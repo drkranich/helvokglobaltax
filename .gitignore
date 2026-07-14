@@ -8,6 +8,7 @@ build/
 coverage/
 .open-next/
 .wrangler/
+supabase/.temp/
 
 # Environment and secrets
 .env
