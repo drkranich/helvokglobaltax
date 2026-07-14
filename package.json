@@ -1,0 +1,22 @@
+{
+  "name": "helvok-tax",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "wrangler:types": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "4.12.30"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.17",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "wrangler": "4.110.0"
+  }
+}
