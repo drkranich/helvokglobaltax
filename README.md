@@ -1,4 +1,4 @@
-# HELVOK TAX PLATFORM
+# Helvok Tax
 
 Infraestrutura global de compliance tributario para calculo, emissao, auditoria e integracao fiscal em multiplos paises.
 
@@ -40,6 +40,7 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - [APIs, eventos e workflows](docs/architecture/07-api-events-workflows.md)
 - [Seguranca e observabilidade](docs/architecture/08-security-observability.md)
 - [Plano de testes](docs/architecture/09-testing-plan.md)
+- [Visao de produto e MVP](docs/product/01-product-vision-and-mvp.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails

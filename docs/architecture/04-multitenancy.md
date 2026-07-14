@@ -38,7 +38,7 @@ flowchart TB
 
 | Escopo | Exemplo | Uso |
 | --- | --- | --- |
-| Tenant | Helvok customer account | billing, quotas, ownership |
+| Tenant | Helvok Tax customer account | billing, quotas, ownership |
 | Environment | sandbox, production | segregacao operacional e credenciais |
 | Organization | matriz, filial, holding | entidade juridica/fiscal |
 | Establishment | loja, CD, escritorio | localidade fiscal |

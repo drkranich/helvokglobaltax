@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-HELVOK TAX PLATFORM e uma infraestrutura global de compliance tributario. Ela fornece uma API unica para softwares, SaaS, ERPs, marketplaces, CRMs e e-commerces calcularem tributos, emitirem documentos fiscais, comunicarem-se com governos e auditarem operacoes em varios paises.
+Helvok Tax e uma infraestrutura global de compliance tributario. Ela fornece uma API unica para softwares, SaaS, ERPs, marketplaces, CRMs e e-commerces calcularem tributos, emitirem documentos fiscais, comunicarem-se com governos e auditarem operacoes em varios paises.
 
 O Brasil e o primeiro adaptador fiscal, nao o centro da arquitetura.
 

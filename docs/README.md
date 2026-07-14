@@ -29,6 +29,7 @@ Esta fase transforma o roadmap em uma arquitetura executavel, revisavel e prepar
 | APIs, eventos, workflows | [07-api-events-workflows.md](architecture/07-api-events-workflows.md) |
 | Seguranca e observabilidade | [08-security-observability.md](architecture/08-security-observability.md) |
 | Testes | [09-testing-plan.md](architecture/09-testing-plan.md) |
+| Visao de produto e MVP | [01-product-vision-and-mvp.md](product/01-product-vision-and-mvp.md) |
 | Roadmap incremental | [01-incremental-delivery-plan.md](roadmap/01-incremental-delivery-plan.md) |
 
 ## Decisoes registradas

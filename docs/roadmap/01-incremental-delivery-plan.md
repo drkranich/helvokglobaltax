@@ -113,6 +113,8 @@ Entregas:
 
 - manifesto do adaptador Brasil;
 - primeira familia documental em homologacao;
+- adaptador inicial para provedor fiscal externo;
+- NF-e de venda de mercadoria como primeiro fluxo de MVP;
 - validacoes brasileiras dentro do adaptador;
 - transmissao por workflow;
 - assinatura/certificado quando aplicavel;
@@ -123,13 +125,16 @@ Gate:
 
 - emissao nunca pelo frontend;
 - homologacao remota validada;
-- nenhum detalhe brasileiro no Core.
+- nenhum detalhe brasileiro no Core;
+- provedor fiscal substituivel sem reescrever Core.
 
 ## Fase 6 - Paineis
 
 Entregas:
 
 - dashboard;
+- central de emissao;
+- painel de rejeicoes;
 - empresas;
 - produtos;
 - servicos;
@@ -149,7 +154,8 @@ Gate:
 
 - permissoes por tela;
 - estados vazios e erros claros;
-- logs/traces acessiveis para suporte.
+- logs/traces acessiveis para suporte;
+- bloqueios fiscais de seguranca visiveis antes de emissao/expedicao.
 
 ## Fase 7 - SDK, webhooks e API publica
 
@@ -236,4 +242,4 @@ Gate:
 
 ## Regra operacional de deploy
 
-O dominio provisório informado e `helvokglobaltax.genialidadefilosofica.workers.dev`. As fases implementaveis devem preferir deploy e validacao remota na Cloudflare, com smoke tests contra a plataforma, em vez de fluxo baseado em porta local.
+O dominio provisorio informado e `helvokglobaltax.genialidadefilosofica.workers.dev`. As fases implementaveis devem preferir deploy e validacao remota na Cloudflare, com smoke tests contra a plataforma, em vez de fluxo baseado em porta local.
