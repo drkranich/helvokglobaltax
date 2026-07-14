@@ -41,6 +41,7 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - [Seguranca e observabilidade](docs/architecture/08-security-observability.md)
 - [Plano de testes](docs/architecture/09-testing-plan.md)
 - [Visao de produto e MVP](docs/product/01-product-vision-and-mvp.md)
+- [Checagem de ambiente](docs/ops/01-environment-check.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails
