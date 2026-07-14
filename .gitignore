@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+coverage/
+.open-next/
+.wrangler/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+secrets.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
