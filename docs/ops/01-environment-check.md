@@ -12,8 +12,8 @@ Confirmar se o workspace local, GitHub, Wrangler/Cloudflare e Supabase estao apo
 | Branch | OK | `main` rastreia `origin/main`. |
 | Repo local | OK | Workspace limpo antes desta checagem; ainda sem backend, frontend, Supabase config ou Wrangler config. |
 | Wrangler CLI | OK | `wrangler` disponivel via `npx`, versao `4.110.0`. |
-| Cloudflare auth | Parcial | Logado via OAuth na conta `CARE KRANICH`, account id `8a1a83bef8564b885a10bfb22314555a`. |
-| Cloudflare Worker | Bloqueado | Wrangler nao encontrou Worker `helvokglobaltax` nessa conta. |
+| Cloudflare auth | OK | Perfil `genialidadefilosofica` vinculado ao diretorio do projeto. Conta `NOXIS DRATHOS (OBSERVATORIO)`, account id `88d4a501b053d9cfc5e7bee644c473da`. |
+| Cloudflare Worker | OK | Wrangler encontra Worker `helvokglobaltax` nessa conta. |
 | Cloudflare Pages | Bloqueado | Wrangler nao encontrou Pages project `helvokglobaltax` nessa conta. |
 | Workers.dev dominio | Parcial | `https://helvokglobaltax.genialidadefilosofica.workers.dev` responde `200 OK` com `Hello world`. |
 | Supabase URL | OK | `https://jlvwudjgfzhhdgttrycj.supabase.co` corresponde ao projeto `jlvwudjgfzhhdgttrycj`. |
@@ -62,7 +62,7 @@ Wrangler validado:
 4.110.0
 ```
 
-### Conta autenticada
+### Conta autenticada inicialmente
 
 Wrangler esta logado em:
 
@@ -74,7 +74,27 @@ Email: carekranich@gmail.com
 
 Permissoes incluem Workers, Pages, KV, Queues, R2, D1, Workflows e Secrets Store.
 
-### Problema encontrado
+### Conta correta ativada
+
+Depois da autorizacao OAuth, foi criado e vinculado ao diretorio o perfil:
+
+```text
+Profile: genialidadefilosofica
+Email: genialidadefilosofica@gmail.com
+Account Name: NOXIS DRATHOS (OBSERVATORIO)
+Account ID: 88d4a501b053d9cfc5e7bee644c473da
+Bound directory: C:\Users\GUSTAVO\OneDrive\Documentos\ATLAS TAX
+```
+
+Validacao sem `--profile`:
+
+```text
+Active profile: genialidadefilosofica
+Worker: helvokglobaltax
+Deployments: encontrados
+```
+
+### Problema encontrado antes da correcao
 
 O dominio:
 
@@ -98,21 +118,18 @@ Pages project helvokglobaltax: Project not found.
 
 ### Interpretacao
 
-O dominio existe e esta ativo, mas nao esta acessivel pelo Wrangler na conta atual. As causas provaveis sao:
+O dominio existe e esta ativo. Ele nao estava acessivel pelos perfis `default` ou `seravie-campo`, mas ficou acessivel pelo perfil `genialidadefilosofica`.
 
-1. O Worker/Pages foi criado em outra conta Cloudflare.
-2. O Wrangler esta autenticado no perfil/conta errada.
-3. O projeto Pages possui nome diferente de `helvokglobaltax`.
-4. O Worker existe sob outro account id que usa o subdominio `genialidadefilosofica`.
+O Worker correto esta na conta `NOXIS DRATHOS (OBSERVATORIO)`.
 
 ### Acao necessaria
 
 Antes de criar `wrangler.jsonc`, deploy, R2, KV, Queues ou Workflows:
 
-1. Confirmar qual conta Cloudflare possui o subdominio `genialidadefilosofica.workers.dev`.
-2. Fazer `wrangler login` nessa conta ou selecionar o profile correto.
-3. Confirmar o nome real do Worker e do Pages project.
-4. Se o recurso ainda nao existir na conta correta, criar/associar os projetos com nomes finais.
+1. Usar sempre o workspace `C:\Users\GUSTAVO\OneDrive\Documentos\ATLAS TAX`, que ja esta vinculado ao perfil correto.
+2. Confirmar se o frontend sera Pages ou Worker-only, pois ainda nao ha Pages project `helvokglobaltax`.
+3. Criar `wrangler.jsonc` apontando para Worker `helvokglobaltax`.
+4. Criar/associar recursos R2, KV, Queues e Workflows somente nessa conta.
 
 ## Supabase
 
@@ -197,11 +214,13 @@ Verificar se `public.rls_auto_enable()` foi criada manualmente. Se nao for uma A
 
 ## Decisao de sequencia
 
-Nao iniciar migrations nem deploys ate resolver:
+Nao iniciar deploys Cloudflare fora do perfil `genialidadefilosofica`.
 
-1. Cloudflare: Wrangler deve apontar para a conta que possui `helvokglobaltax.genialidadefilosofica.workers.dev`.
-2. Supabase CLI: login/token local se formos usar CLI para link, migrations e advisors.
-3. Supabase security advisor: resolver ou justificar `public.rls_auto_enable()`.
+Pendencias antes da Fase 1:
+
+1. Supabase CLI: login/token local se formos usar CLI para link, migrations e advisors.
+2. Supabase security advisor: resolver ou justificar `public.rls_auto_enable()`.
+3. Cloudflare Pages: decidir se precisa existir ja no MVP ou se o primeiro deploy sera Worker/API.
 
 Depois desses pontos, iniciar Fase 1:
 
