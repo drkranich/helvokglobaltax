@@ -199,7 +199,7 @@ Preparar:
 
 Preparar:
 
-- Japao
+- Japão
 - China
 - Coreia
 - Singapura

@@ -153,7 +153,7 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
   const localDeliveryCost = money(input.local_delivery_cost);
   const marketingCost = money(input.marketing_cost);
   const otherCosts = money(input.other_costs);
-  const isGoods = operationType.includes("goods") || operationType.includes("marketplace");
+  const isGoods = isGoodsLikeOperation(operationType, items);
   const isCrossBorder = originCountry !== destinationCountry;
   const paymentFeeRate = rate(input.payment_fee_rate, 0.029);
   const marketplaceFeeRate = rate(input.marketplace_fee_rate, channel.includes("market") ? 0.12 : 0);
@@ -319,7 +319,7 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
         market,
       ),
       buildLine("payment_fee", "Taxa de pagamento", "commercial_fee", paymentFeeRate, sellerCashCollected, paymentFee, "seller", market),
-      buildLine("marketplace_fee", "Comissao marketplace/canal", "commercial_fee", marketplaceFeeRate, commercialSubtotal, marketplaceFee, channel.includes("market") ? "marketplace" : "seller", market),
+      buildLine("marketplace_fee", "Comissão marketplace/canal", "commercial_fee", marketplaceFeeRate, commercialSubtotal, marketplaceFee, channel.includes("market") ? "marketplace" : "seller", market),
     ],
     value_chain: buildValueChain({
       commercialSubtotal,
@@ -425,6 +425,33 @@ function normalizeItems(items: TaxSimulationItemInput[] | undefined): Array<{
   });
 }
 
+function isGoodsLikeOperation(
+  operationType: string,
+  items: Array<{ category: string }>,
+): boolean {
+  const normalizedOperation = operationType.toLowerCase();
+  if (["service", "saas", "subscription", "license", "rental", "leasing", "tourism", "experience", "event"].some((token) => normalizedOperation.includes(token))) {
+    return false;
+  }
+  if (["goods", "marketplace", "ecommerce", "import", "export", "wholesale", "distribution"].some((token) => normalizedOperation.includes(token))) {
+    return true;
+  }
+
+  const serviceCategories = new Set([
+    "digital_product",
+    "saas",
+    "subscription",
+    "license",
+    "service",
+    "professional_service",
+    "tourism",
+    "accommodation",
+    "event",
+    "rental",
+  ]);
+  return items.some((item) => !serviceCategories.has(item.category.toLowerCase()));
+}
+
 function buildLine(
   code: string,
   label: string,
@@ -522,14 +549,14 @@ function buildDocumentChecklist(input: {
   const docs = [
     "Commercial invoice",
     "Packing list",
-    "Classificacao fiscal HS/NCM",
+    "Classificação fiscal HS/NCM",
     "Comprovante de seguro quando houver",
   ];
   if (input.isCrossBorder) {
     docs.push("Documento de transporte internacional", "Declaração de exportação/importação", "Certificado de origem quando aplicável");
   }
   if (input.originCountry === "BR") {
-    docs.push("NF-e de exportacao", "DU-E / Siscomex", "Documentacao MAPA/ANVISA quando o produto exigir");
+    docs.push("NF-e de exportação", "DU-E / Siscomex", "Documentação MAPA/ANVISA quando o produto exigir");
   }
   const itemText = JSON.stringify(input.input.items ?? "").toLowerCase();
   if (input.originCountry === "BR" && (itemText.includes("cachaca") || itemText.includes("cacha") || itemText.includes("alcohol") || itemText.includes("bebida"))) {

@@ -65,7 +65,7 @@ O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IV
 - Conceder/atualizar membership: `POST /v1/admin/memberships`
 - Admin API protegida: `GET/POST /v1/admin/*`
 
-## Documentacao
+## Documentação
 
 - [Indice da Fase 0](docs/README.md)
 - [Arquitetura de alto nivel](docs/architecture/01-system-architecture.md)

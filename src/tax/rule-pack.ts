@@ -122,7 +122,7 @@ export const EXPORT_MARKETS: TaxMarket[] = [
   { code: "CN", name: "China", region: "Ásia", currency: "CNY", indirectTaxName: "VAT", standardRate: 0.13, defaultDutyRate: 0.08, eInvoiceStatus: "fapiao", sourceStatus: "estimated-seed", notes: ["Fapiao e import duty exigem classificação HS."] },
   {
     code: "JP",
-    name: "Japao",
+    name: "Japão",
     region: "Ásia",
     currency: "JPY",
     indirectTaxName: "Consumption Tax",

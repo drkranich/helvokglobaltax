@@ -12,7 +12,7 @@ type TaxComparePayload = TaxSimulationInput & {
   keep_destination_tax_override?: boolean;
 };
 
-const DEFAULT_COMPARE_DESTINATIONS = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU"];
+const DEFAULT_COMPARE_DESTINATIONS = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU", "AG", "BB", "DO", "JM", "LC", "KN", "VC", "TT"];
 
 export function createTaxRouter(): Hono<AppEnv> {
   const router = new Hono<AppEnv>();

@@ -39,7 +39,7 @@ flowchart TB
   Core["Core Platform\nTenants, Organizations, Products,\nOperations, Documents, Rules,\nEvents, Audit, Storage"]
   RuleEngine["Rule Engine\nFiscal-neutral evaluation"]
   AdapterRouter["Adapter Router\nCountry + Jurisdiction + Document Type"]
-  Plugins["Fiscal Adapter Plugins\nBrazil, Portugal, Germany,\nUSA, Canada, Japan, etc."]
+  Plugins["Fiscal Adapter Plugins\nBrazil, Portugal, Germany,\nUSA, Canada, Japão, etc."]
   Regulatory["Regulatory Intelligence\nOfficial sources, providers,\nevidence, impact analysis"]
   Queues["Cloudflare Queues\nEmission, Webhooks, Integrations"]
   Workflows["Cloudflare Workflows\nLong-running fiscal processes"]

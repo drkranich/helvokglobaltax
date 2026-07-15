@@ -31,6 +31,13 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Helvok Tax");
     expect(body).toContain("Central de comando viva");
     expect(body).toContain("Simulador fiscal operacional");
+    expect(body).toContain("Bebida alcoólica");
+    expect(body).toContain("Cosméticos");
+    expect(body).toContain("Serviço digital");
+    expect(body).toContain("Serviço profissional");
+    expect(body).toContain("Venda doméstica");
+    expect(body).toContain("Assinatura SaaS");
+    expect(body).toContain("Turismo e experiências");
     expect(body).toContain('class="app-view active" id="dashboard"');
     expect(body).toContain('class="app-view" id="motor"');
     expect(body).toContain('class="app-view" id="documentos"');
@@ -87,6 +94,7 @@ describe("Helvok Tax Worker API", () => {
         "Suécia",
         "Romênia",
         "Grécia",
+        "Japão",
         "Austrália",
         "Bélgica",
         "Suíça",
@@ -171,6 +179,7 @@ describe("Helvok Tax Worker API", () => {
       expect.arrayContaining(["import_duty", "excise", "destination_indirect_tax"]),
     );
     expect(body.simulation.document_checklist).toEqual(expect.arrayContaining(["DU-E / Siscomex", "Registro MAPA do estabelecimento/produto"]));
+    expect(body.simulation.document_checklist).toEqual(expect.arrayContaining(["Classificação fiscal HS/NCM", "Documentação MAPA/ANVISA quando o produto exigir"]));
     expect(body.simulation.value_chain.map((stage) => stage.key)).toContain("destination_import");
     expect(body.simulation.warnings.length).toBeGreaterThan(0);
   });

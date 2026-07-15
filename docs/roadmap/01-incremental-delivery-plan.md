@@ -211,7 +211,7 @@ Entregas por onda:
 6. Holanda.
 7. Estados Unidos.
 8. Canada.
-9. Japao.
+9. Japão.
 10. Singapura.
 
 Gate:

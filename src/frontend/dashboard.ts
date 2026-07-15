@@ -2206,10 +2206,18 @@ export function renderDashboard(): string {
                     <label for="tax-operation-type">Tipo</label>
                     <select id="tax-operation-type" class="glass-select">
                       <option value="export_goods" selected>Exportação de mercadorias</option>
-                      <option value="domestic_goods">Venda domestica</option>
-                      <option value="marketplace_sale">Marketplace</option>
-                      <option value="digital_service">Servico digital</option>
-                      <option value="professional_service">Servico profissional</option>
+                      <option value="import_goods">Importação de mercadorias</option>
+                      <option value="domestic_goods">Venda doméstica</option>
+                      <option value="wholesale_distribution">Distribuição atacadista</option>
+                      <option value="cross_border_ecommerce">E-commerce internacional</option>
+                      <option value="marketplace_sale">Venda em marketplace</option>
+                      <option value="digital_service">Serviço digital</option>
+                      <option value="professional_service">Serviço profissional</option>
+                      <option value="saas_subscription">Assinatura SaaS</option>
+                      <option value="software_license">Licença de software</option>
+                      <option value="rental_leasing">Locação ou leasing</option>
+                      <option value="event_ticketing">Ingressos e eventos</option>
+                      <option value="tourism_experience">Turismo e experiências</option>
                     </select>
                   </div>
                   <div class="field-block">
@@ -2241,12 +2249,30 @@ export function renderDashboard(): string {
                   <div class="field-block">
                     <label for="tax-item-category">Categoria</label>
                     <select id="tax-item-category" class="glass-select">
-                      <option value="beverage_alcohol" selected>Bebida alcoolica</option>
+                      <option value="beverage_alcohol" selected>Bebida alcoólica</option>
+                      <option value="beverage_non_alcohol">Bebida não alcoólica</option>
                       <option value="goods">Mercadoria geral</option>
                       <option value="food">Alimentos</option>
-                      <option value="cosmetics">Cosmeticos</option>
+                      <option value="cosmetics">Cosméticos</option>
+                      <option value="health_product">Saúde, higiene e bem-estar</option>
+                      <option value="electronics">Eletrônicos</option>
+                      <option value="apparel">Vestuário e acessórios</option>
+                      <option value="industrial_product">Produto industrial</option>
+                      <option value="raw_material">Matéria-prima</option>
+                      <option value="agricultural">Produto agropecuário</option>
+                      <option value="handcrafted">Artesanato</option>
+                      <option value="kit">Kit, combo ou cesta</option>
+                      <option value="marketplace_bundle">Bundle de marketplace</option>
                       <option value="digital_product">Produto digital</option>
                       <option value="saas">SaaS</option>
+                      <option value="subscription">Assinatura recorrente</option>
+                      <option value="license">Licença</option>
+                      <option value="service">Serviço geral</option>
+                      <option value="professional_service">Serviço profissional</option>
+                      <option value="tourism">Turismo e experiência</option>
+                      <option value="accommodation">Hospedagem</option>
+                      <option value="event">Evento ou ingresso</option>
+                      <option value="rental">Aluguel ou locação</option>
                     </select>
                   </div>
                   <div class="field-block">
@@ -3678,7 +3704,7 @@ export function renderDashboard(): string {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
       }
 
-      ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel"].forEach((selector) => {
+      ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {
         const node = qs(selector);
         if (node) {
           node.addEventListener("change", () => runTaxSimulation());
