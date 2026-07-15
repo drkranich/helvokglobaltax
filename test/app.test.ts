@@ -20,6 +20,17 @@ describe("Helvok Tax Worker API", () => {
     vi.restoreAllMocks();
   });
 
+  it("serves the glass command center at the root route", async () => {
+    const app = createApp();
+    const response = await app.request("/", {}, env);
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(body).toContain("Helvok Tax");
+    expect(body).toContain("Command center vivo");
+  });
+
   it("returns a healthy response", async () => {
     const app = createApp();
     const response = await app.request("/health", {}, env);

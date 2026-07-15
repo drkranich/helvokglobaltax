@@ -2,7 +2,15 @@
 
 Infraestrutura global de compliance tributario para calculo, emissao, auditoria e integracao fiscal em multiplos paises.
 
-Este repositorio comeca na Fase 0: arquitetura, dominio, modelagem, seguranca, observabilidade, testes e roadmap. Nenhum backend, frontend, migration ou adaptador fiscal deve ser implementado antes de a arquitetura ser revisada e aprovada.
+Este repositorio comecou pela Fase 0: arquitetura, dominio, modelagem, seguranca, observabilidade, testes e roadmap.
+
+Estado atual:
+
+- Worker publico publicado na Cloudflare.
+- API foundation em Hono/TypeScript.
+- Supabase PostgreSQL com schema core/audit, RLS e migrations iniciais.
+- Bootstrap real do tenant `helvok-tax-foundation`.
+- Primeiro painel visual glassmorphism publicado na rota `/`.
 
 ## Principio central
 
@@ -26,9 +34,19 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 
 - Supabase: `https://jlvwudjgfzhhdgttrycj.supabase.co`
 - GitHub: `https://github.com/drkranich/helvokglobaltax`
-- Dominio provisório Cloudflare Workers: `helvokglobaltax.genialidadefilosofica.workers.dev`
+- Cloudflare Workers: `https://helvokglobaltax.genialidadefilosofica.workers.dev`
 
-## Documentacao da Fase 0
+## Rotas publicadas
+
+- Painel visual: `GET /`
+- Painel visual alternativo: `GET /app`
+- Health check: `GET /health`
+- API metadata: `GET /v1`
+- API status: `GET /v1/status`
+- API meta: `GET /v1/meta`
+- Admin API protegida: `GET/POST /v1/admin/*`
+
+## Documentacao
 
 - [Indice da Fase 0](docs/README.md)
 - [Arquitetura de alto nivel](docs/architecture/01-system-architecture.md)
@@ -42,6 +60,9 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - [Plano de testes](docs/architecture/09-testing-plan.md)
 - [Visao de produto e MVP](docs/product/01-product-vision-and-mvp.md)
 - [Checagem de ambiente](docs/ops/01-environment-check.md)
+- [Supabase Phase 1 foundation](docs/ops/02-supabase-phase-1-foundation.md)
+- [Worker admin API Phase 2](docs/ops/03-worker-admin-api-phase-2.md)
+- [Glass admin preview](docs/ops/04-glass-admin-preview.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails
@@ -51,4 +72,4 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - Nao sobrescrever regras tributarias; toda mudanca cria nova versao e nova vigencia.
 - Nao misturar IA com decisao tributaria homologada.
 - Nao criar arquitetura exclusiva para o Brasil.
-- Nao avancar para backend antes da revisao da Fase 0.
+- Manter cada fase funcional, revisavel e preparada para producao antes da fase seguinte.

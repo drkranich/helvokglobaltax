@@ -3,7 +3,8 @@ import { secureHeaders } from "hono/secure-headers";
 
 import { createAdminRouter } from "./admin/routes";
 import type { AppEnv } from "./env";
-import { jsonResponse } from "./response";
+import { renderDashboard } from "./frontend/dashboard";
+import { htmlResponse, jsonResponse } from "./response";
 
 export function createApp(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -17,17 +18,8 @@ export function createApp(): Hono<AppEnv> {
     }),
   );
 
-  app.get("/", (c) =>
-    jsonResponse(c, {
-      service: c.env.APP_NAME,
-      status: "ok",
-      message: "Helvok Tax API is online.",
-      links: {
-        health: "/health",
-        version: `/${c.env.API_VERSION}`,
-      },
-    }),
-  );
+  app.get("/", (c) => htmlResponse(c, renderDashboard()));
+  app.get("/app", (c) => htmlResponse(c, renderDashboard()));
 
   app.get("/health", (c) =>
     jsonResponse(c, {

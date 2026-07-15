@@ -27,3 +27,13 @@ export function jsonResponse(
     status,
   );
 }
+
+export function htmlResponse(c: Context<AppEnv>, body: string, status: ContentfulStatusCode = 200): Response {
+  const requestId = getRequestId(c);
+
+  c.header("x-request-id", requestId);
+  c.header("cache-control", "no-store");
+  c.header("content-type", "text/html; charset=utf-8");
+
+  return c.body(body, status);
+}
