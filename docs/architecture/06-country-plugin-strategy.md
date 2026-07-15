@@ -70,6 +70,9 @@ Campos do manifesto:
 - required_certificates
 - sandbox_support
 - government_endpoints
+- official_sources
+- provider_dependencies
+- automation_levels
 - contract_version
 - adapter_version
 
@@ -232,6 +235,19 @@ Mas devem sempre:
 - publicar eventos no contrato global;
 - manter snapshots de decisao;
 - versionar manifestos.
+
+## Conectores governamentais e provedores
+
+Um adaptador pode conter conectores para governos, provedores tributarios, despachantes, contadores, marketplaces e ERPs. Cada conector deve declarar:
+
+- fonte dos dados;
+- tipo de credencial exigida;
+- se a integracao permite leitura, preparacao, transmissao ou acompanhamento;
+- nivel de automacao permitido;
+- evidencias que precisam ser arquivadas;
+- limites legais ou operacionais conhecidos.
+
+Quando a autoridade nao fornecer API, ou quando a submissao exigir operador local, o adaptador deve operar em modo assistido ou orientacao operacional, mantendo checklist, artefatos e auditoria.
 
 ## Marketplace de plugins
 

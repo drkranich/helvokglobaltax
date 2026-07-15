@@ -23,6 +23,8 @@ Sistemas externos enviam dados factuais de uma operacao comercial para uma API u
 
 No Brasil, isso inclui futuramente CFOP, CST/CSOSN, ICMS, ICMS-ST, DIFAL, FCP, IPI, ISS, IBS, CBS e PIS/Cofins durante a transicao. Internacionalmente, cada pais troca seus nomes, campos, documentos e canais oficiais por meio de plugin/adaptador.
 
+Helvok Tax nao deve prometer tributacao correta apenas por estar conectado a governos ou provedores. A promessa central e combinar fontes oficiais monitoradas, regras versionadas, calculos rastreaveis e homologacao profissional para mudancas criticas.
+
 ## Experiencia esperada
 
 O usuario escolhe empresa, pais e operacao. O painel mostra apenas os campos e documentos relevantes para aquele contexto.
@@ -53,6 +55,8 @@ O usuario nao deve ver campos fiscais desnecessarios para o pais, documento ou o
 13. A transicao IBS/CBS precisa ser suportada.
 14. O emissor fiscal pode ser substituido sem reconstruir o sistema.
 15. A plataforma opera como Fiscal-as-a-Service por API.
+16. Fontes oficiais, provedores e IA sao evidencias ou apoio, nao regras publicadas automaticamente.
+17. Cada obrigacao deve declarar nivel de automacao: integral, assistida ou orientacao operacional.
 
 ## Modulos de produto
 
@@ -366,3 +370,5 @@ O produto deve deixar claro quando uma regra e:
 - fornecida por provedor externo;
 - validada por especialista;
 - aguardando confirmacao.
+
+Mudancas detectadas em portais, diarios oficiais, PDFs, APIs governamentais ou provedores externos devem passar por captura de evidencia, analise de impacto, revisao e publicacao de nova versao antes de afetar calculos de producao.

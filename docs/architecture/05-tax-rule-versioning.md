@@ -47,6 +47,9 @@ Uma versao de regra possui:
 - `conditions`
 - `outcomes`
 - `legal_source`
+- `source_evidence_ids`
+- `confidence_level`
+- `automation_level`
 - `workflow_status`
 - `author`
 - `reviewer`
@@ -124,6 +127,8 @@ Antes de publicar:
 - simulacao contra casos conhecidos;
 - diff contra versao anterior;
 - registro de fonte legal;
+- evidencias arquivadas com fonte, data, jurisdicao, vigencia e hash quando aplicavel;
+- classificacao do nivel de automacao permitido;
 - aprovacao por role `rules.publish`.
 
 ## Retroatividade
@@ -148,3 +153,9 @@ Overrides de tenant devem:
 ## AI e regras
 
 IA pode sugerir revisao, explicar diffs e apontar inconsistencias. IA nao publica regra, nao altera outcome e nao decide imposto.
+
+## Fontes e evidencias
+
+Consultas a governos, provedores tributarios, bases tarifarias, diarios oficiais, PDFs e comunicados tecnicos nao alteram regras publicadas automaticamente. Esses dados alimentam um registro de evidencias que pode abrir workflow de impacto e revisao.
+
+Uma regra publicada deve apontar para evidencias suficientes para explicar sua origem, mas o calculo de producao depende da versao da regra, nao de uma chamada externa feita no momento da operacao.

@@ -40,6 +40,7 @@ flowchart TB
   RuleEngine["Rule Engine\nFiscal-neutral evaluation"]
   AdapterRouter["Adapter Router\nCountry + Jurisdiction + Document Type"]
   Plugins["Fiscal Adapter Plugins\nBrazil, Portugal, Germany,\nUSA, Canada, Japan, etc."]
+  Regulatory["Regulatory Intelligence\nOfficial sources, providers,\nevidence, impact analysis"]
   Queues["Cloudflare Queues\nEmission, Webhooks, Integrations"]
   Workflows["Cloudflare Workflows\nLong-running fiscal processes"]
   Supabase["Supabase PostgreSQL\nRLS + Audit + Realtime"]
@@ -57,6 +58,8 @@ flowchart TB
   Core --> RuleEngine
   RuleEngine --> AdapterRouter
   AdapterRouter --> Plugins
+  Regulatory --> RuleEngine
+  Regulatory --> Plugins
   Plugins --> Gov
   Core --> Supabase
   Core --> R2
@@ -162,6 +165,7 @@ flowchart LR
 | Tax Calculation | simulacoes e calculo fiscal | Fase 4 |
 | Fiscal Documents | ciclo de vida abstrato de documentos | Fase 5 |
 | Brazil Adapter | NF-e inicial e homologacao | Fase 5 |
+| Regulatory Intelligence | fontes oficiais, provedores, evidencias, impacto e homologacao | Fase 4+ |
 | Audit | trilha imutavel e eventos de dominio | Fase 1 |
 | Integrations | webhooks, API keys, conectores | Fases 7-8 |
 | AI Assist | explicacoes e inconsistencias, sem decidir imposto | Fase posterior |
@@ -233,6 +237,12 @@ O Core nao pode:
 - serializar XML fiscal local;
 - decidir protocolo governamental;
 - sobrescrever regras sem versao.
+
+## Regulatory Intelligence
+
+Helvok Tax pode consultar governos, bases oficiais e provedores externos, mas essas fontes entram como evidencias controladas. Mudancas criticas passam por analise de impacto, revisao profissional, testes de regressao e publicacao de nova versao antes de afetar producao.
+
+Obrigacoes e transmissoes devem declarar se suportam automacao integral, automacao assistida ou apenas orientacao operacional. Isso impede que o produto prometa transmissao automatica onde a autoridade, o provedor ou a lei exige operador habilitado, certificado, representante local ou submissao externa.
 
 ## Ambiente e dominios
 
