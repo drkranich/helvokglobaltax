@@ -545,6 +545,20 @@ export function renderDashboard(): string {
         box-shadow: 0 14px 34px rgba(200, 154, 61, 0.18);
       }
 
+      .panel > .glass-button,
+      .member-form > .glass-button,
+      .invitation-form > .glass-button,
+      .catalog-form > .glass-button,
+      .tax-simulator-grid > .glass-button,
+      .tax-section > .glass-button {
+        margin-top: 10px;
+      }
+
+      .tax-section > .glass-button {
+        justify-self: start;
+        margin-bottom: 8px;
+      }
+
       .hero-grid {
         display: grid;
         grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
@@ -1014,7 +1028,9 @@ export function renderDashboard(): string {
       .catalog-workbench {
         display: grid;
         grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-        gap: 18px;
+        align-items: start;
+        gap: 26px;
+        margin-top: 22px;
       }
 
       .catalog-form {
@@ -1032,6 +1048,7 @@ export function renderDashboard(): string {
       .catalog-list {
         display: grid;
         gap: 10px;
+        margin-top: 12px;
         max-height: 680px;
         overflow: auto;
         padding-right: 4px;
@@ -1091,6 +1108,7 @@ export function renderDashboard(): string {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
+        margin-bottom: 12px;
       }
 
       .copy-row {
@@ -1319,6 +1337,12 @@ export function renderDashboard(): string {
       .tax-chain-list {
         display: grid;
         gap: 9px;
+      }
+
+      .tax-mini-grid + .glass-button {
+        justify-self: start;
+        margin-top: 4px;
+        margin-bottom: 8px;
       }
 
       .tax-mini-card,
@@ -2485,7 +2509,7 @@ export function renderDashboard(): string {
               <h2>Simulador fiscal operacional</h2>
               <span id="tax-result-status">api edge</span>
             </div>
-            <form class="tax-simulator-grid" id="tax-simulator-form">
+            <form class="tax-simulator-grid" id="tax-simulator-form" novalidate>
               <div class="tax-section">
                 <div class="tax-section-head"><strong>Operação</strong><span id="tax-rule-pack">pacote de regras</span></div>
                 <div class="tax-input-grid">
@@ -2673,7 +2697,7 @@ export function renderDashboard(): string {
                 </div>
               </div>
 
-              <button class="glass-button primary" id="tax-simulate-button" type="submit">Calcular impostos e preço real</button>
+              <button class="glass-button primary" id="tax-simulate-button" type="button">Calcular impostos e preço real</button>
             </form>
           </article>
         </section>
@@ -4541,7 +4565,13 @@ export function renderDashboard(): string {
 
       const taxSimulatorForm = qs("#tax-simulator-form");
       if (taxSimulatorForm) {
+        taxSimulatorForm.noValidate = true;
         taxSimulatorForm.addEventListener("submit", runTaxSimulation);
+      }
+
+      const taxSimulateButton = qs("#tax-simulate-button");
+      if (taxSimulateButton) {
+        taxSimulateButton.addEventListener("click", runTaxSimulation);
       }
 
       const taxCompareButton = qs("#tax-compare-button");

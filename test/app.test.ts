@@ -49,6 +49,8 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Criar draft fiscal global");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
+    expect(body).toContain('id="tax-simulator-form" novalidate');
+    expect(body).toContain('id="tax-simulate-button" type="button"');
     expect(body).toContain("function initializeCustomSelects");
     expect(body).toContain(".select-panel");
     expect(body).toContain("initializeCustomSelects();");
