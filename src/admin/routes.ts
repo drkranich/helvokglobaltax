@@ -39,6 +39,7 @@ function adminErrorResponse(c: Context<AppEnv>, error: unknown): Response {
           message: error.message,
           upstream_status: error.status,
           upstream_code: error.code,
+          upstream_details: error.details,
         },
       },
       (error.status >= 400 && error.status <= 599 ? error.status : 502) as ContentfulStatusCode,

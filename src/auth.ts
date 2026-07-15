@@ -7,7 +7,7 @@ const encoder = new TextEncoder();
 
 function extractAdminToken(authorization: string | undefined, headerToken: string | undefined): string | null {
   if (headerToken) {
-    return headerToken;
+    return headerToken.trim() || null;
   }
 
   if (!authorization) {
@@ -19,7 +19,7 @@ function extractAdminToken(authorization: string | undefined, headerToken: strin
     return null;
   }
 
-  return token;
+  return token.trim() || null;
 }
 
 async function sha256(value: string): Promise<Uint8Array> {
@@ -43,7 +43,7 @@ async function isValidSecret(provided: string, expected: string): Promise<boolea
 }
 
 export const requireAdminToken: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const expectedToken = c.env.HELVOK_ADMIN_TOKEN;
+  const expectedToken = c.env.HELVOK_ADMIN_TOKEN?.trim();
   if (!expectedToken) {
     return jsonResponse(
       c,

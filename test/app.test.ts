@@ -11,8 +11,8 @@ const env = {
 
 const adminEnv = {
   ...env,
-  HELVOK_ADMIN_TOKEN: "test-admin-token",
-  SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+  HELVOK_ADMIN_TOKEN: "test-admin-token\n",
+  SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key\n",
 };
 
 describe("Helvok Tax Worker API", () => {
@@ -99,7 +99,40 @@ describe("Helvok Tax Worker API", () => {
       "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_list_tenants",
       expect.objectContaining({
         method: "POST",
+        headers: expect.objectContaining({
+          apikey: "test-service-role-key",
+          authorization: "Bearer test-service-role-key",
+        }),
       }),
     );
+  });
+
+  it("returns structured errors when Supabase returns a non-JSON response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("upstream unavailable", {
+        status: 503,
+        headers: {
+          "content-type": "text/plain",
+        },
+      }),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/tenants",
+      {
+        headers: {
+          "x-helvok-admin-token": "test-admin-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<Record<string, { code: string; message: string }>>();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toMatchObject({
+      code: "supabase_rpc_error",
+      message: "Supabase RPC returned a non-JSON response.",
+    });
   });
 });

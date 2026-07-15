@@ -12,7 +12,7 @@ Esta entrega ainda nao expõe frontend nem fluxo de usuario final. Ela cria o ca
 | --- | --- |
 | Worker | `helvokglobaltax` |
 | URL | `https://helvokglobaltax.genialidadefilosofica.workers.dev` |
-| Versao Cloudflare | `5480e2a1-fa7c-451f-9239-cdb99418c6f7` |
+| Versao Cloudflare | `5295e8e5-4812-4c7f-84b7-1cd5c73607c3` |
 | Perfil Wrangler | `genialidadefilosofica` |
 
 ## Rotas adicionadas
@@ -47,6 +47,8 @@ x-helvok-admin-token: <token>
 
 O token e comparado por hash SHA-256 com comparacao constante em tempo para reduzir vazamento por timing.
 
+O Worker normaliza tokens com `trim()` antes da comparacao para evitar falhas causadas por quebras de linha em secrets gravados via CLI.
+
 ## Secrets configurados
 
 O Worker possui os secrets necessarios configurados por nome. `wrangler secret list` retornou:
@@ -71,9 +73,11 @@ Esses valores nunca devem entrar em:
 
 Observacao operacional:
 
-- O valor de `HELVOK_ADMIN_TOKEN` foi gravado como secret do Worker e nao e recuperavel depois da escrita.
-- Antes de uso manual das rotas admin, rotacionar `HELVOK_ADMIN_TOKEN` para um valor guardado fora do repositorio.
+- O valor de `HELVOK_ADMIN_TOKEN` foi rotacionado como secret do Worker e nao e recuperavel depois da escrita.
+- Antes de novo uso manual das rotas admin, rotacionar `HELVOK_ADMIN_TOKEN` para um valor guardado fora do repositorio.
 - O valor de `SUPABASE_SERVICE_ROLE_KEY` tambem esta gravado apenas como secret do Worker.
+- O cliente Supabase normaliza `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` com `trim()` antes de montar headers.
+- O cliente Supabase chama `fetch` por wrapper proprio para evitar `Illegal invocation` em Cloudflare Workers.
 
 Comandos seguros para rotacionar:
 
@@ -127,20 +131,50 @@ GET /v1/admin/health -> 401 unauthorized
 
 Esse resultado e esperado quando `HELVOK_ADMIN_TOKEN` existe no Worker, mas a requisicao nao envia o token administrativo.
 
+Rota admin com token rotacionado:
+
+```text
+GET /v1/admin/health -> 200 ok
+GET /v1/admin/tenants -> 200 ok
+```
+
+Bootstrap real criado via Worker publico:
+
+| Recurso | Valor |
+| --- | --- |
+| Tenant slug | `helvok-tax-foundation` |
+| Tenant ID | `f8f16a8b-accc-47d1-a551-955381c23984` |
+| Organizacao | `Helvok Tax` |
+| Organizacao ID | `ccca1d3a-b7f6-4a72-871a-90d13ae252ba` |
+| Estabelecimento | `Helvok Tax Brasil` |
+| Estabelecimento ID | `02d8b2df-7372-4880-b0dd-9b1962ea20e3` |
+
+Validacao no Supabase:
+
+```text
+tenants: 1
+organizations: 1
+establishments: 1
+audit_events bootstrap: 2
+outbox_events bootstrap: 2
+security advisor: []
+```
+
 ## Validacoes locais
 
 ```text
 npm run typecheck -> OK
-npm test -> 5 tests passed
+npm test -> 6 tests passed
 npx wrangler deploy --dry-run -> OK
 npx wrangler deploy -> OK
 ```
 
 ## Proximo passo
 
-Rotacionar `HELVOK_ADMIN_TOKEN` para um valor operacional guardado fora do repositorio e executar smoke test real:
+Continuar a Fase 2 com autenticacao de usuarios e RBAC aplicado aos usuarios reais:
 
-1. `GET /v1/admin/health` com token.
-2. `POST /v1/admin/tenants`.
-3. `POST /v1/admin/organizations`.
-4. Validar audit/outbox no Supabase.
+1. Conectar Supabase Auth ao modelo `core.users`.
+2. Criar RPCs seguras para convite/ativacao de usuario.
+3. Criar memberships por tenant/organizacao.
+4. Expor endpoints Worker para usuarios, membros e roles.
+5. Validar RLS/RBAC por usuario autenticado.
