@@ -42,6 +42,17 @@ function getOptionalInteger(record: JsonRecord, key: string): number | undefined
   return Number.isInteger(parsed) ? parsed : undefined;
 }
 
+function getOptionalNumber(record: JsonRecord, key: string): number | undefined {
+  const value = record[key];
+  const parsed = typeof value === "number"
+    ? value
+    : typeof value === "string" && value.trim()
+      ? Number(value.replace(",", "."))
+      : NaN;
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function invalid(message: string, code = "invalid_payload"): ValidationResult<never> {
   return { ok: false, code, message };
 }
@@ -299,6 +310,146 @@ export function validateMembershipPayload(input: unknown): ValidationResult<Json
 
   if (scopeId) {
     payload.scope_id = scopeId;
+  }
+
+  return { ok: true, value: payload };
+}
+
+const catalogSkuPattern = /^[A-Za-z0-9][A-Za-z0-9_.:/-]{1,63}$/;
+const catalogSlugPattern = /^[a-z][a-z0-9_]{1,63}$/;
+const currencyPattern = /^[A-Z]{3}$/;
+const unitPattern = /^[A-Z0-9_]{1,16}$/;
+const catalogKinds = new Set([
+  "goods",
+  "service",
+  "digital_product",
+  "saas",
+  "subscription",
+  "license",
+  "kit",
+  "bundle",
+  "rental",
+  "event",
+  "tourism",
+  "asset",
+]);
+
+export function validateCatalogItemPayload(input: unknown): ValidationResult<JsonRecord> {
+  if (!isRecord(input)) {
+    return invalid("Request body must be a JSON object.");
+  }
+
+  const tenantId = getOptionalString(input, "tenant_id");
+  const organizationId = getOptionalString(input, "organization_id");
+  const id = getOptionalString(input, "id");
+  const sku = getOptionalString(input, "sku")?.toUpperCase();
+  const name = getOptionalString(input, "name");
+  const itemKind = getOptionalString(input, "item_kind")?.toLowerCase() ?? "goods";
+  const category = getOptionalString(input, "category")?.toLowerCase() ?? "goods";
+  const countryOfOrigin = getOptionalString(input, "country_of_origin")?.toUpperCase();
+  const currencyCode = getOptionalString(input, "currency_code")?.toUpperCase() ?? "BRL";
+  const unitCode = getOptionalString(input, "unit_code")?.toUpperCase() ?? "UN";
+  const unitPrice = getOptionalNumber(input, "unit_price") ?? 0;
+  const unitCost = getOptionalNumber(input, "unit_cost") ?? 0;
+  const status = getOptionalString(input, "status")?.toLowerCase() ?? "draft";
+
+  if (!tenantId || !isUuid(tenantId)) {
+    return invalid("tenant_id must be a valid UUID.");
+  }
+
+  if (id && !isUuid(id)) {
+    return invalid("id must be a valid UUID.");
+  }
+
+  if (organizationId && !isUuid(organizationId)) {
+    return invalid("organization_id must be a valid UUID.");
+  }
+
+  if (!sku || !catalogSkuPattern.test(sku)) {
+    return invalid("sku must have 2 to 64 characters and use letters, numbers, dot, dash, slash, colon, or underscore.");
+  }
+
+  if (!name) {
+    return invalid("name is required.");
+  }
+
+  if (!catalogKinds.has(itemKind)) {
+    return invalid("item_kind must be a supported catalog kind.");
+  }
+
+  if (!catalogSlugPattern.test(category)) {
+    return invalid("category must be a lowercase catalog slug.");
+  }
+
+  if (countryOfOrigin && !countryPattern.test(countryOfOrigin)) {
+    return invalid("country_of_origin must be ISO 3166-1 alpha-2.");
+  }
+
+  if (!currencyPattern.test(currencyCode)) {
+    return invalid("currency_code must be ISO 4217.");
+  }
+
+  if (!unitPattern.test(unitCode)) {
+    return invalid("unit_code must be a short uppercase unit code.");
+  }
+
+  if (unitPrice < 0 || unitCost < 0) {
+    return invalid("unit_price and unit_cost must be greater than or equal to zero.");
+  }
+
+  if (!["draft", "active", "inactive", "archived"].includes(status)) {
+    return invalid("status must be draft, active, inactive, or archived.");
+  }
+
+  const metadata = getOptionalRecord(input, "metadata");
+  const payload: JsonRecord = {
+    tenant_id: tenantId,
+    sku,
+    name,
+    item_kind: itemKind,
+    category,
+    unit_code: unitCode,
+    currency_code: currencyCode,
+    unit_price: unitPrice,
+    unit_cost: unitCost,
+    status,
+  };
+
+  const description = getOptionalString(input, "description");
+  const taxCategory = getOptionalString(input, "tax_category")?.toLowerCase();
+  const ncmCode = getOptionalString(input, "ncm_code")?.toUpperCase();
+  const hsCode = getOptionalString(input, "hs_code")?.toUpperCase();
+
+  if (id) {
+    payload.id = id;
+  }
+
+  if (organizationId) {
+    payload.organization_id = organizationId;
+  }
+
+  if (description) {
+    payload.description = description;
+  }
+
+  if (taxCategory) {
+    payload.tax_category = taxCategory;
+  }
+
+  if (ncmCode) {
+    payload.ncm_code = ncmCode;
+  }
+
+  if (hsCode) {
+    payload.hs_code = hsCode;
+  }
+
+  if (countryOfOrigin) {
+    payload.country_of_origin = countryOfOrigin;
+  }
+
+  if (metadata) {
+    payload.metadata = metadata;
   }
 
   return { ok: true, value: payload };

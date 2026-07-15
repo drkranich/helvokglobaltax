@@ -48,6 +48,7 @@ export function createApp(): Hono<AppEnv> {
         members: "authenticated-rbac-preview",
         invitations: "authenticated-invite-preview",
         organizations: "admin-api-preview",
+        products: "authenticated-catalog-preview",
         tax_simulator: "edge-estimate-engine-preview",
         tax_rules: "seed-rule-pack-preview",
         fiscal_documents: "planned",

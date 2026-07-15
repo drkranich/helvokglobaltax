@@ -39,8 +39,11 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Assinatura SaaS");
     expect(body).toContain("Turismo e experiências");
     expect(body).toContain('class="app-view active" id="dashboard"');
+    expect(body).toContain('class="app-view" id="produtos"');
     expect(body).toContain('class="app-view" id="motor"');
     expect(body).toContain('class="app-view" id="documentos"');
+    expect(body).toContain("Produtos e serviços");
+    expect(body).toContain("Salvar produto ou serviço");
     expect(body).toContain("function activateView");
     expect(body).toContain("--petroleum:");
     expect(body).toContain("--midnight:");
@@ -454,6 +457,138 @@ describe("Helvok Tax Worker API", () => {
     );
   });
 
+  it("lists catalog items through admin RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify([{ id: "item-1", sku: "CACHA-700", name: "CachaÃ§a premium 700ml" }]), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/admin/tenants/${tenantId}/catalog/items`,
+      {
+        headers: {
+          "x-helvok-admin-token": "test-admin-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<Record<string, unknown>>();
+
+    expect(response.status).toBe(200);
+    expect(body.items).toEqual([{ id: "item-1", sku: "CACHA-700", name: "CachaÃ§a premium 700ml" }]);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_list_catalog_items",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId }),
+      }),
+    );
+  });
+
+  it("creates a catalog item through admin RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          event_type: "product.created",
+          item: {
+            sku: "CACHA-700",
+            name: "CachaÃ§a premium 700ml",
+            item_kind: "goods",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/catalog/items",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-helvok-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          sku: "cacha-700",
+          name: "CachaÃ§a premium 700ml",
+          item_kind: "goods",
+          category: "beverage_alcohol",
+          country_of_origin: "br",
+          currency_code: "brl",
+          unit_price: 45,
+          unit_cost: 22,
+          status: "active",
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string; item: { sku: string; country_of_origin?: string } }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("product.created");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_upsert_catalog_item",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            sku: "CACHA-700",
+            name: "CachaÃ§a premium 700ml",
+            item_kind: "goods",
+            category: "beverage_alcohol",
+            unit_code: "UN",
+            currency_code: "BRL",
+            unit_price: 45,
+            unit_cost: 22,
+            status: "active",
+            country_of_origin: "BR",
+          },
+        }),
+      }),
+    );
+  });
+
+  it("rejects catalog items without SKU", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/catalog/items",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-helvok-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          tenant_id: "22222222-2222-4222-8222-222222222222",
+          name: "Produto sem SKU",
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<Record<string, { code: string; message: string }>>();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatchObject({
+      code: "invalid_payload",
+      message: "sku must have 2 to 64 characters and use letters, numbers, dot, dash, slash, colon, or underscore.",
+    });
+  });
+
   it("rejects membership creation without a user selector", async () => {
     const app = createApp();
     const response = await app.request(
@@ -698,6 +833,122 @@ describe("Helvok Tax Worker API", () => {
             scope_type: "tenant",
             status: "active",
             email: "member@helvok.tax",
+          },
+        }),
+      }),
+    );
+  });
+
+  it("loads catalog items through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ sku: "CACHA-700", name: "CachaÃ§a premium 700ml" }]), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/catalog/items`,
+      {
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ items: Array<{ sku: string }> }>();
+
+    expect(response.status).toBe(200);
+    expect(body.items[0]?.sku).toBe("CACHA-700");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_list_catalog_items",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          authorization: "Bearer user-access-token",
+        }),
+        body: JSON.stringify({ p_tenant_id: tenantId }),
+      }),
+    );
+  });
+
+  it("creates catalog items through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "product.created", item: { sku: "SAAS-001" }, items: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/catalog/items`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({
+          sku: "saas-001",
+          name: "Assinatura Helvok mensal",
+          item_kind: "saas",
+          category: "saas",
+          currency_code: "usd",
+          unit_price: 99,
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("product.created");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_upsert_catalog_item",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            sku: "SAAS-001",
+            name: "Assinatura Helvok mensal",
+            item_kind: "saas",
+            category: "saas",
+            unit_code: "UN",
+            currency_code: "USD",
+            unit_price: 99,
+            unit_cost: 0,
+            status: "draft",
           },
         }),
       }),

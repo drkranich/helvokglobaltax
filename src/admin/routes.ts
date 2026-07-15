@@ -6,7 +6,7 @@ import { requireAdminToken } from "../auth";
 import type { AppEnv } from "../env";
 import { jsonResponse } from "../response";
 import { isSupabaseError, SupabaseAdminRpcClient, SupabaseConfigurationError, SupabaseRpcError } from "../supabase";
-import { isUuid, validateMembershipPayload, validateOrganizationPayload, validateTenantPayload } from "./validation";
+import { isUuid, validateCatalogItemPayload, validateMembershipPayload, validateOrganizationPayload, validateTenantPayload } from "./validation";
 
 async function readJsonBody(c: Context<AppEnv>): Promise<unknown> {
   try {
@@ -160,6 +160,57 @@ export function createAdminRouter(): Hono<AppEnv> {
     try {
       const client = new SupabaseAdminRpcClient(c.env);
       const result = await client.rpc("helvok_admin_create_organization", { payload: validation.value });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
+  admin.get("/tenants/:tenantId/catalog/items", async (c) => {
+    const tenantId = c.req.param("tenantId");
+
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const items = await client.rpc("helvok_admin_list_catalog_items", { p_tenant_id: tenantId });
+      return jsonResponse(c, { items });
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
+  admin.post("/catalog/items", async (c) => {
+    const body = await readJsonBody(c);
+    const validation = validateCatalogItemPayload(body);
+
+    if (!validation.ok) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: validation.code,
+            message: validation.message,
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const result = await client.rpc("helvok_admin_upsert_catalog_item", { payload: validation.value });
       return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
     } catch (error) {
       return adminErrorResponse(c, error);

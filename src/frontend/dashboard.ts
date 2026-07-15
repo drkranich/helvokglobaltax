@@ -918,6 +918,80 @@ export function renderDashboard(): string {
           rgba(244, 230, 200, 0.08);
       }
 
+      .catalog-workbench {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 18px;
+      }
+
+      .catalog-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .catalog-form .wide-field,
+      .catalog-form .glass-button,
+      .catalog-message {
+        grid-column: 1 / -1;
+      }
+
+      .catalog-list {
+        display: grid;
+        gap: 10px;
+        max-height: 680px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .catalog-item-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+        min-height: 108px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(244, 230, 200, 0.1), rgba(8, 36, 38, 0.18)),
+          rgba(244, 230, 200, 0.06);
+      }
+
+      .catalog-item-card strong {
+        display: block;
+        color: var(--champagne);
+        font-size: 15px;
+      }
+
+      .catalog-item-card span {
+        display: block;
+        margin-top: 4px;
+        color: var(--champagne-64);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .catalog-item-card em {
+        justify-self: end;
+        min-width: 96px;
+        padding: 8px 10px;
+        border: 1px solid rgba(240, 200, 117, 0.42);
+        border-radius: var(--radius);
+        background: rgba(200, 154, 61, 0.12);
+        color: var(--gold-300);
+        font-family: var(--font-data);
+        font-size: 11px;
+        font-style: normal;
+        text-align: center;
+      }
+
+      .catalog-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
       .copy-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -1737,6 +1811,9 @@ export function renderDashboard(): string {
         .comparison-summary,
         .member-form,
         .invitation-form,
+        .catalog-workbench,
+        .catalog-form,
+        .catalog-meta-grid,
         .copy-row,
         .access-matrix {
           grid-template-columns: 1fr;
@@ -1824,6 +1901,7 @@ export function renderDashboard(): string {
           <a class="nav-button active" href="#dashboard"><span>Dashboard</span><span class="nav-code">D01</span></a>
           <a class="nav-button" href="#usuarios"><span>Usuários</span><span class="nav-code">USR</span></a>
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
+          <a class="nav-button" href="#produtos"><span>Produtos</span><span class="nav-code">CAT</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
@@ -2141,6 +2219,134 @@ export function renderDashboard(): string {
             </div>
           </aside>
         </section>
+        </section>
+
+        <section class="app-view" id="produtos" data-view="produtos" aria-label="Produtos e serviços">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Catálogo fiscal</span>
+              <h1>Produtos e serviços</h1>
+              <p>Cadastre SKUs, serviços, SaaS, kits, mercadorias e classificações fiscais para alimentar simulações, pedidos e documentos.</p>
+            </div>
+            <span class="view-status" id="catalog-view-status">aguardando sessão</span>
+          </div>
+          <section class="catalog-workbench">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Catálogo do tenant</h2>
+                <span id="catalog-count-label">0 itens</span>
+              </div>
+              <div class="catalog-meta-grid" aria-label="Indicadores do catálogo">
+                <div class="tax-mini-card"><strong id="catalog-active-count">0</strong><span>Ativos</span></div>
+                <div class="tax-mini-card"><strong id="catalog-service-count">0</strong><span>Serviços e SaaS</span></div>
+                <div class="tax-mini-card"><strong id="catalog-goods-count">0</strong><span>Mercadorias</span></div>
+              </div>
+              <div class="catalog-list" id="catalog-items-list">
+                <div class="empty-state">
+                  <strong>Nenhum produto carregado</strong>
+                  <span>Entre com uma sessão autorizada para carregar o catálogo protegido por tenant.</span>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Novo item fiscal</h2>
+                <span>products.manage</span>
+              </div>
+              <form class="catalog-form" id="catalog-item-form">
+                <div class="field-block">
+                  <label for="catalog-sku">SKU</label>
+                  <input id="catalog-sku" class="glass-field" placeholder="CACHAÇA-700ML" required />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-status">Status</label>
+                  <select id="catalog-status" class="glass-select">
+                    <option value="draft">Rascunho</option>
+                    <option value="active" selected>Ativo</option>
+                    <option value="inactive">Inativo</option>
+                    <option value="archived">Arquivado</option>
+                  </select>
+                </div>
+                <div class="field-block wide-field">
+                  <label for="catalog-name">Nome</label>
+                  <input id="catalog-name" class="glass-field" placeholder="Cachaça premium 700ml" required />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-kind">Tipo</label>
+                  <select id="catalog-kind" class="glass-select">
+                    <option value="goods" selected>Mercadoria</option>
+                    <option value="service">Serviço</option>
+                    <option value="digital_product">Produto digital</option>
+                    <option value="saas">SaaS</option>
+                    <option value="subscription">Assinatura</option>
+                    <option value="license">Licença</option>
+                    <option value="kit">Kit</option>
+                    <option value="bundle">Combo</option>
+                    <option value="rental">Aluguel ou locação</option>
+                    <option value="event">Evento ou ingresso</option>
+                    <option value="tourism">Turismo e experiência</option>
+                    <option value="asset">Ativo</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="catalog-category">Categoria</label>
+                  <select id="catalog-category" class="glass-select">
+                    <option value="beverage_alcohol" selected>Bebida alcoólica</option>
+                    <option value="beverage_non_alcohol">Bebida não alcoólica</option>
+                    <option value="goods">Mercadoria geral</option>
+                    <option value="food">Alimentos</option>
+                    <option value="cosmetics">Cosméticos</option>
+                    <option value="health_product">Saúde, higiene e bem-estar</option>
+                    <option value="electronics">Eletrônicos</option>
+                    <option value="apparel">Vestuário e acessórios</option>
+                    <option value="industrial_product">Produto industrial</option>
+                    <option value="raw_material">Matéria-prima</option>
+                    <option value="agricultural">Produto agropecuário</option>
+                    <option value="handcrafted">Artesanato</option>
+                    <option value="kit">Kit, combo ou cesta</option>
+                    <option value="marketplace_bundle">Bundle de marketplace</option>
+                    <option value="digital_product">Produto digital</option>
+                    <option value="saas">SaaS</option>
+                    <option value="subscription">Assinatura recorrente</option>
+                    <option value="license">Licença</option>
+                    <option value="service">Serviço geral</option>
+                    <option value="professional_service">Serviço profissional</option>
+                    <option value="tourism">Turismo e experiência</option>
+                    <option value="accommodation">Hospedagem</option>
+                    <option value="event">Evento ou ingresso</option>
+                    <option value="rental">Aluguel ou locação</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="catalog-origin">País de origem</label>
+                  <input id="catalog-origin" class="glass-field" maxlength="2" value="BR" />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-ncm">Classificação fiscal HS/NCM</label>
+                  <input id="catalog-ncm" class="glass-field" placeholder="2208.40" />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-unit">Unidade</label>
+                  <input id="catalog-unit" class="glass-field" value="UN" />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-currency">Moeda</label>
+                  <input id="catalog-currency" class="glass-field" value="BRL" />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-price">Preço unitário</label>
+                  <input id="catalog-price" class="glass-field" type="number" min="0" step="0.01" value="45" />
+                </div>
+                <div class="field-block">
+                  <label for="catalog-cost">Custo unitário</label>
+                  <input id="catalog-cost" class="glass-field" type="number" min="0" step="0.01" value="22" />
+                </div>
+                <button class="glass-button primary" id="catalog-save-button" type="submit">Salvar produto ou serviço</button>
+                <div class="auth-message catalog-message" id="catalog-message">O catálogo usa products.manage e fica isolado por tenant.</div>
+              </form>
+            </aside>
+          </section>
         </section>
 
         <section class="app-view" id="auditoria" data-view="auditoria" aria-label="Auditoria">
@@ -2525,6 +2731,11 @@ export function renderDashboard(): string {
         lastComparison: null
       };
 
+      const catalogState = {
+        items: [],
+        loadedTenantId: ""
+      };
+
       let feedCounter = 0;
 
       function qs(selector) {
@@ -2648,6 +2859,7 @@ export function renderDashboard(): string {
         setText("#session-chip", "sessão anônima");
         setText("#session-button", "Entrar");
         renderTenantAccess(null);
+        renderCatalogItems([]);
         showAuthGate(true);
         addFeed("auth.logout", "Sessão local encerrada");
       }
@@ -2782,6 +2994,86 @@ export function renderDashboard(): string {
         if (tone) {
           node.classList.add(tone);
         }
+      }
+
+      function setCatalogMessage(message, tone) {
+        const node = qs("#catalog-message");
+        if (!node) {
+          return;
+        }
+        node.textContent = message;
+        node.classList.remove("good", "warn");
+        if (tone) {
+          node.classList.add(tone);
+        }
+      }
+
+      function renderCatalogItems(items) {
+        const list = qs("#catalog-items-list");
+        const normalized = Array.isArray(items) ? items : [];
+        catalogState.items = normalized;
+
+        const activeCount = normalized.filter((item) => item && item.status === "active").length;
+        const serviceCount = normalized.filter((item) => item && ["service", "digital_product", "saas", "subscription", "license"].includes(item.item_kind)).length;
+        const goodsCount = normalized.filter((item) => item && ["goods", "kit", "bundle", "asset"].includes(item.item_kind)).length;
+
+        setText("#catalog-count-label", normalized.length + " itens");
+        setText("#catalog-active-count", String(activeCount));
+        setText("#catalog-service-count", String(serviceCount));
+        setText("#catalog-goods-count", String(goodsCount));
+        setText("#catalog-view-status", catalogState.loadedTenantId ? "catálogo ativo" : "aguardando sessão");
+
+        if (!list) {
+          return;
+        }
+
+        if (normalized.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state"><strong>Nenhum produto cadastrado</strong><span>Crie o primeiro SKU fiscal para alimentar simulações, pedidos e documentos.</span></div>';
+          return;
+        }
+
+        list.innerHTML = normalized.map((item) => {
+          const currency = item.currency_code || "BRL";
+          const price = formatCurrency(item.unit_price || 0, currency);
+          const cost = formatCurrency(item.unit_cost || 0, currency);
+          const classification = item.ncm_code || item.hs_code || "HS/NCM pendente";
+          const origin = item.country_of_origin || "origem pendente";
+          return (
+            '<div class="catalog-item-card">' +
+              '<div><strong>' + escapeHtml(item.name || item.sku || "Item fiscal") + '</strong>' +
+              '<span>' + escapeHtml(item.sku || "SKU") + ' / ' + escapeHtml(item.item_kind || "tipo") + ' / ' + escapeHtml(item.category || "categoria") + '</span>' +
+              '<span>' + escapeHtml(classification) + ' / origem ' + escapeHtml(origin) + ' / custo ' + escapeHtml(cost) + '</span></div>' +
+              '<em>' + escapeHtml(price) + '</em>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadCatalogItems(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          catalogState.loadedTenantId = "";
+          renderCatalogItems([]);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/catalog/items", {
+          headers: {
+            authorization: "Bearer " + accessToken
+          },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar o catálogo.");
+        }
+
+        catalogState.loadedTenantId = tenantId;
+        renderCatalogItems(body.items || []);
+        setCatalogMessage("Catálogo sincronizado com o tenant ativo.", "good");
+        addFeed("catalog.loaded", "Produtos e serviços sincronizados");
+        return body.items || [];
       }
 
       function renderTenantAccess(access) {
@@ -2948,12 +3240,17 @@ export function renderDashboard(): string {
         if (tenantCount === 0) {
           addFeed("auth.provisioned", "Usuário autenticado; aguardando membership no tenant");
           renderTenantAccess(null);
+          renderCatalogItems([]);
         } else {
           addFeed("auth.session", "Sessão ligada ao core multi-tenant");
           if (primaryTenant && primaryTenant.id) {
             loadTenantAccess(primaryTenant.id).catch((error) => {
               setMemberMessage(error instanceof Error ? error.message : "Não foi possível carregar usuários.", "warn");
               addFeed("members.error", "Falha ao carregar memberships");
+            });
+            loadCatalogItems(primaryTenant.id).catch((error) => {
+              setCatalogMessage(error instanceof Error ? error.message : "Não foi possível carregar o catálogo.", "warn");
+              addFeed("catalog.error", "Falha ao carregar produtos e serviços");
             });
           }
         }
@@ -3015,6 +3312,89 @@ export function renderDashboard(): string {
         } catch (error) {
           setMemberMessage(error instanceof Error ? error.message : "Não foi possível salvar membership.", "warn");
           addFeed("members.error", "Falha ao salvar membership");
+        }
+      }
+
+      async function submitCatalogItemForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+
+        if (!tenantId || !accessToken) {
+          setCatalogMessage("Entre com uma sessão autorizada para salvar produtos.", "warn");
+          showAuthGate(true);
+          return;
+        }
+
+        const sku = textValue("#catalog-sku");
+        const name = textValue("#catalog-name");
+
+        if (!sku || !name) {
+          setCatalogMessage("Informe SKU e nome para cadastrar o item fiscal.", "warn");
+          return;
+        }
+
+        const button = qs("#catalog-save-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Salvando no core...";
+        }
+        setCatalogMessage("Salvando produto ou serviço no catálogo multi-tenant...", null);
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/catalog/items", {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              sku: sku,
+              name: name,
+              item_kind: textValue("#catalog-kind") || "goods",
+              category: textValue("#catalog-category") || "goods",
+              country_of_origin: textValue("#catalog-origin") || "BR",
+              ncm_code: textValue("#catalog-ncm"),
+              hs_code: textValue("#catalog-ncm"),
+              unit_code: textValue("#catalog-unit") || "UN",
+              currency_code: textValue("#catalog-currency") || "BRL",
+              unit_price: numberValue("#catalog-price"),
+              unit_cost: numberValue("#catalog-cost"),
+              status: textValue("#catalog-status") || "active",
+              metadata: {
+                source: "helvok-dashboard",
+                ready_for_tax_simulation: true
+              }
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Catalog item upsert failed");
+          }
+
+          renderCatalogItems(body.items || (body.item ? [body.item].concat(catalogState.items) : catalogState.items));
+          setCatalogMessage("Produto ou serviço salvo e auditado.", "good");
+          addFeed(body.event_type || "product.saved", sku + " salvo no catálogo");
+          const form = qs("#catalog-item-form");
+          if (form) {
+            form.reset();
+            qs("#catalog-status").value = "active";
+            qs("#catalog-kind").value = "goods";
+            qs("#catalog-category").value = "beverage_alcohol";
+            qs("#catalog-origin").value = "BR";
+            qs("#catalog-unit").value = "UN";
+            qs("#catalog-currency").value = "BRL";
+            qs("#catalog-price").value = "45";
+            qs("#catalog-cost").value = "22";
+          }
+        } catch (error) {
+          setCatalogMessage(error instanceof Error ? error.message : "Não foi possível salvar o item fiscal.", "warn");
+          addFeed("catalog.error", "Falha ao salvar produto ou serviço");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Salvar produto ou serviço";
+          }
         }
       }
 
@@ -3687,6 +4067,11 @@ export function renderDashboard(): string {
       const memberForm = qs("#member-form");
       if (memberForm) {
         memberForm.addEventListener("submit", submitMemberForm);
+      }
+
+      const catalogItemForm = qs("#catalog-item-form");
+      if (catalogItemForm) {
+        catalogItemForm.addEventListener("submit", submitCatalogItemForm);
       }
 
       const invitationForm = qs("#invitation-form");

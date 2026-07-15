@@ -6,6 +6,7 @@ import type { AppEnv } from "../env";
 import { jsonResponse } from "../response";
 import {
   isUuid,
+  validateCatalogItemPayload,
   validateInvitationAcceptPayload,
   validateInvitationPayload,
   validateInvitationResendPayload,
@@ -317,6 +318,85 @@ export function createSessionRouter(): Hono<AppEnv> {
       const client = new SupabaseAuthenticatedClient(c.env, accessToken);
       await client.getUser();
       const result = await client.rpc("helvok_current_upsert_membership", { payload: validation.value });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.get("/tenants/:tenantId/catalog/items", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const items = await client.rpc("helvok_current_list_catalog_items", { p_tenant_id: tenantId });
+      return jsonResponse(c, { items });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/catalog/items", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const requestBody = body && typeof body === "object" && !Array.isArray(body)
+      ? { ...(body as Record<string, unknown>), tenant_id: tenantId }
+      : { tenant_id: tenantId };
+    const validation = validateCatalogItemPayload(requestBody);
+
+    if (!validation.ok) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: validation.code,
+            message: validation.message,
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upsert_catalog_item", { payload: validation.value });
       return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
     } catch (error) {
       return sessionErrorResponse(c, error);
