@@ -4,32 +4,32 @@ Entrega operacional do primeiro simulador fiscal da Helvok Tax.
 
 ## Objetivo
 
-Transformar o painel de motor tributario em uma simulacao economica realista, cobrindo:
+Transformar o painel de motor tributário em uma simulação econômica realista, cobrindo:
 
-- produto/servico;
+- produto/serviço;
 - origem e destino;
 - incoterm;
-- custo unitario;
-- embalagem e preparacao;
+- custo unitário;
+- embalagem e preparação;
 - despacho de exportacao;
 - compliance/documentacao;
 - frete e seguro;
-- tarifa de importacao;
+- tarifa de importação;
 - excise/imposto especial;
 - imposto indireto no destino;
 - armazenagem e last mile;
 - marketplace, marketing e pagamento;
-- margem alvo e preco sugerido.
+- margem alvo e preço sugerido.
 
-O simulador nao emite documentos fiscais e ainda nao substitui regras homologadas por pais. Ele entrega uma estimativa versionada para decisao comercial, precificacao e preparacao de emissao.
+O simulador não emite documentos fiscais e ainda não substitui regras homologadas por país. Ele entrega uma estimativa versionada para decisão comercial, precificação e preparação de emissão.
 
 ## Rotas
 
 | Metodo | Rota | Funcao |
 | --- | --- | --- |
-| `GET` | `/v1/tax/markets` | Lista mercados suportados pelo rule pack seed. |
+| `GET` | `/v1/tax/markets` | Lista mercados suportados pelo pacote de regras seed. |
 | `POST` | `/v1/tax/simulate` | Calcula custo total, impostos, fees, margem e documentos. |
-| `POST` | `/v1/tax/compare` | Compara a mesma operacao em varios destinos. |
+| `POST` | `/v1/tax/compare` | Compara a mesma operação em vários destinos. |
 
 ## Rule pack
 
@@ -39,14 +39,14 @@ Versao inicial:
 global-indirect-tax-seed-2026.07.15
 ```
 
-O rule pack contem mercados para America, Europa, Asia, Oriente Medio, Oceania e Africa. Cada mercado possui:
+O pacote de regras contém mercados para América, Europa, Ásia, Oriente Médio, Oceania e África. Cada mercado possui:
 
-- codigo ISO;
+- código ISO;
 - nome;
 - regiao;
 - moeda;
 - imposto indireto principal;
-- aliquota padrao seed;
+- alíquota padrão seed;
 - duty default seed;
 - status de e-invoice/compliance;
 - status da fonte;
@@ -55,22 +55,22 @@ O rule pack contem mercados para America, Europa, Asia, Oriente Medio, Oceania e
 
 ## Cadeia de valor
 
-A simulacao retorna `value_chain` com as etapas:
+A simulação retorna `value_chain` com as etapas:
 
-1. Producao e origem.
-2. Preparacao no pais de origem.
-3. Exportacao e documentos de origem.
+1. Produção e origem.
+2. Preparação no país de origem.
+3. Exportação e documentos de origem.
 4. Transporte internacional.
-5. Importacao no destino.
-6. Armazenagem e distribuicao.
+5. Importação no destino.
+6. Armazenagem e distribuição.
 7. Canal, pagamento e marketing.
-8. Preco final estimado ao cliente.
+8. Preço final estimado ao cliente.
 
 Esse modelo nasceu do caso de uso de exportacao Brasil-Europa, mas foi implementado sem prender o Core a cachaca, bebidas ou Brasil.
 
-## Comparacao de mercados
+## Comparação de mercados
 
-O comparador executa a mesma simulacao para uma lista de destinos e retorna:
+O comparador executa a mesma simulação para uma lista de destinos e retorna:
 
 - total estimado ao cliente;
 - indice de custo;
@@ -78,7 +78,7 @@ O comparador executa a mesma simulacao para uma lista de destinos e retorna:
 - duty;
 - excise;
 - margem estimada;
-- preco unitario sugerido;
+- preço unitário sugerido;
 - carga operacional;
 - alertas principais;
 - dados obrigatorios pendentes.
@@ -97,9 +97,9 @@ O ranking principal usa `cost_index = customer_total / commercial_subtotal`. Iss
 Testes adicionados:
 
 - lista global de mercados;
-- simulacao DDP Brasil -> Reino Unido com produto alcoolico;
-- comparacao da mesma exportacao em multiplos mercados;
-- erro estruturado para mercado nao suportado;
+- simulação DDP Brasil -> Reino Unido com produto alcoólico;
+- comparação da mesma exportacao em múltiplos mercados;
+- erro estruturado para mercado não suportado;
 - painel contem o novo simulador operacional.
 
 Comandos:

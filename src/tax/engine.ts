@@ -132,7 +132,7 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
   const market = getMarket(destinationCountry);
 
   if (!market) {
-    throw new TaxSimulationError("Destination country is not supported by the current rule pack.", "unsupported_market");
+    throw new TaxSimulationError("País de destino não suportado pelo pacote de regras atual.", "unsupported_market");
   }
 
   const operationType = normalizeText(input.operation_type, DEFAULT_OPERATION);
@@ -306,7 +306,7 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
       suggested_customer_total: roundMoney(suggestedCommercialPrice + suggestedDuty + suggestedExcise + suggestedDestinationTax),
     },
     tax_lines: [
-      buildLine("import_duty", "Tarifa de importacao", "customs_duty", importDutyRate, customsValue, importDuty, sellerPaysImport ? "seller" : "buyer", market),
+      buildLine("import_duty", "Tarifa de importação", "customs_duty", importDutyRate, customsValue, importDuty, sellerPaysImport ? "seller" : "buyer", market),
       buildLine("excise", "Imposto especial / excise", "excise", exciseRate, exciseBase, exciseTax, sellerPaysImport ? "seller" : "buyer", market),
       buildLine(
         "destination_indirect_tax",
@@ -478,14 +478,14 @@ function buildValueChain(input: {
 }): TaxSimulationValueStage[] {
   const denominator = Math.max(input.customerTotal, 1);
   return [
-    stage("production_origin", "Producao e origem", input.itemCost, denominator, "calculated", ["Custo unitario informado nos itens."]),
-    stage("preparation_origin", "Preparacao no pais de origem", input.packagingCost + input.preparationCost, denominator, "calculated", ["Embalagem, rotulagem, lote e preparacao comercial."]),
-    stage("export_origin", "Exportacao e documentos de origem", input.exportClearanceCost + input.complianceCost, denominator, input.isCrossBorder ? "calculated" : "not-applicable", ["DUE, invoice, certificados e custos de compliance quando aplicavel."]),
-    stage("international_transport", "Transporte internacional", input.freight + input.insurance, denominator, input.isCrossBorder ? "calculated" : "not-applicable", ["Frete e seguro entram na base aduaneira conforme incoterm e pais."]),
-    stage("destination_import", "Importacao no destino", input.importDuty + input.exciseTax + input.destinationTax, denominator, input.isCrossBorder ? "calculated" : "needs-data", ["Tarifa, excise e imposto indireto do destino."]),
-    stage("storage_distribution", "Armazenagem e distribuicao", input.storageCost + input.localDeliveryCost, denominator, "calculated", ["Armazem fiscal/comum, last mile e distribuicao local."]),
+    stage("production_origin", "Produção e origem", input.itemCost, denominator, "calculated", ["Custo unitário informado nos itens."]),
+    stage("preparation_origin", "Preparação no país de origem", input.packagingCost + input.preparationCost, denominator, "calculated", ["Embalagem, rotulagem, lote e preparação comercial."]),
+    stage("export_origin", "Exportação e documentos de origem", input.exportClearanceCost + input.complianceCost, denominator, input.isCrossBorder ? "calculated" : "not-applicable", ["DU-E, invoice, certificados e custos de compliance quando aplicável."]),
+    stage("international_transport", "Transporte internacional", input.freight + input.insurance, denominator, input.isCrossBorder ? "calculated" : "not-applicable", ["Frete e seguro entram na base aduaneira conforme incoterm e país."]),
+    stage("destination_import", "Importação no destino", input.importDuty + input.exciseTax + input.destinationTax, denominator, input.isCrossBorder ? "calculated" : "needs-data", ["Tarifa, excise e imposto indireto do destino."]),
+    stage("storage_distribution", "Armazenagem e distribuição", input.storageCost + input.localDeliveryCost, denominator, "calculated", ["Armazém fiscal/comum, last mile e distribuição local."]),
     stage("market_channel", "Canal, pagamento e marketing", input.marketingCost + input.marketplaceFee, denominator, "calculated", ["Marketplace, e-commerce, promocao e custo comercial."]),
-    stage("market_price", "Preco final estimado ao cliente", input.customerTotal, denominator, "calculated", ["Total economico incluindo custos, tarifas e impostos calculados."]),
+    stage("market_price", "Preço final estimado ao cliente", input.customerTotal, denominator, "calculated", ["Total econômico incluindo custos, tarifas e impostos calculados."]),
   ];
 }
 
@@ -516,7 +516,7 @@ function buildDocumentChecklist(input: {
   isCrossBorder: boolean;
 }): string[] {
   if (!input.isGoods) {
-    return ["Contrato/ordem de servico", "Invoice comercial", "Comprovante de residencia fiscal quando aplicavel"];
+    return ["Contrato/ordem de serviço", "Invoice comercial", "Comprovante de residência fiscal quando aplicável"];
   }
 
   const docs = [
@@ -526,20 +526,20 @@ function buildDocumentChecklist(input: {
     "Comprovante de seguro quando houver",
   ];
   if (input.isCrossBorder) {
-    docs.push("Documento de transporte internacional", "Declaracao de exportacao/importacao", "Certificado de origem quando aplicavel");
+    docs.push("Documento de transporte internacional", "Declaração de exportação/importação", "Certificado de origem quando aplicável");
   }
   if (input.originCountry === "BR") {
     docs.push("NF-e de exportacao", "DU-E / Siscomex", "Documentacao MAPA/ANVISA quando o produto exigir");
   }
   const itemText = JSON.stringify(input.input.items ?? "").toLowerCase();
   if (input.originCountry === "BR" && (itemText.includes("cachaca") || itemText.includes("cacha") || itemText.includes("alcohol") || itemText.includes("bebida"))) {
-    docs.push("Registro MAPA do estabelecimento/produto", "Analise laboratorial/lote", "Rotulo adequado ao pais destino");
+    docs.push("Registro MAPA do estabelecimento/produto", "Análise laboratorial/lote", "Rótulo adequado ao país destino");
   }
   if (input.destinationCountry !== "BR") {
-    docs.push("Cadastro/importer of record ou parceiro fiscal no destino quando aplicavel");
+    docs.push("Cadastro/importer of record ou parceiro fiscal no destino quando aplicável");
   }
   if (input.operationType.includes("marketplace")) {
-    docs.push("Contrato marketplace facilitator e comprovante de coleta tributaria do canal");
+    docs.push("Contrato marketplace facilitator e comprovante de coleta tributária do canal");
   }
   return Array.from(new Set(docs));
 }
@@ -558,34 +558,34 @@ function buildWarnings(input: {
   marketplaceFeeRate: number;
 }): string[] {
   const warnings = [
-    `Simulacao estimativa com rule pack ${RULE_PACK_VERSION}; nao substitui regra fiscal homologada ou consulta oficial.`,
+    `Simulação estimativa com pacote de regras ${RULE_PACK_VERSION}; não substitui regra fiscal homologada ou consulta oficial.`,
   ];
   if (input.market.sourceStatus !== "official-seed") {
-    warnings.push(`Mercado ${input.market.code} usa aliquota seed/estimada; valide fonte legal antes de emitir documento fiscal.`);
+    warnings.push(`Mercado ${input.market.code} usa alíquota seed/estimada; valide fonte legal antes de emitir documento fiscal.`);
   }
   if (input.isGoods && input.isCrossBorder && !cleanOptional(input.input.hs_code) && !cleanOptional(input.input.ncm)) {
-    warnings.push("Tarifa de importacao depende de HS/NCM; foi usada aliquota padrao do mercado.");
+    warnings.push("Tarifa de importação depende de HS/NCM; foi usada alíquota padrão do mercado.");
   }
   if (input.market.code === "BR" && input.operationType.includes("domestic")) {
-    warnings.push("Brasil domestico exige UF, municipio, NCM, CFOP, CST/CSOSN, regime e beneficios fiscais.");
+    warnings.push("Brasil doméstico exige UF, município, NCM, CFOP, CST/CSOSN, regime e benefícios fiscais.");
   }
   if (input.market.code === "US") {
     warnings.push("Estados Unidos exige estado/county/cidade, nexus, economic nexus e regras de marketplace facilitator.");
   }
   if (input.market.code === "CA") {
-    warnings.push("Canada exige provincia/territorio para separar GST, HST, PST e QST.");
+    warnings.push("Canadá exige província/território para separar GST, HST, PST e QST.");
   }
   if (input.market.region === "Europa" && input.customerType === "b2c") {
     warnings.push("B2C Europa pode exigir OSS/IOSS, importador fiscal, limiares e regras de marketplace.");
   }
   if (input.incoterm !== "DDP" && input.isCrossBorder) {
-    warnings.push("Incoterm nao-DDP: tarifa/imposto podem ser pagos pelo comprador no desembaraco, embora aparecam no custo total do cliente.");
+    warnings.push("Incoterm não-DDP: tarifa/imposto podem ser pagos pelo comprador no desembaraço, embora apareçam no custo total do cliente.");
   }
   if (input.destinationTaxRate === 0 && input.market.standardRate > 0) {
-    warnings.push("Aliquota de imposto indireto zerada por override; confirme se o produto e zero-rated/exempt/reverse charge.");
+    warnings.push("Alíquota de imposto indireto zerada por override; confirme se o produto é zero-rated/exempt/reverse charge.");
   }
   if (input.marginTargetRate + input.paymentFeeRate + input.marketplaceFeeRate >= 0.88) {
-    warnings.push("Meta de margem somada a fees esta muito alta; preco sugerido pode ficar artificialmente elevado.");
+    warnings.push("Meta de margem somada a fees está muito alta; preço sugerido pode ficar artificialmente elevado.");
   }
   return warnings;
 }
@@ -612,11 +612,11 @@ function buildRequiredData(input: {
     required.add("nexus/economic nexus");
   }
   if (input.market.code === "CA") {
-    required.add("provincia/territorio");
+    required.add("província/território");
   }
   if (input.market.region === "Europa" && input.customerType === "b2c") {
     required.add("OSS/IOSS ou importador fiscal");
-    required.add("pais de consumo e VAT ID quando houver");
+    required.add("país de consumo e VAT ID quando houver");
   }
   if (input.isCrossBorder) {
     required.add("incoterm validado no contrato");

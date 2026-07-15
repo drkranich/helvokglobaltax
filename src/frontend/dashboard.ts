@@ -1697,8 +1697,8 @@ export function renderDashboard(): string {
           </div>
           <div class="hero-strip">
             <div class="strip-cell"><span>Auth</span><strong id="auth-health-label">online</strong></div>
-            <div class="strip-cell"><span>Core user</span><strong id="auth-core-label">sync</strong></div>
-            <div class="strip-cell"><span>Tenant</span><strong id="auth-tenant-label">guarded</strong></div>
+            <div class="strip-cell"><span>Core user</span><strong id="auth-core-label">sincronizando</strong></div>
+            <div class="strip-cell"><span>Tenant</span><strong id="auth-tenant-label">protegido</strong></div>
           </div>
         </div>
         <form class="auth-form-panel" id="auth-form">
@@ -1723,8 +1723,8 @@ export function renderDashboard(): string {
             <input id="auth-password" class="glass-field" autocomplete="current-password" type="password" minlength="6" placeholder="minimo 6 caracteres" required />
           </div>
           <button class="glass-button primary" id="auth-submit" type="submit">Entrar</button>
-          <button class="glass-button" id="auth-skip" type="button">Ver cockpit sem sessao</button>
-          <div class="auth-message" id="auth-message">Use seu email e senha do Supabase Auth. Se criar acesso e o projeto exigir confirmacao, confirme no email antes de entrar.</div>
+          <button class="glass-button" id="auth-skip" type="button">Ver cockpit sem sessão</button>
+          <div class="auth-message" id="auth-message">Use seu email e senha do Supabase Auth. Se criar acesso e o projeto exigir confirmação, confirme no email antes de entrar.</div>
         </form>
       </div>
     </section>
@@ -1736,26 +1736,26 @@ export function renderDashboard(): string {
             <div class="brand-sigil" aria-hidden="true"></div>
             <div class="brand-copy">
               <strong>Helvok Tax</strong>
-              <span>global fiscal mesh</span>
+              <span>malha fiscal global</span>
             </div>
           </div>
-          <div class="env-pill"><span><i class="pulse-dot"></i>Cloudflare live</span><span id="rail-clock">--:--</span></div>
+          <div class="env-pill"><span><i class="pulse-dot"></i>Cloudflare ao vivo</span><span id="rail-clock">--:--</span></div>
         </div>
 
         <nav class="nav-stack">
           <a class="nav-button active" href="#dashboard"><span>Dashboard</span><span class="nav-code">D01</span></a>
-          <a class="nav-button" href="#usuarios"><span>Usuarios</span><span class="nav-code">USR</span></a>
+          <a class="nav-button" href="#usuarios"><span>Usuários</span><span class="nav-code">USR</span></a>
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
-          <a class="nav-button" href="#motor"><span>Motor tributario</span><span class="nav-code">RUL</span></a>
+          <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
-          <a class="nav-button" href="#integracoes"><span>Integracoes</span><span class="nav-code">SDK</span></a>
+          <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
         </nav>
 
         <div class="rail-footer">
           <div class="glass-note">
-            Painel conectado ao Worker publico. O token admin continua protegido em secret e nao vai para o navegador.
+            Painel conectado ao Worker público. O token admin continua protegido em secret e não vai para o navegador.
           </div>
           <button class="glass-button" type="button" data-action="pulse">Sincronizar painel</button>
         </div>
@@ -1776,11 +1776,11 @@ export function renderDashboard(): string {
             <strong id="breadcrumb-organization">Helvok Tax</strong>
           </div>
           <div class="top-actions">
-            <span class="session-chip" id="session-chip">sessao anonima</span>
-            <input class="glass-field" type="search" placeholder="Buscar regra, documento, pais..." />
+            <span class="session-chip" id="session-chip">sessão anônima</span>
+            <input class="glass-field" type="search" placeholder="Buscar regra, documento, país..." />
             <select class="glass-select" aria-label="Ambiente">
               <option>Sandbox</option>
-              <option>Production</option>
+              <option>Produção</option>
             </select>
             <button class="glass-button" id="session-button" type="button">Entrar</button>
             <button class="glass-button primary" type="button" data-action="pulse">Executar varredura</button>
@@ -1790,11 +1790,11 @@ export function renderDashboard(): string {
         <section class="hero-grid">
           <article class="hero-panel">
             <div class="hero-content">
-              <span class="eyebrow"><i class="pulse-dot"></i>Command center vivo</span>
+              <span class="eyebrow"><i class="pulse-dot"></i>Central de comando viva</span>
               <h1 class="hero-title">Helvok <span>Tax</span></h1>
               <p class="hero-subtitle">
-                Infraestrutura global de compliance fiscal, preparada para tenants, paises, regras versionadas,
-                documentos fiscais, auditoria imutavel e adaptadores por jurisdicao.
+                Infraestrutura global de compliance fiscal, preparada para tenants, países, regras versionadas,
+                documentos fiscais, auditoria imutável e adaptadores por jurisdição.
               </p>
               <div class="hero-strip" aria-label="Indicadores principais">
                 <div class="strip-cell">
@@ -1806,7 +1806,7 @@ export function renderDashboard(): string {
                   <strong id="api-label">v1</strong>
                 </div>
                 <div class="strip-cell">
-                  <span>Atualizacao</span>
+                  <span>Atualização</span>
                   <strong id="last-sync">agora</strong>
                 </div>
               </div>
@@ -1823,16 +1823,16 @@ export function renderDashboard(): string {
               <span class="status-badge" id="worker-status">live</span>
             </div>
             <div class="system-row">
-              <div><strong>Supabase</strong><span id="supabase-detail">configuracao protegida</span></div>
-              <span class="status-badge pending" id="supabase-status">sync</span>
+              <div><strong>Supabase</strong><span id="supabase-detail">configuração protegida</span></div>
+              <span class="status-badge pending" id="supabase-status">sincronizando</span>
             </div>
             <div class="system-row">
-              <div><strong>Admin API</strong><span>token em secret, sem exposicao no frontend</span></div>
-              <span class="status-badge">sealed</span>
+              <div><strong>Admin API</strong><span>token em secret, sem exposição no frontend</span></div>
+              <span class="status-badge">protegido</span>
             </div>
             <div class="system-row">
               <div><strong>Outbox</strong><span>eventos prontos para filas e workflows</span></div>
-              <span class="status-badge">armed</span>
+              <span class="status-badge">pronto</span>
             </div>
           </aside>
         </section>
@@ -1864,11 +1864,11 @@ export function renderDashboard(): string {
           <article class="panel access-panel">
             <div class="panel-title">
               <h2>Malha de acesso</h2>
-              <span id="access-state-label">guarded</span>
+              <span id="access-state-label">protegido</span>
             </div>
             <div class="access-matrix">
               <div class="access-cell">
-                <span>Usuario core</span>
+                <span>Usuário core</span>
                 <strong id="access-user-label">aguardando login</strong>
               </div>
               <div class="access-cell">
@@ -1880,8 +1880,8 @@ export function renderDashboard(): string {
                 <strong id="access-tenant-label">convite pendente</strong>
               </div>
               <div class="access-cell">
-                <span>Permissoes</span>
-                <strong id="access-permission-label">0 permissoes</strong>
+                <span>Permissões</span>
+                <strong id="access-permission-label">0 permissões</strong>
               </div>
             </div>
           </article>
@@ -1902,16 +1902,16 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
-        <section class="members-workbench" id="usuarios" aria-label="Usuarios, roles e memberships">
+        <section class="members-workbench" id="usuarios" aria-label="Usuários, roles e memberships">
           <article class="panel members-panel">
             <div class="panel-title">
-              <h2>Usuarios e memberships</h2>
-              <span id="members-count-label">aguardando sessao</span>
+              <h2>Usuários e memberships</h2>
+              <span id="members-count-label">aguardando sessão</span>
             </div>
             <div class="member-list" id="members-list">
               <div class="empty-state">
                 <strong>Nenhum membership carregado</strong>
-                <span>Entre como owner para carregar usuarios, roles e permissoes do tenant.</span>
+                <span>Entre como owner para carregar usuários, roles e permissões do tenant.</span>
               </div>
             </div>
           </article>
@@ -1923,7 +1923,7 @@ export function renderDashboard(): string {
             </div>
             <form class="member-form" id="member-form">
               <div class="field-block">
-                <label for="member-email">Email do usuario</label>
+                <label for="member-email">Email do usuário</label>
                 <input id="member-email" class="glass-field" type="email" placeholder="usuario@empresa.com" required />
               </div>
               <div class="field-block">
@@ -1949,9 +1949,9 @@ export function renderDashboard(): string {
               </div>
               <button class="glass-button primary" type="submit">Salvar membership</button>
             </form>
-            <div class="auth-message" id="member-message">O usuario precisa entrar uma vez antes de receber membership.</div>
+            <div class="auth-message" id="member-message">O usuário precisa entrar uma vez antes de receber membership.</div>
             <div class="panel-title">
-              <h3>Roles disponiveis</h3>
+              <h3>Roles disponíveis</h3>
               <span id="roles-count-label">0 roles</span>
             </div>
             <div class="role-grid" id="roles-grid"></div>
@@ -1995,7 +1995,7 @@ export function renderDashboard(): string {
               </div>
               <button class="glass-button primary" type="submit">Gerar convite</button>
             </form>
-            <div class="auth-message" id="invitation-message">Convites geram um link unico. Envio automatico por email entra na proxima camada transacional.</div>
+            <div class="auth-message" id="invitation-message">Convites geram um link único. Envio automático por email entra na próxima camada transacional.</div>
             <div class="invitation-link-card hidden" id="invitation-link-card">
               <strong>Link de convite gerado</strong>
               <div class="copy-row">
@@ -2015,11 +2015,11 @@ export function renderDashboard(): string {
         <section class="work-grid">
           <article class="panel" id="empresas">
             <div class="panel-title">
-              <h2>Malha fiscal por jurisdicao</h2>
+              <h2>Malha fiscal por jurisdição</h2>
               <span>adaptadores</span>
             </div>
             <div class="jurisdiction-map" id="jurisdiction-map">
-              <div class="country-tile active"><strong>Carregando</strong><span>rule pack global</span><small>...</small></div>
+              <div class="country-tile active"><strong>Carregando</strong><span>pacote de regras global</span><small>...</small></div>
             </div>
           </article>
 
@@ -2042,7 +2042,7 @@ export function renderDashboard(): string {
             </div>
             <form class="tax-simulator-grid" id="tax-simulator-form">
               <div class="tax-section">
-                <div class="tax-section-head"><strong>Operacao</strong><span id="tax-rule-pack">rule pack</span></div>
+                <div class="tax-section-head"><strong>Operação</strong><span id="tax-rule-pack">pacote de regras</span></div>
                 <div class="tax-input-grid">
                   <div class="field-block">
                     <label for="tax-origin">Origem</label>
@@ -2067,7 +2067,7 @@ export function renderDashboard(): string {
                   <div class="field-block">
                     <label for="tax-operation-type">Tipo</label>
                     <select id="tax-operation-type" class="glass-select">
-                      <option value="export_goods" selected>Exportacao de mercadorias</option>
+                      <option value="export_goods" selected>Exportação de mercadorias</option>
                       <option value="domestic_goods">Venda domestica</option>
                       <option value="marketplace_sale">Marketplace</option>
                       <option value="digital_service">Servico digital</option>
@@ -2094,7 +2094,7 @@ export function renderDashboard(): string {
               </div>
 
               <div class="tax-section">
-                <div class="tax-section-head"><strong>Produto e classificacao</strong><span>HS/NCM</span></div>
+                <div class="tax-section-head"><strong>Produto e classificação</strong><span>HS/NCM</span></div>
                 <div class="tax-input-grid">
                   <div class="field-block">
                     <label for="tax-item-description">Produto</label>
@@ -2120,25 +2120,25 @@ export function renderDashboard(): string {
                     <input id="tax-quantity" class="glass-field" type="number" step="1" min="1" value="120" />
                   </div>
                   <div class="field-block">
-                    <label for="tax-unit-price">Preco unitario</label>
+                    <label for="tax-unit-price">Preço unitário</label>
                     <input id="tax-unit-price" class="glass-field" type="number" step="0.01" min="0" value="45" />
                   </div>
                   <div class="field-block">
-                    <label for="tax-unit-cost">Custo unitario</label>
+                    <label for="tax-unit-cost">Custo unitário</label>
                     <input id="tax-unit-cost" class="glass-field" type="number" step="0.01" min="0" value="22" />
                   </div>
                 </div>
               </div>
 
               <div class="tax-section">
-                <div class="tax-section-head"><strong>Logistica, burocracia e canal</strong><span>custo real</span></div>
+                <div class="tax-section-head"><strong>Logística, burocracia e canal</strong><span>custo real</span></div>
                 <div class="tax-input-grid">
                   <div class="field-block">
                     <label for="tax-packaging-cost">Embalagem</label>
                     <input id="tax-packaging-cost" class="glass-field" type="number" step="0.01" min="0" value="240" />
                   </div>
                   <div class="field-block">
-                    <label for="tax-preparation-cost">Preparacao</label>
+                    <label for="tax-preparation-cost">Preparação</label>
                     <input id="tax-preparation-cost" class="glass-field" type="number" step="0.01" min="0" value="180" />
                   </div>
                   <div class="field-block">
@@ -2202,13 +2202,13 @@ export function renderDashboard(): string {
                 </div>
               </div>
 
-              <button class="glass-button primary" id="tax-simulate-button" type="submit">Calcular impostos e preco real</button>
+              <button class="glass-button primary" id="tax-simulate-button" type="submit">Calcular impostos e preço real</button>
             </form>
           </article>
 
           <aside class="panel tax-result-panel" id="documentos">
             <div class="panel-title">
-              <h2>Resultado da simulacao</h2>
+              <h2>Resultado da simulação</h2>
               <span id="tax-market-name">aguardando</span>
             </div>
             <div class="tax-market-strip">
@@ -2220,12 +2220,12 @@ export function renderDashboard(): string {
               <div class="tax-kpi"><span>Total cliente</span><strong id="tax-customer-total">--</strong></div>
               <div class="tax-kpi"><span>Desembolso vendedor</span><strong id="tax-seller-out">--</strong></div>
               <div class="tax-kpi"><span>Margem estimada</span><strong id="tax-margin">--</strong></div>
-              <div class="tax-kpi"><span>Preco unitario alvo</span><strong id="tax-suggested">--</strong></div>
+              <div class="tax-kpi"><span>Preço unitário alvo</span><strong id="tax-suggested">--</strong></div>
             </div>
             <div class="tax-section">
-              <div class="tax-section-head"><strong>Linhas tributarias e fees</strong><span>base x aliquota</span></div>
+              <div class="tax-section-head"><strong>Linhas tributárias e fees</strong><span>base x alíquota</span></div>
               <div class="tax-line-list" id="tax-lines">
-                <div class="tax-line-card"><strong>Nenhuma simulacao</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>
+                <div class="tax-line-card"><strong>Nenhuma simulação</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>
               </div>
             </div>
             <div class="tax-section">
@@ -2233,7 +2233,7 @@ export function renderDashboard(): string {
               <div class="tax-chain-list" id="tax-value-chain"></div>
             </div>
             <div class="tax-section">
-              <div class="tax-section-head"><strong>Documentos e pendencias</strong><span>pre-emissao</span></div>
+              <div class="tax-section-head"><strong>Documentos e pendências</strong><span>pre-emissão</span></div>
               <div class="tax-doc-list" id="tax-docs"></div>
               <div class="tax-warning-list" id="tax-required-data"></div>
             </div>
@@ -2247,8 +2247,8 @@ export function renderDashboard(): string {
         <section class="panel market-comparison" id="mercados">
           <div class="comparison-toolbar">
             <div class="panel-title">
-              <h2>Mesa de comparacao de mercados</h2>
-              <span id="tax-compare-status">aguardando simulacao</span>
+              <h2>Mesa de comparação de mercados</h2>
+              <span id="tax-compare-status">aguardando simulação</span>
             </div>
             <button class="glass-button primary" id="tax-compare-button" type="button">Comparar mercados</button>
           </div>
@@ -2263,7 +2263,7 @@ export function renderDashboard(): string {
               <span>Total cliente</span>
               <span>Imposto destino</span>
               <span>Margem</span>
-              <span>Preco unitario alvo</span>
+              <span>Preço unitário alvo</span>
               <span>Carga operacional</span>
             </div>
             <div class="comparison-row">
@@ -2289,7 +2289,7 @@ export function renderDashboard(): string {
             <div class="module-meter"><span style="--meter: 18%;"></span></div>
           </article>
           <article class="module">
-            <h3>SDK publico</h3>
+            <h3>SDK público</h3>
             <p>TypeScript, REST, webhooks e CLI vao nascer sobre o mesmo core versionado.</p>
             <div class="module-meter"><span style="--meter: 14%;"></span></div>
           </article>
@@ -2302,11 +2302,11 @@ export function renderDashboard(): string {
         ["tenant.created", "Tenant foundation confirmado"],
         ["organization.created", "Organizacao Helvok Tax criada"],
         ["worker.health", "Cloudflare Worker respondeu"],
-        ["api.version", "Contrato publico v1 sincronizado"],
-        ["outbox.ready", "Outbox aguardando filas"],
-        ["rule.engine", "Motor tributario em modo preview"],
+        ["api.version", "Contrato público v1 sincronizado"],
+        ["outbox.pronto", "Outbox aguardando filas"],
+        ["rule.engine", "Motor tributário em modo preview"],
         ["adapter.br", "Adaptador Brasil priorizado"],
-        ["audit.scan", "Auditoria imutavel verificada"]
+        ["audit.scan", "Auditoria imutável verificada"]
       ];
 
       const authStorage = {
@@ -2450,11 +2450,11 @@ export function renderDashboard(): string {
         window.localStorage.removeItem(authStorage.email);
         authState.session = null;
         authState.access = null;
-        setText("#session-chip", "sessao anonima");
+        setText("#session-chip", "sessão anônima");
         setText("#session-button", "Entrar");
         renderTenantAccess(null);
         showAuthGate(true);
-        addFeed("auth.logout", "Sessao local encerrada");
+        addFeed("auth.logout", "Sessão local encerrada");
       }
 
       function setInvitationMessage(message, tone) {
@@ -2530,7 +2530,7 @@ export function renderDashboard(): string {
           return null;
         }
 
-        const response = await fetch("/v1/session/sync", {
+          const response = await fetch("/v1/session/sync", {
           method: "POST",
           headers: {
             authorization: "Bearer " + accessToken
@@ -2538,7 +2538,7 @@ export function renderDashboard(): string {
         });
         const body = await response.json();
         if (!response.ok) {
-          throw new Error(body && body.error && body.error.message ? body.error.message : "Session sync failed");
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao sincronizar sessão");
         }
         authState.session = body.session;
         renderSession(body.session);
@@ -2611,14 +2611,14 @@ export function renderDashboard(): string {
         if (membersList) {
           if (memberships.length === 0) {
             membersList.innerHTML =
-              '<div class="empty-state"><strong>Nenhum usuario vinculado</strong><span>Conceda uma role para um usuario sincronizado pelo Auth.</span></div>';
+              '<div class="empty-state"><strong>Nenhum usuário vinculado</strong><span>Conceda uma role para um usuário sincronizado pelo Auth.</span></div>';
           } else {
             membersList.innerHTML = memberships.map((membership) => {
               const user = membership.user || {};
               const role = membership.role || {};
               return (
                 '<div class="member-card">' +
-                  '<div><strong>' + escapeHtml(user.full_name || user.email || "usuario") + '</strong>' +
+                  '<div><strong>' + escapeHtml(user.full_name || user.email || "usuário") + '</strong>' +
                   '<span>' + escapeHtml(user.email || "sem email") + ' / ' + escapeHtml(membership.status || "status") +
                   ' / ' + escapeHtml(membership.scope_type || "tenant") + '</span></div>' +
                   '<span class="member-role-badge">' + escapeHtml(role.role_key || "role") + '</span>' +
@@ -2630,11 +2630,11 @@ export function renderDashboard(): string {
 
         if (rolesGrid) {
           rolesGrid.innerHTML = roles.length === 0
-            ? '<div class="empty-state"><strong>Roles indisponiveis</strong><span>A sessao precisa de members.manage para carregar roles.</span></div>'
+            ? '<div class="empty-state"><strong>Roles indisponíveis</strong><span>A sessão precisa de members.manage para carregar roles.</span></div>'
             : roles.map((role) => (
                 '<div class="role-card">' +
                   '<strong>' + escapeHtml(role.name || role.role_key) + '</strong>' +
-                  '<span>' + escapeHtml(role.role_key) + ' / ' + Number(role.permission_count || 0) + ' permissoes</span>' +
+                  '<span>' + escapeHtml(role.role_key) + ' / ' + Number(role.permission_count || 0) + ' permissões</span>' +
                 '</div>'
               )).join("");
         }
@@ -2652,7 +2652,7 @@ export function renderDashboard(): string {
         if (invitationsList) {
           if (invitations.length === 0) {
             invitationsList.innerHTML =
-              '<div class="empty-state"><strong>Nenhum convite emitido</strong><span>Gere um link unico para convidar usuarios antes do primeiro login.</span></div>';
+              '<div class="empty-state"><strong>Nenhum convite emitido</strong><span>Gere um link único para convidar usuários antes do primeiro login.</span></div>';
           } else {
             invitationsList.innerHTML = invitations.map((invitation) => {
               const role = invitation.role || {};
@@ -2709,7 +2709,7 @@ export function renderDashboard(): string {
           throw new Error(body && body.error && body.error.message ? body.error.message : "Tenant access unavailable");
         }
         renderTenantAccess(body.access);
-        addFeed("members.access", "Usuarios e roles sincronizados");
+        addFeed("members.access", "Usuários e roles sincronizados");
         return body.access;
       }
 
@@ -2727,23 +2727,23 @@ export function renderDashboard(): string {
           ? (primaryTenant.display_name || primaryTenant.legal_name || primaryTenant.slug || "tenant ativo")
           : "convite pendente";
         const organizationLabel = primaryOrganization
-          ? (primaryOrganization.trade_name || primaryOrganization.legal_name || "organizacao ativa")
+          ? (primaryOrganization.trade_name || primaryOrganization.legal_name || "organização ativa")
           : "Helvok Tax";
 
         setText("#session-chip", email ? email + " / tenants " + tenantCount : "perfil sincronizado");
         setText("#session-button", "Sair");
-        setText("#auth-core-label", user ? "ready" : "created");
+        setText("#auth-core-label", user ? "pronto" : "created");
         setText("#auth-tenant-label", tenantCount > 0 ? "linked" : "invite");
         setText("#access-user-label", email || "perfil sincronizado");
         setText("#access-role-label", roleLabels || "sem membership");
         setText("#access-tenant-label", tenantLabel);
-        setText("#access-permission-label", permissions.length + " permissoes");
-        setText("#access-state-label", tenantCount > 0 ? "linked" : "guarded");
+        setText("#access-permission-label", permissions.length + " permissões");
+        setText("#access-state-label", tenantCount > 0 ? "linked" : "protegido");
         setText("#access-pulse-title", tenantCount > 0 ? "Owner ligado ao core" : "Aguardando primeiro owner");
         setText(
           "#access-pulse-caption",
           tenantCount > 0
-            ? "Sessao autorizada por membership ativo. O painel agora enxerga tenants, organizacoes e permissoes via RLS."
+            ? "Sessão autorizada por membership ativo. O painel agora enxerga tenants, organizações e permissões via RLS."
             : "Entre com Supabase Auth uma vez; depois a Admin API concede membership no tenant foundation.",
         );
         setText("#breadcrumb-tenant", primaryTenant && primaryTenant.slug ? primaryTenant.slug : "helvok-tax-foundation");
@@ -2751,13 +2751,13 @@ export function renderDashboard(): string {
         showAuthGate(false);
 
         if (tenantCount === 0) {
-          addFeed("auth.provisioned", "Usuario autenticado; aguardando membership no tenant");
+          addFeed("auth.provisioned", "Usuário autenticado; aguardando membership no tenant");
           renderTenantAccess(null);
         } else {
-          addFeed("auth.session", "Sessao ligada ao core multi-tenant");
+          addFeed("auth.session", "Sessão ligada ao core multi-tenant");
           if (primaryTenant && primaryTenant.id) {
             loadTenantAccess(primaryTenant.id).catch((error) => {
-              setMemberMessage(error instanceof Error ? error.message : "Nao foi possivel carregar usuarios.", "warn");
+              setMemberMessage(error instanceof Error ? error.message : "Não foi possível carregar usuários.", "warn");
               addFeed("members.error", "Falha ao carregar memberships");
             });
           }
@@ -2772,12 +2772,12 @@ export function renderDashboard(): string {
         const status = qs("#member-status").value;
 
         if (!tenantId) {
-          setMemberMessage("Sessao sem tenant ativo.", "warn");
+          setMemberMessage("Sessão sem tenant ativo.", "warn");
           return;
         }
 
         if (!email) {
-          setMemberMessage("Informe o email do usuario.", "warn");
+          setMemberMessage("Informe o email do usuário.", "warn");
           return;
         }
 
@@ -2818,7 +2818,7 @@ export function renderDashboard(): string {
           addFeed(body.event_type || "membership.updated", email + " / " + roleKey);
           qs("#member-email").value = "";
         } catch (error) {
-          setMemberMessage(error instanceof Error ? error.message : "Nao foi possivel salvar membership.", "warn");
+          setMemberMessage(error instanceof Error ? error.message : "Não foi possível salvar membership.", "warn");
           addFeed("members.error", "Falha ao salvar membership");
         }
       }
@@ -2832,7 +2832,7 @@ export function renderDashboard(): string {
         const accessToken = getStoredAccessToken();
 
         if (!tenantId) {
-          setInvitationMessage("Sessao sem tenant ativo para convite.", "warn");
+          setInvitationMessage("Sessão sem tenant ativo para convite.", "warn");
           return;
         }
 
@@ -2869,11 +2869,11 @@ export function renderDashboard(): string {
           }
 
           showInvitationLink(body.invitation_url || "");
-          setInvitationMessage("Convite gerado. Copie o link e envie ao usuario convidado.", "good");
+          setInvitationMessage("Convite gerado. Copie o link e envie ao usuário convidado.", "good");
           addFeed(body.event_type || "invitation.created", email + " / " + roleKey);
           qs("#invite-email").value = "";
         } catch (error) {
-          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel gerar convite.", "warn");
+          setInvitationMessage(error instanceof Error ? error.message : "Não foi possível gerar convite.", "warn");
           addFeed("invitation.error", "Falha ao gerar convite");
         }
       }
@@ -2883,7 +2883,7 @@ export function renderDashboard(): string {
         const accessToken = getStoredAccessToken();
         const expiresInDays = Number(qs("#invite-expiry").value || "7");
         if (!tenantId || !accessToken) {
-          setInvitationMessage("Sessao sem acesso para reenviar convite.", "warn");
+          setInvitationMessage("Sessão sem acesso para reenviar convite.", "warn");
           return;
         }
 
@@ -2912,7 +2912,7 @@ export function renderDashboard(): string {
           setInvitationMessage("Novo link gerado. O link antigo deixa de funcionar.", "good");
           addFeed(body.event_type || "invitation.resent", "Link de convite rotacionado");
         } catch (error) {
-          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel reenviar convite.", "warn");
+          setInvitationMessage(error instanceof Error ? error.message : "Não foi possível reenviar convite.", "warn");
           addFeed("invitation.error", "Falha ao reenviar convite");
         }
       }
@@ -2921,7 +2921,7 @@ export function renderDashboard(): string {
         const tenantId = getActiveTenantId();
         const accessToken = getStoredAccessToken();
         if (!tenantId || !accessToken) {
-          setInvitationMessage("Sessao sem acesso para revogar convite.", "warn");
+          setInvitationMessage("Sessão sem acesso para revogar convite.", "warn");
           return;
         }
 
@@ -2947,7 +2947,7 @@ export function renderDashboard(): string {
           setInvitationMessage("Convite revogado e auditado.", "good");
           addFeed(body.event_type || "invitation.revoked", "Convite revogado");
         } catch (error) {
-          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel revogar convite.", "warn");
+          setInvitationMessage(error instanceof Error ? error.message : "Não foi possível revogar convite.", "warn");
           addFeed("invitation.error", "Falha ao revogar convite");
         }
       }
@@ -2987,7 +2987,7 @@ export function renderDashboard(): string {
           setAuthMessage("Convite aceito. Membership ativo no tenant.", "good");
           addFeed(body.event_type || "invitation.accepted", "Convite aceito e auditado");
         } catch (error) {
-          setAuthMessage(error instanceof Error ? error.message : "Nao foi possivel aceitar o convite.", "warn");
+          setAuthMessage(error instanceof Error ? error.message : "Não foi possível aceitar o convite.", "warn");
           addFeed("invitation.error", "Falha ao aceitar convite");
         }
       }
@@ -3041,8 +3041,8 @@ export function renderDashboard(): string {
               });
 
           if (!payload.access_token) {
-            setAuthMessage("Acesso criado. Se o Supabase exigir confirmacao, confirme no email e depois entre.", "warn");
-            addFeed("auth.pending", "Acesso criado aguardando confirmacao");
+            setAuthMessage("Acesso criado. Se o Supabase exigir confirmação, confirme no email e depois entre.", "warn");
+            addFeed("auth.pending", "Acesso criado aguardando confirmação");
             return;
           }
 
@@ -3051,10 +3051,10 @@ export function renderDashboard(): string {
           if (authState.pendingInviteToken) {
             await acceptPendingInvitation();
           } else {
-            setAuthMessage("Sessao sincronizada com o core Helvok Tax.", "good");
+            setAuthMessage("Sessão sincronizada com o core Helvok Tax.", "good");
           }
         } catch (error) {
-          setAuthMessage(error instanceof Error ? error.message : "Nao foi possivel autenticar.", "warn");
+          setAuthMessage(error instanceof Error ? error.message : "Não foi possível autenticar.", "warn");
           addFeed("auth.error", "Falha na autenticacao ou sincronizacao");
         }
       }
@@ -3065,7 +3065,7 @@ export function renderDashboard(): string {
           return;
         }
         if (!markets || markets.length === 0) {
-          map.innerHTML = '<div class="country-tile active"><strong>Sem mercados</strong><span>API indisponivel</span><small>hold</small></div>';
+          map.innerHTML = '<div class="country-tile active"><strong>Sem mercados</strong><span>API indisponível</span><small>pendente</small></div>';
           return;
         }
 
@@ -3110,12 +3110,12 @@ export function renderDashboard(): string {
           taxState.rulePackVersion = body.rule_pack_version || "";
           renderJurisdictionMap(taxState.markets);
           populateMarketSelects(taxState.markets);
-          setText("#tax-rule-pack", taxState.rulePackVersion || "rule pack");
-          addFeed("tax.markets", String(taxState.markets.length) + " mercados de exportacao carregados");
+          setText("#tax-rule-pack", taxState.rulePackVersion || "pacote de regras");
+          addFeed("tax.markets", String(taxState.markets.length) + " mercados de exportação carregados");
           await runTaxSimulation();
         } catch (error) {
           setText("#tax-result-status", "offline");
-          addFeed("tax.markets.error", "Nao foi possivel carregar mercados fiscais");
+          addFeed("tax.markets.error", "Não foi possível carregar mercados fiscais");
         }
       }
 
@@ -3197,13 +3197,13 @@ export function renderDashboard(): string {
           setText("#tax-result-status", "erro");
           const warnings = qs("#tax-warnings");
           if (warnings) {
-            warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha na simulacao</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
+            warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha na simulação</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
           }
           addFeed("tax.simulation.error", "Falha ao calcular impostos");
         } finally {
           if (button) {
             button.disabled = false;
-            button.textContent = "Calcular impostos e preco real";
+            button.textContent = "Calcular impostos e preço real";
           }
         }
       }
@@ -3243,7 +3243,7 @@ export function renderDashboard(): string {
           const table = qs("#tax-comparison-table");
           if (table) {
             table.innerHTML =
-              '<div class="comparison-row"><div><strong>Comparacao indisponivel</strong><span>' +
+              '<div class="comparison-row"><div><strong>Comparação indisponível</strong><span>' +
               escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") +
               '</span></div><span class="comparison-value">--</span><span class="comparison-value">--</span><span class="comparison-value">--</span><span class="comparison-value">--</span><div class="risk-meter"><span style="--risk: 0%;"></span></div></div>';
           }
@@ -3279,7 +3279,7 @@ export function renderDashboard(): string {
             '<span>Total/indice</span>' +
             '<span>Imposto destino</span>' +
             '<span>Margem</span>' +
-            '<span>Preco unitario alvo</span>' +
+            '<span>Preço unitário alvo</span>' +
             '<span>Carga operacional</span>' +
           '</div>';
 
@@ -3310,7 +3310,7 @@ export function renderDashboard(): string {
         taxState.currency = currency;
 
         setText("#tax-result-status", "estimativa viva");
-        setText("#tax-rule-pack", simulation.rule_pack_version || taxState.rulePackVersion || "rule pack");
+        setText("#tax-rule-pack", simulation.rule_pack_version || taxState.rulePackVersion || "pacote de regras");
         setText("#tax-market-name", (market.name || "mercado") + " / " + (snapshot.incoterm || "incoterm"));
         setText("#tax-currency-label", currency);
         setText("#tax-market-tax-label", (market.indirectTaxName || "Tax") + " " + formatPercent(market.standardRate || 0));
@@ -3404,8 +3404,8 @@ export function renderDashboard(): string {
           setText("#worker-detail", health.environment + " - " + health.timestamp);
           setText("#worker-status", health.status);
           setText("#supabase-detail", health.checks && health.checks.supabase_configured ? "URL configurada no Worker" : "pendente");
-          setText("#supabase-status", health.checks && health.checks.supabase_configured ? "ready" : "hold");
-          setText("#runtime-label", api.status === "foundation-ready" ? "Edge" : "Workers");
+          setText("#supabase-status", health.checks && health.checks.supabase_configured ? "pronto" : "pendente");
+          setText("#runtime-label", api.status === "foundation-pronto" ? "Edge" : "Workers");
           setText("#api-label", api.api_version || "v1");
           setText("#request-label", latency + "ms");
           setText("#last-sync", formatTime(new Date()));
@@ -3509,7 +3509,7 @@ export function renderDashboard(): string {
       if (authSkip) {
         authSkip.addEventListener("click", () => {
           showAuthGate(false);
-          addFeed("auth.preview", "Cockpit aberto sem sessao");
+          addFeed("auth.preview", "Cockpit aberto sem sessão");
         });
       }
 

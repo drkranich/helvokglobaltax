@@ -29,7 +29,7 @@ describe("Helvok Tax Worker API", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(body).toContain("Helvok Tax");
-    expect(body).toContain("Command center vivo");
+    expect(body).toContain("Central de comando viva");
     expect(body).toContain("Simulador fiscal operacional");
   });
 

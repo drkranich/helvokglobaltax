@@ -1,25 +1,25 @@
 # Helvok Tax
 
-Infraestrutura global de compliance tributario para calculo, emissao, auditoria e integracao fiscal em multiplos paises.
+Infraestrutura global de compliance tributário para cálculo, emissão, auditoria e integração fiscal em múltiplos países.
 
-Este repositorio comecou pela Fase 0: arquitetura, dominio, modelagem, seguranca, observabilidade, testes e roadmap.
+Este repositório começou pela Fase 0: arquitetura, domínio, modelagem, segurança, observabilidade, testes e roadmap.
 
 Estado atual:
 
-- Worker publico publicado na Cloudflare.
+- Worker público publicado na Cloudflare.
 - API foundation em Hono/TypeScript.
 - Supabase PostgreSQL com schema core/audit, RLS e migrations iniciais.
 - Bootstrap real do tenant `helvok-tax-foundation`.
 - Primeiro painel visual glassmorphism publicado na rota `/`.
 - Auth/session preview com Supabase Auth, `core.users` e RLS.
-- Admin membership flow para vincular usuarios autenticados a tenants e roles.
-- Workbench autenticado de usuarios, roles e memberships para owners.
-- Convites de usuarios com token hasheado, expiracao, aceite, reenvio e revogacao.
-- Simulador fiscal operacional com rule pack global seed, cadeia de valor, impostos, fees, margem e preco sugerido.
+- Admin membership flow para vincular usuários autenticados a tenants e roles.
+- Workbench autenticado de usuários, roles e memberships para owners.
+- Convites de usuários com token hasheado, expiração, aceite, reenvio e revogação.
+- Simulador fiscal operacional com pacote de regras global seed, cadeia de valor, impostos, fees, margem e preço sugerido.
 
 ## Principio central
 
-O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, GST, Sales Tax, ISS, Excise, IBS ou CBS. O Core conhece apenas conceitos globais: tenants, organizacoes, partes, produtos, operacoes, documentos, regras, eventos, workflows, auditoria e storage. Cada pais implementa suas obrigacoes em um adaptador fiscal independente.
+O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IVA, GST, Sales Tax, ISS, Excise, IBS ou CBS. O Core conhece apenas conceitos globais: tenants, organizações, partes, produtos, operações, documentos, regras, eventos, workflows, auditoria e storage. Cada país implementa suas obrigações em um adaptador fiscal independente.
 
 ## Stack alvo
 
@@ -50,11 +50,11 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - API status: `GET /v1/status`
 - API meta: `GET /v1/meta`
 - Mercados do simulador fiscal: `GET /v1/tax/markets`
-- Simulacao fiscal: `POST /v1/tax/simulate`
-- Comparacao de mercados: `POST /v1/tax/compare`
+- Simulação fiscal: `POST /v1/tax/simulate`
+- Comparação de mercados: `POST /v1/tax/compare`
 - Auth config: `GET /v1/auth/config`
-- Sessao atual: `GET /v1/me`
-- Sync de usuario autenticado: `POST /v1/session/sync`
+- Sessão atual: `GET /v1/me`
+- Sync de usuário autenticado: `POST /v1/session/sync`
 - Workbench de acesso do tenant: `GET /v1/tenants/:tenantId/access`
 - Salvar membership autenticado: `POST /v1/tenants/:tenantId/memberships`
 - Criar convite autenticado: `POST /v1/tenants/:tenantId/invitations`
@@ -69,11 +69,11 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 
 - [Indice da Fase 0](docs/README.md)
 - [Arquitetura de alto nivel](docs/architecture/01-system-architecture.md)
-- [Modelo de dominio](docs/architecture/02-domain-model.md)
+- [Modelo de domínio](docs/architecture/02-domain-model.md)
 - [Modelo relacional e estrategia Supabase](docs/architecture/03-relational-model.md)
 - [Multi-tenancy](docs/architecture/04-multitenancy.md)
-- [Versionamento de regras tributarias](docs/architecture/05-tax-rule-versioning.md)
-- [Plugins e adaptadores por pais](docs/architecture/06-country-plugin-strategy.md)
+- [Versionamento de regras tributárias](docs/architecture/05-tax-rule-versioning.md)
+- [Plugins e adaptadores por país](docs/architecture/06-country-plugin-strategy.md)
 - [APIs, eventos e workflows](docs/architecture/07-api-events-workflows.md)
 - [Seguranca e observabilidade](docs/architecture/08-security-observability.md)
 - [Plano de testes](docs/architecture/09-testing-plan.md)
@@ -91,9 +91,9 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 
 ## Guardrails
 
-- Nao escrever regra tributaria fixa no codigo da aplicacao.
-- Nao emitir documentos fiscais diretamente pelo frontend.
-- Nao sobrescrever regras tributarias; toda mudanca cria nova versao e nova vigencia.
-- Nao misturar IA com decisao tributaria homologada.
-- Nao criar arquitetura exclusiva para o Brasil.
-- Manter cada fase funcional, revisavel e preparada para producao antes da fase seguinte.
+- Não escrever regra tributária fixa no código da aplicação.
+- Não emitir documentos fiscais diretamente pelo frontend.
+- Não sobrescrever regras tributárias; toda mudança cria nova versão e nova vigência.
+- Não misturar IA com decisão tributária homologada.
+- Não criar arquitetura exclusiva para o Brasil.
+- Manter cada fase funcional, revisável e preparada para produção antes da fase seguinte.
