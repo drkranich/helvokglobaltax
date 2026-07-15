@@ -46,6 +46,9 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Salvar produto ou serviço");
     expect(body).toContain("Usar no simulador");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
+    expect(body).toContain("function initializeCustomSelects");
+    expect(body).toContain(".select-panel");
+    expect(body).toContain("initializeCustomSelects();");
     expect(body).toContain("function activateView");
     expect(body).toContain("--petroleum:");
     expect(body).toContain("--midnight:");

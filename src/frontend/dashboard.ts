@@ -429,6 +429,99 @@ export function renderDashboard(): string {
         background: var(--petroleum-950);
       }
 
+      .glass-select.select-native-hidden {
+        position: absolute;
+        width: 1px !important;
+        height: 1px;
+        min-height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .select-shell {
+        position: relative;
+        width: 100%;
+      }
+
+      .select-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(244, 230, 200, 0.16), rgba(14, 63, 66, 0.36)),
+          rgba(8, 36, 38, 0.88);
+        color: var(--champagne);
+        cursor: pointer;
+        text-align: left;
+        backdrop-filter: blur(18px) saturate(150%);
+      }
+
+      .select-trigger::after {
+        width: 0;
+        height: 0;
+        content: "";
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid var(--gold-300);
+      }
+
+      .select-shell.open .select-trigger {
+        border-color: rgba(240, 200, 117, 0.58);
+        box-shadow: 0 0 0 3px rgba(200, 154, 61, 0.12);
+      }
+
+      .select-panel {
+        position: absolute;
+        top: calc(100% + 7px);
+        right: 0;
+        left: 0;
+        z-index: 90;
+        display: none;
+        max-height: 330px;
+        overflow-y: auto;
+        padding: 6px;
+        border: 1px solid rgba(240, 200, 117, 0.36);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(14, 63, 66, 0.92), rgba(5, 7, 19, 0.96)),
+          rgba(8, 36, 38, 0.98);
+        color: var(--champagne);
+        box-shadow: 0 24px 70px rgba(2, 4, 12, 0.72);
+        backdrop-filter: blur(22px) saturate(150%);
+      }
+
+      .select-shell.open .select-panel {
+        display: grid;
+        gap: 3px;
+      }
+
+      .select-option {
+        display: flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 8px 10px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: rgba(244, 230, 200, 0.04);
+        color: var(--champagne);
+        cursor: pointer;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      .select-option:hover,
+      .select-option.active {
+        border-color: rgba(240, 200, 117, 0.42);
+        background: rgba(200, 154, 61, 0.24);
+        color: #fff7df;
+      }
+
       .glass-button {
         display: inline-flex;
         align-items: center;
@@ -3078,6 +3171,113 @@ export function renderDashboard(): string {
         const hasOption = Array.from(node.options || []).some((option) => option.value === stringValue);
         if (hasOption) {
           node.value = stringValue;
+          refreshCustomSelect(node);
+        }
+      }
+
+      function closeCustomSelects(exceptShell) {
+        document.querySelectorAll(".select-shell.open").forEach((shell) => {
+          if (shell !== exceptShell) {
+            shell.classList.remove("open");
+            const trigger = shell.querySelector(".select-trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "false");
+            }
+          }
+        });
+      }
+
+      function optionLabel(option) {
+        return option ? String(option.textContent || option.value || "").trim() : "";
+      }
+
+      function refreshCustomSelect(select) {
+        if (!select || !select.dataset || !select.dataset.customSelectReady) {
+          return;
+        }
+
+        const shell = select.nextElementSibling;
+        if (!shell || !shell.classList.contains("select-shell")) {
+          return;
+        }
+
+        const trigger = shell.querySelector(".select-trigger");
+        const panel = shell.querySelector(".select-panel");
+        const selected = select.options[select.selectedIndex] || select.options[0];
+
+        if (trigger) {
+          trigger.querySelector("span").textContent = optionLabel(selected) || "Selecionar";
+        }
+
+        if (panel) {
+          panel.innerHTML = Array.from(select.options || []).map((option) => (
+            '<button class="select-option' + (option.selected ? ' active' : '') + '" type="button" data-value="' +
+            escapeHtml(option.value) +
+            '">' +
+            escapeHtml(optionLabel(option)) +
+            '</button>'
+          )).join("");
+        }
+      }
+
+      function initializeCustomSelects() {
+        document.querySelectorAll("select.glass-select").forEach((select) => {
+          if (select.dataset.customSelectReady) {
+            refreshCustomSelect(select);
+            return;
+          }
+
+          const shell = document.createElement("div");
+          shell.className = "select-shell";
+          const trigger = document.createElement("button");
+          trigger.className = "select-trigger";
+          trigger.type = "button";
+          trigger.setAttribute("aria-haspopup", "listbox");
+          trigger.setAttribute("aria-expanded", "false");
+          trigger.innerHTML = '<span></span>';
+          const panel = document.createElement("div");
+          panel.className = "select-panel";
+          panel.setAttribute("role", "listbox");
+          shell.appendChild(trigger);
+          shell.appendChild(panel);
+          select.classList.add("select-native-hidden");
+          select.dataset.customSelectReady = "true";
+          select.insertAdjacentElement("afterend", shell);
+
+          trigger.addEventListener("click", () => {
+            const willOpen = !shell.classList.contains("open");
+            closeCustomSelects(shell);
+            shell.classList.toggle("open", willOpen);
+            trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+          });
+
+          panel.addEventListener("click", (event) => {
+            const optionButton = event.target && event.target.closest ? event.target.closest(".select-option") : null;
+            if (!optionButton) {
+              return;
+            }
+            select.value = optionButton.getAttribute("data-value") || "";
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            refreshCustomSelect(select);
+            closeCustomSelects();
+          });
+
+          refreshCustomSelect(select);
+        });
+
+        if (!window.__helvokCustomSelectListeners) {
+          window.__helvokCustomSelectListeners = true;
+          document.addEventListener("click", (event) => {
+            if (!event.target.closest(".select-shell")) {
+              closeCustomSelects();
+            }
+          });
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              closeCustomSelects();
+            }
+          });
         }
       }
 
@@ -3761,6 +3961,8 @@ export function renderDashboard(): string {
         destination.innerHTML = options;
         origin.value = markets.some((market) => market.code === "BR") ? "BR" : (markets[0] && markets[0].code ? markets[0].code : "");
         destination.value = markets.some((market) => market.code === "GB") ? "GB" : (markets[0] && markets[0].code ? markets[0].code : "");
+        refreshCustomSelect(origin);
+        refreshCustomSelect(destination);
       }
 
       async function loadTaxMarkets() {
@@ -4129,6 +4331,8 @@ export function renderDashboard(): string {
           activateView(String(link.getAttribute("href") || "#dashboard").replace("#", ""), true);
         });
       });
+
+      initializeCustomSelects();
 
       window.addEventListener("hashchange", () => {
         activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
