@@ -369,4 +369,118 @@ describe("Helvok Tax Worker API", () => {
       }),
     );
   });
+
+  it("loads authenticated tenant access for a member manager", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ memberships: [], roles: [], counts: { memberships: 0 } }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/access`,
+      {
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ access: { counts: { memberships: number } } }>();
+
+    expect(response.status).toBe(200);
+    expect(body.access.counts.memberships).toBe(0);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_tenant_access",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          apikey: "test-publishable-key",
+          authorization: "Bearer user-access-token",
+        }),
+        body: JSON.stringify({ p_tenant_id: tenantId }),
+      }),
+    );
+  });
+
+  it("grants membership through authenticated tenant access RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "membership.created", membership: { status: "active" } }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/memberships`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({
+          email: "Member@Helvok.Tax",
+          role_key: "viewer",
+          status: "active",
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string; membership: { status: string } }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("membership.created");
+    expect(body.membership.status).toBe("active");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_upsert_membership",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          apikey: "test-publishable-key",
+          authorization: "Bearer user-access-token",
+        }),
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            role_key: "viewer",
+            scope_type: "tenant",
+            status: "active",
+            email: "member@helvok.tax",
+          },
+        }),
+      }),
+    );
+  });
 });

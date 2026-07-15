@@ -711,6 +711,107 @@ export function renderDashboard(): string {
         line-height: 1.5;
       }
 
+      .members-workbench {
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+        gap: 22px;
+      }
+
+      .members-panel {
+        display: grid;
+        gap: 14px;
+      }
+
+      .member-list,
+      .role-grid,
+      .audit-mini {
+        display: grid;
+        gap: 10px;
+      }
+
+      .member-card,
+      .role-card,
+      .audit-card,
+      .empty-state {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+      }
+
+      .member-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 86px;
+        padding: 13px;
+      }
+
+      .member-card strong,
+      .role-card strong,
+      .audit-card strong {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+
+      .member-card span,
+      .role-card span,
+      .audit-card span,
+      .empty-state span {
+        display: block;
+        margin-top: 5px;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 11px;
+      }
+
+      .member-role-badge {
+        display: inline-flex;
+        justify-content: center;
+        min-width: 92px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 197, 108, 0.42);
+        border-radius: var(--radius);
+        color: var(--ochre-300);
+        background: rgba(216, 138, 29, 0.12);
+        font-family: var(--font-data);
+        font-size: 11px;
+      }
+
+      .member-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(130px, 0.42fr) minmax(130px, 0.38fr);
+        gap: 10px;
+      }
+
+      .member-form .glass-button {
+        grid-column: 1 / -1;
+      }
+
+      .role-card {
+        min-height: 74px;
+        padding: 12px;
+      }
+
+      .audit-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .audit-card time {
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+      }
+
+      .empty-state {
+        min-height: 86px;
+        padding: 14px;
+        color: var(--frost-80);
+      }
+
       .jurisdiction-map {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1132,6 +1233,7 @@ export function renderDashboard(): string {
 
         .hero-grid,
         .work-grid,
+        .members-workbench,
         .access-grid {
           grid-template-columns: 1fr;
         }
@@ -1204,6 +1306,7 @@ export function renderDashboard(): string {
         .modules-grid,
         .jurisdiction-map,
         .form-grid,
+        .member-form,
         .access-matrix {
           grid-template-columns: 1fr;
         }
@@ -1284,6 +1387,7 @@ export function renderDashboard(): string {
 
         <nav class="nav-stack">
           <a class="nav-button active" href="#dashboard"><span>Dashboard</span><span class="nav-code">D01</span></a>
+          <a class="nav-button" href="#usuarios"><span>Usuarios</span><span class="nav-code">USR</span></a>
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributario</span><span class="nav-code">RUL</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
@@ -1440,6 +1544,67 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
+        <section class="members-workbench" id="usuarios" aria-label="Usuarios, roles e memberships">
+          <article class="panel members-panel">
+            <div class="panel-title">
+              <h2>Usuarios e memberships</h2>
+              <span id="members-count-label">aguardando sessao</span>
+            </div>
+            <div class="member-list" id="members-list">
+              <div class="empty-state">
+                <strong>Nenhum membership carregado</strong>
+                <span>Entre como owner para carregar usuarios, roles e permissoes do tenant.</span>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel members-panel">
+            <div class="panel-title">
+              <h2>Conceder acesso</h2>
+              <span id="member-action-label">members.manage</span>
+            </div>
+            <form class="member-form" id="member-form">
+              <div class="field-block">
+                <label for="member-email">Email do usuario</label>
+                <input id="member-email" class="glass-field" type="email" placeholder="usuario@empresa.com" required />
+              </div>
+              <div class="field-block">
+                <label for="member-role">Role</label>
+                <select id="member-role" class="glass-select">
+                  <option value="viewer">Viewer</option>
+                  <option value="auditor">Auditor</option>
+                  <option value="developer">Developer</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="fiscal_manager">Fiscal manager</option>
+                  <option value="admin">Admin</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </div>
+              <div class="field-block">
+                <label for="member-status">Status</label>
+                <select id="member-status" class="glass-select">
+                  <option value="active">Active</option>
+                  <option value="invited">Invited</option>
+                  <option value="disabled">Disabled</option>
+                  <option value="revoked">Revoked</option>
+                </select>
+              </div>
+              <button class="glass-button primary" type="submit">Salvar membership</button>
+            </form>
+            <div class="auth-message" id="member-message">O usuario precisa entrar uma vez antes de receber membership.</div>
+            <div class="panel-title">
+              <h3>Roles disponiveis</h3>
+              <span id="roles-count-label">0 roles</span>
+            </div>
+            <div class="role-grid" id="roles-grid"></div>
+            <div class="panel-title">
+              <h3>Auditoria de acesso</h3>
+              <span id="access-audit-label">0 eventos</span>
+            </div>
+            <div class="audit-mini" id="membership-audit"></div>
+          </aside>
+        </section>
+
         <section class="work-grid">
           <article class="panel" id="empresas">
             <div class="panel-title">
@@ -1578,7 +1743,8 @@ export function renderDashboard(): string {
       const authState = {
         mode: "login",
         config: null,
-        session: null
+        session: null,
+        access: null
       };
 
       let feedCounter = 0;
@@ -1596,6 +1762,15 @@ export function renderDashboard(): string {
         if (node) {
           node.textContent = value;
         }
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       }
 
       function setAuthMessage(message, tone) {
@@ -1653,8 +1828,10 @@ export function renderDashboard(): string {
         window.localStorage.removeItem(authStorage.refresh);
         window.localStorage.removeItem(authStorage.email);
         authState.session = null;
+        authState.access = null;
         setText("#session-chip", "sessao anonima");
         setText("#session-button", "Entrar");
+        renderTenantAccess(null);
         showAuthGate(true);
         addFeed("auth.logout", "Sessao local encerrada");
       }
@@ -1735,6 +1912,116 @@ export function renderDashboard(): string {
         return body.session;
       }
 
+      function getActiveTenantId() {
+        if (authState.access && authState.access.tenant && authState.access.tenant.id) {
+          return authState.access.tenant.id;
+        }
+
+        const session = authState.session;
+        const tenants = session && Array.isArray(session.tenants) ? session.tenants : [];
+        return tenants.length > 0 && tenants[0].id ? tenants[0].id : "";
+      }
+
+      function setMemberMessage(message, tone) {
+        const node = qs("#member-message");
+        if (!node) {
+          return;
+        }
+        node.textContent = message;
+        node.classList.remove("good", "warn");
+        if (tone) {
+          node.classList.add(tone);
+        }
+      }
+
+      function renderTenantAccess(access) {
+        authState.access = access || null;
+        const memberships = access && Array.isArray(access.memberships) ? access.memberships : [];
+        const roles = access && Array.isArray(access.roles) ? access.roles : [];
+        const auditEvents = access && Array.isArray(access.audit_events) ? access.audit_events : [];
+        const membersList = qs("#members-list");
+        const rolesGrid = qs("#roles-grid");
+        const auditList = qs("#membership-audit");
+        const roleSelect = qs("#member-role");
+
+        setText("#members-count-label", memberships.length + " memberships");
+        setText("#roles-count-label", roles.length + " roles");
+        setText("#access-audit-label", auditEvents.length + " eventos");
+
+        if (membersList) {
+          if (memberships.length === 0) {
+            membersList.innerHTML =
+              '<div class="empty-state"><strong>Nenhum usuario vinculado</strong><span>Conceda uma role para um usuario sincronizado pelo Auth.</span></div>';
+          } else {
+            membersList.innerHTML = memberships.map((membership) => {
+              const user = membership.user || {};
+              const role = membership.role || {};
+              return (
+                '<div class="member-card">' +
+                  '<div><strong>' + escapeHtml(user.full_name || user.email || "usuario") + '</strong>' +
+                  '<span>' + escapeHtml(user.email || "sem email") + ' / ' + escapeHtml(membership.status || "status") +
+                  ' / ' + escapeHtml(membership.scope_type || "tenant") + '</span></div>' +
+                  '<span class="member-role-badge">' + escapeHtml(role.role_key || "role") + '</span>' +
+                '</div>'
+              );
+            }).join("");
+          }
+        }
+
+        if (rolesGrid) {
+          rolesGrid.innerHTML = roles.length === 0
+            ? '<div class="empty-state"><strong>Roles indisponiveis</strong><span>A sessao precisa de members.manage para carregar roles.</span></div>'
+            : roles.map((role) => (
+                '<div class="role-card">' +
+                  '<strong>' + escapeHtml(role.name || role.role_key) + '</strong>' +
+                  '<span>' + escapeHtml(role.role_key) + ' / ' + Number(role.permission_count || 0) + ' permissoes</span>' +
+                '</div>'
+              )).join("");
+        }
+
+        if (roleSelect && roles.length > 0) {
+          const currentValue = roleSelect.value || "viewer";
+          roleSelect.innerHTML = roles.map((role) => (
+            '<option value="' + escapeHtml(role.role_key) + '">' + escapeHtml(role.name || role.role_key) + '</option>'
+          )).join("");
+          roleSelect.value = roles.some((role) => role.role_key === currentValue) ? currentValue : "viewer";
+        }
+
+        if (auditList) {
+          auditList.innerHTML = auditEvents.length === 0
+            ? '<div class="empty-state"><strong>Nenhum evento de acesso</strong><span>Alteracoes futuras aparecem aqui.</span></div>'
+            : auditEvents.map((event) => (
+                '<div class="audit-card">' +
+                  '<div><strong>' + escapeHtml(event.event_type || "membership.event") + '</strong>' +
+                  '<span>' + escapeHtml(event.resource_type || "core.membership") + '</span></div>' +
+                  '<time>' + escapeHtml(event.created_at ? new Date(event.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "--:--") + '</time>' +
+                '</div>'
+              )).join("");
+        }
+      }
+
+      async function loadTenantAccess(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          renderTenantAccess(null);
+          return null;
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/access", {
+          headers: {
+            authorization: "Bearer " + accessToken
+          },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Tenant access unavailable");
+        }
+        renderTenantAccess(body.access);
+        addFeed("members.access", "Usuarios e roles sincronizados");
+        return body.access;
+      }
+
       function renderSession(session) {
         const user = session && session.user ? session.user : null;
         const email = user && user.email ? user.email : window.localStorage.getItem(authStorage.email);
@@ -1774,8 +2061,74 @@ export function renderDashboard(): string {
 
         if (tenantCount === 0) {
           addFeed("auth.provisioned", "Usuario autenticado; aguardando membership no tenant");
+          renderTenantAccess(null);
         } else {
           addFeed("auth.session", "Sessao ligada ao core multi-tenant");
+          if (primaryTenant && primaryTenant.id) {
+            loadTenantAccess(primaryTenant.id).catch((error) => {
+              setMemberMessage(error instanceof Error ? error.message : "Nao foi possivel carregar usuarios.", "warn");
+              addFeed("members.error", "Falha ao carregar memberships");
+            });
+          }
+        }
+      }
+
+      async function submitMemberForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const email = qs("#member-email").value.trim().toLowerCase();
+        const roleKey = qs("#member-role").value;
+        const status = qs("#member-status").value;
+
+        if (!tenantId) {
+          setMemberMessage("Sessao sem tenant ativo.", "warn");
+          return;
+        }
+
+        if (!email) {
+          setMemberMessage("Informe o email do usuario.", "warn");
+          return;
+        }
+
+        const accessToken = getStoredAccessToken();
+        if (!accessToken) {
+          setMemberMessage("Entre novamente para alterar memberships.", "warn");
+          showAuthGate(true);
+          return;
+        }
+
+        setMemberMessage("Salvando membership no core...", null);
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/memberships", {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              email: email,
+              role_key: roleKey,
+              status: status
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Membership update failed");
+          }
+
+          if (body.access) {
+            renderTenantAccess(body.access);
+          } else {
+            await loadTenantAccess(tenantId);
+          }
+
+          setMemberMessage("Membership salvo e auditado.", "good");
+          addFeed(body.event_type || "membership.updated", email + " / " + roleKey);
+          qs("#member-email").value = "";
+        } catch (error) {
+          setMemberMessage(error instanceof Error ? error.message : "Nao foi possivel salvar membership.", "warn");
+          addFeed("members.error", "Falha ao salvar membership");
         }
       }
 
@@ -1903,6 +2256,11 @@ export function renderDashboard(): string {
       const authForm = qs("#auth-form");
       if (authForm) {
         authForm.addEventListener("submit", submitAuthForm);
+      }
+
+      const memberForm = qs("#member-form");
+      if (memberForm) {
+        memberForm.addEventListener("submit", submitMemberForm);
       }
 
       const authSkip = qs("#auth-skip");

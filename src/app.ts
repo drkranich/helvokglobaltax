@@ -44,6 +44,7 @@ export function createApp(): Hono<AppEnv> {
         auth: "supabase-auth-preview",
         session: "rls-session-preview",
         tenants: "admin-api-preview",
+        members: "authenticated-rbac-preview",
         organizations: "admin-api-preview",
         tax_rules: "planned",
         fiscal_documents: "planned",
