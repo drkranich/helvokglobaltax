@@ -47,20 +47,21 @@ x-helvok-admin-token: <token>
 
 O token e comparado por hash SHA-256 com comparacao constante em tempo para reduzir vazamento por timing.
 
-## Secrets necessarios
+## Secrets configurados
 
-O Worker ainda nao possui secrets configurados. `wrangler secret list` retornou:
+O Worker possui os secrets necessarios configurados por nome. `wrangler secret list` retornou:
 
 ```text
-[]
+HELVOK_ADMIN_TOKEN
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Secrets esperados:
+Valores configurados:
 
 - `HELVOK_ADMIN_TOKEN`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-Esses valores nao devem entrar em:
+Esses valores nunca devem entrar em:
 
 - `wrangler.jsonc`
 - `.env` versionado
@@ -68,7 +69,13 @@ Esses valores nao devem entrar em:
 - logs
 - commits
 
-Comandos seguros para configurar:
+Observacao operacional:
+
+- O valor de `HELVOK_ADMIN_TOKEN` foi gravado como secret do Worker e nao e recuperavel depois da escrita.
+- Antes de uso manual das rotas admin, rotacionar `HELVOK_ADMIN_TOKEN` para um valor guardado fora do repositorio.
+- O valor de `SUPABASE_SERVICE_ROLE_KEY` tambem esta gravado apenas como secret do Worker.
+
+Comandos seguros para rotacionar:
 
 ```text
 npx wrangler secret put HELVOK_ADMIN_TOKEN
@@ -112,13 +119,13 @@ Rotas publicas:
 GET /v1 -> tenants: admin-api-preview, organizations: admin-api-preview
 ```
 
-Rota admin sem secret configurado:
+Rota admin sem token de requisicao:
 
 ```text
-GET /v1/admin/health -> 503 admin_token_not_configured
+GET /v1/admin/health -> 401 unauthorized
 ```
 
-Esse resultado e esperado ate configurarmos `HELVOK_ADMIN_TOKEN`.
+Esse resultado e esperado quando `HELVOK_ADMIN_TOKEN` existe no Worker, mas a requisicao nao envia o token administrativo.
 
 ## Validacoes locais
 
@@ -131,7 +138,7 @@ npx wrangler deploy -> OK
 
 ## Proximo passo
 
-Configurar os dois secrets no Cloudflare Worker e executar smoke test real:
+Rotacionar `HELVOK_ADMIN_TOKEN` para um valor operacional guardado fora do repositorio e executar smoke test real:
 
 1. `GET /v1/admin/health` com token.
 2. `POST /v1/admin/tenants`.
