@@ -30,6 +30,7 @@ describe("Helvok Tax Worker API", () => {
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(body).toContain("Helvok Tax");
     expect(body).toContain("Command center vivo");
+    expect(body).toContain("Simulador fiscal operacional");
   });
 
   it("returns a healthy response", async () => {
@@ -50,6 +51,115 @@ describe("Helvok Tax Worker API", () => {
     expect(response.status).toBe(200);
     expect(body.product).toBe("Helvok Tax");
     expect(body.api_version).toBe("v1");
+  });
+
+  it("lists global export markets for the tax simulator", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/tax/markets", {}, env);
+    const body = await response.json<{
+      count: number;
+      rule_pack_version: string;
+      markets: Array<{ code: string; name: string; indirectTaxName: string }>;
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.rule_pack_version).toContain("global-indirect-tax-seed");
+    expect(body.count).toBeGreaterThan(40);
+    expect(body.markets.map((market) => market.code)).toEqual(expect.arrayContaining(["BR", "GB", "US", "CA", "SG", "JP"]));
+  });
+
+  it("simulates a cross-border DDP tax and cost scenario", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/tax/simulate",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          origin_country: "BR",
+          destination_country: "GB",
+          operation_type: "export_goods",
+          customer_type: "b2c",
+          incoterm: "DDP",
+          channel: "marketplace",
+          items: [
+            {
+              description: "Cachaca premium 700ml",
+              category: "beverage_alcohol",
+              quantity: 120,
+              unit_price: 45,
+              unit_cost: 22,
+            },
+          ],
+          freight: 680,
+          insurance: 90,
+          packaging_cost: 240,
+          preparation_cost: 180,
+          export_clearance_cost: 320,
+          compliance_cost: 260,
+          storage_cost: 180,
+          local_delivery_cost: 140,
+          marketing_cost: 300,
+          import_duty_rate: 0.08,
+          excise_rate: 0.12,
+          payment_fee_rate: 0.03,
+          marketplace_fee_rate: 0.1,
+          margin_target_rate: 0.38,
+        }),
+      },
+      env,
+    );
+    const body = await response.json<{
+      event_type: string;
+      simulation: {
+        market: { code: string };
+        totals: {
+          customer_total: number;
+          seller_cash_out: number;
+          destination_indirect_tax: number;
+          suggested_unit_price: number;
+        };
+        tax_lines: Array<{ code: string; amount: number; payer: string }>;
+        document_checklist: string[];
+        value_chain: Array<{ key: string; amount: number }>;
+        warnings: string[];
+      };
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("tax.simulation.completed");
+    expect(body.simulation.market.code).toBe("GB");
+    expect(body.simulation.totals.customer_total).toBeGreaterThan(7000);
+    expect(body.simulation.totals.seller_cash_out).toBeGreaterThan(5000);
+    expect(body.simulation.totals.destination_indirect_tax).toBeGreaterThan(0);
+    expect(body.simulation.totals.suggested_unit_price).toBeGreaterThan(0);
+    expect(body.simulation.tax_lines.map((line) => line.code)).toEqual(
+      expect.arrayContaining(["import_duty", "excise", "destination_indirect_tax"]),
+    );
+    expect(body.simulation.document_checklist).toEqual(expect.arrayContaining(["DU-E / Siscomex", "Registro MAPA do estabelecimento/produto"]));
+    expect(body.simulation.value_chain.map((stage) => stage.key)).toContain("destination_import");
+    expect(body.simulation.warnings.length).toBeGreaterThan(0);
+  });
+
+  it("rejects unsupported simulator destinations", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/tax/simulate",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ destination_country: "ZZ" }),
+      },
+      env,
+    );
+    const body = await response.json<{ error: { code: string } }>();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("unsupported_market");
   });
 
   it("returns public Supabase Auth configuration", async () => {

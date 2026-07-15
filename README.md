@@ -15,6 +15,7 @@ Estado atual:
 - Admin membership flow para vincular usuarios autenticados a tenants e roles.
 - Workbench autenticado de usuarios, roles e memberships para owners.
 - Convites de usuarios com token hasheado, expiracao, aceite, reenvio e revogacao.
+- Simulador fiscal operacional com rule pack global seed, cadeia de valor, impostos, fees, margem e preco sugerido.
 
 ## Principio central
 
@@ -48,6 +49,8 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - API metadata: `GET /v1`
 - API status: `GET /v1/status`
 - API meta: `GET /v1/meta`
+- Mercados do simulador fiscal: `GET /v1/tax/markets`
+- Simulacao fiscal: `POST /v1/tax/simulate`
 - Auth config: `GET /v1/auth/config`
 - Sessao atual: `GET /v1/me`
 - Sync de usuario autenticado: `POST /v1/session/sync`
@@ -82,6 +85,7 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - [Admin membership flow](docs/ops/06-admin-membership-flow.md)
 - [User role membership workbench](docs/ops/07-user-role-membership-workbench.md)
 - [Membership invitations](docs/ops/08-membership-invitations.md)
+- [Tax simulator engine](docs/ops/09-tax-simulator-engine.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails

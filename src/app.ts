@@ -6,6 +6,7 @@ import type { AppEnv } from "./env";
 import { renderDashboard } from "./frontend/dashboard";
 import { htmlResponse, jsonResponse } from "./response";
 import { createSessionRouter } from "./session/routes";
+import { createTaxRouter } from "./tax/routes";
 
 export function createApp(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -47,7 +48,8 @@ export function createApp(): Hono<AppEnv> {
         members: "authenticated-rbac-preview",
         invitations: "authenticated-invite-preview",
         organizations: "admin-api-preview",
-        tax_rules: "planned",
+        tax_simulator: "edge-estimate-engine-preview",
+        tax_rules: "seed-rule-pack-preview",
         fiscal_documents: "planned",
         audit: "planned",
       },
@@ -81,6 +83,7 @@ export function createApp(): Hono<AppEnv> {
 
   app.route("/v1/admin", createAdminRouter());
   app.route("/v1", createSessionRouter());
+  app.route("/v1", createTaxRouter());
 
   app.notFound((c) =>
     jsonResponse(

@@ -985,6 +985,186 @@ export function renderDashboard(): string {
         accent-color: var(--ochre-500);
       }
 
+      .tax-workbench {
+        grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+      }
+
+      .tax-simulator-panel,
+      .tax-result-panel {
+        display: grid;
+        gap: 14px;
+      }
+
+      .tax-simulator-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .tax-section {
+        display: grid;
+        gap: 12px;
+        padding: 13px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(47, 100, 255, 0.12), rgba(216, 138, 29, 0.08)),
+          rgba(247, 251, 255, 0.07);
+      }
+
+      .tax-section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .tax-input-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tax-input-grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tax-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tax-kpi {
+        min-height: 96px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+      }
+
+      .tax-kpi span {
+        display: block;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+
+      .tax-kpi strong {
+        display: block;
+        margin-top: 12px;
+        overflow-wrap: anywhere;
+        font-family: var(--font-display);
+        font-size: clamp(22px, 3vw, 34px);
+        line-height: 1;
+      }
+
+      .tax-mini-grid,
+      .tax-line-list,
+      .tax-doc-list,
+      .tax-warning-list,
+      .tax-chain-list {
+        display: grid;
+        gap: 9px;
+      }
+
+      .tax-mini-card,
+      .tax-line-card,
+      .tax-doc-card,
+      .tax-warning-card,
+      .tax-chain-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        min-height: 58px;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.075);
+      }
+
+      .tax-warning-card {
+        align-items: start;
+        border-color: rgba(255, 197, 108, 0.32);
+        color: var(--ochre-300);
+      }
+
+      .tax-doc-card {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .tax-chain-card {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tax-chain-card::after {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        content: "";
+        background: linear-gradient(90deg, var(--royal-500), var(--ochre-500));
+        transform-origin: left;
+        transform: scaleX(var(--share, 0.1));
+      }
+
+      .tax-mini-card strong,
+      .tax-line-card strong,
+      .tax-doc-card strong,
+      .tax-warning-card strong,
+      .tax-chain-card strong {
+        display: block;
+        overflow-wrap: anywhere;
+        font-size: 13px;
+      }
+
+      .tax-mini-card span,
+      .tax-line-card span,
+      .tax-doc-card span,
+      .tax-warning-card span,
+      .tax-chain-card span {
+        display: block;
+        margin-top: 4px;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+      }
+
+      .tax-amount {
+        color: var(--ochre-300);
+        font-family: var(--font-data);
+        font-size: 12px;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .tax-market-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tax-status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 0 9px;
+        border: 1px solid rgba(89, 241, 189, 0.34);
+        border-radius: var(--radius);
+        color: var(--good);
+        background: rgba(89, 241, 189, 0.09);
+        font-family: var(--font-data);
+        font-size: 10px;
+      }
+
       .feed {
         display: grid;
         max-height: 520px;
@@ -1308,6 +1488,7 @@ export function renderDashboard(): string {
 
         .hero-grid,
         .work-grid,
+        .tax-workbench,
         .members-workbench,
         .access-grid {
           grid-template-columns: 1fr;
@@ -1381,6 +1562,10 @@ export function renderDashboard(): string {
         .modules-grid,
         .jurisdiction-map,
         .form-grid,
+        .tax-input-grid,
+        .tax-input-grid.two,
+        .tax-kpi-grid,
+        .tax-market-strip,
         .member-form,
         .invitation-form,
         .copy-row,
@@ -1741,15 +1926,8 @@ export function renderDashboard(): string {
               <h2>Malha fiscal por jurisdicao</h2>
               <span>adaptadores</span>
             </div>
-            <div class="jurisdiction-map">
-              <div class="country-tile active"><strong>Brasil</strong><span>Tenant base ativo</span><small>86%</small></div>
-              <div class="country-tile"><strong>Portugal</strong><span>VAT + SAF-T planejado</span><small>24%</small></div>
-              <div class="country-tile"><strong>Alemanha</strong><span>VAT + eInvoice</span><small>18%</small></div>
-              <div class="country-tile"><strong>USA</strong><span>Sales tax nexus</span><small>16%</small></div>
-              <div class="country-tile"><strong>Canada</strong><span>GST/HST/PST/QST</span><small>12%</small></div>
-              <div class="country-tile"><strong>Mexico</strong><span>CFDI no roadmap</span><small>10%</small></div>
-              <div class="country-tile"><strong>Japan</strong><span>Invoice system</span><small>8%</small></div>
-              <div class="country-tile"><strong>Singapore</strong><span>GST adapter</span><small>8%</small></div>
+            <div class="jurisdiction-map" id="jurisdiction-map">
+              <div class="country-tile active"><strong>Carregando</strong><span>rule pack global</span><small>...</small></div>
             </div>
           </article>
 
@@ -1764,70 +1942,212 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
-        <section class="work-grid" id="motor">
-          <article class="panel">
+        <section class="work-grid tax-workbench" id="motor">
+          <article class="panel tax-simulator-panel">
             <div class="panel-title">
-              <h2>Simulador visual do motor tributario</h2>
-              <span>preview</span>
+              <h2>Simulador fiscal operacional</h2>
+              <span id="tax-result-status">api edge</span>
             </div>
-            <div class="form-grid">
-              <div class="field-block">
-                <label for="country">Pais</label>
-                <select id="country" class="glass-select">
-                  <option>Brasil</option>
-                  <option>Portugal</option>
-                  <option>Alemanha</option>
-                  <option>Estados Unidos</option>
-                </select>
+            <form class="tax-simulator-grid" id="tax-simulator-form">
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Operacao</strong><span id="tax-rule-pack">rule pack</span></div>
+                <div class="tax-input-grid">
+                  <div class="field-block">
+                    <label for="tax-origin">Origem</label>
+                    <select id="tax-origin" class="glass-select">
+                      <option value="BR" selected>Brasil</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-destination">Destino</label>
+                    <select id="tax-destination" class="glass-select"></select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-incoterm">Incoterm</label>
+                    <select id="tax-incoterm" class="glass-select">
+                      <option value="DDP" selected>DDP</option>
+                      <option value="DAP">DAP</option>
+                      <option value="CIF">CIF</option>
+                      <option value="FOB">FOB</option>
+                      <option value="EXW">EXW</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-operation-type">Tipo</label>
+                    <select id="tax-operation-type" class="glass-select">
+                      <option value="export_goods" selected>Exportacao de mercadorias</option>
+                      <option value="domestic_goods">Venda domestica</option>
+                      <option value="marketplace_sale">Marketplace</option>
+                      <option value="digital_service">Servico digital</option>
+                      <option value="professional_service">Servico profissional</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-customer-type">Cliente</label>
+                    <select id="tax-customer-type" class="glass-select">
+                      <option value="b2c" selected>B2C</option>
+                      <option value="b2b">B2B</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-channel">Canal</label>
+                    <select id="tax-channel" class="glass-select">
+                      <option value="marketplace" selected>Marketplace</option>
+                      <option value="ecommerce">E-commerce proprio</option>
+                      <option value="distributor">Distribuidor</option>
+                      <option value="erp">ERP/SaaS</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div class="field-block">
-                <label for="operation">Operacao</label>
-                <select id="operation" class="glass-select">
-                  <option>Venda B2B</option>
-                  <option>Venda B2C</option>
-                  <option>Servico digital</option>
-                  <option>Marketplace</option>
-                </select>
+
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Produto e classificacao</strong><span>HS/NCM</span></div>
+                <div class="tax-input-grid">
+                  <div class="field-block">
+                    <label for="tax-item-description">Produto</label>
+                    <input id="tax-item-description" class="glass-field" value="Cachaca premium 700ml" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-item-category">Categoria</label>
+                    <select id="tax-item-category" class="glass-select">
+                      <option value="beverage_alcohol" selected>Bebida alcoolica</option>
+                      <option value="goods">Mercadoria geral</option>
+                      <option value="food">Alimentos</option>
+                      <option value="cosmetics">Cosmeticos</option>
+                      <option value="digital_product">Produto digital</option>
+                      <option value="saas">SaaS</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-ncm">NCM/HS</label>
+                    <input id="tax-ncm" class="glass-field" placeholder="2208.40" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-quantity">Quantidade</label>
+                    <input id="tax-quantity" class="glass-field" type="number" step="1" min="1" value="120" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-unit-price">Preco unitario</label>
+                    <input id="tax-unit-price" class="glass-field" type="number" step="0.01" min="0" value="45" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-unit-cost">Custo unitario</label>
+                    <input id="tax-unit-cost" class="glass-field" type="number" step="0.01" min="0" value="22" />
+                  </div>
+                </div>
               </div>
-              <div class="field-block">
-                <label for="product">Produto ou servico</label>
-                <input id="product" class="glass-field" value="SaaS multiempresa" />
+
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Logistica, burocracia e canal</strong><span>custo real</span></div>
+                <div class="tax-input-grid">
+                  <div class="field-block">
+                    <label for="tax-packaging-cost">Embalagem</label>
+                    <input id="tax-packaging-cost" class="glass-field" type="number" step="0.01" min="0" value="240" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-preparation-cost">Preparacao</label>
+                    <input id="tax-preparation-cost" class="glass-field" type="number" step="0.01" min="0" value="180" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-export-clearance-cost">Despacho origem</label>
+                    <input id="tax-export-clearance-cost" class="glass-field" type="number" step="0.01" min="0" value="320" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-compliance-cost">Compliance</label>
+                    <input id="tax-compliance-cost" class="glass-field" type="number" step="0.01" min="0" value="260" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-freight">Frete</label>
+                    <input id="tax-freight" class="glass-field" type="number" step="0.01" min="0" value="680" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-insurance">Seguro</label>
+                    <input id="tax-insurance" class="glass-field" type="number" step="0.01" min="0" value="90" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-storage-cost">Armazenagem</label>
+                    <input id="tax-storage-cost" class="glass-field" type="number" step="0.01" min="0" value="180" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-local-delivery-cost">Last mile</label>
+                    <input id="tax-local-delivery-cost" class="glass-field" type="number" step="0.01" min="0" value="140" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-marketing-cost">Marketing</label>
+                    <input id="tax-marketing-cost" class="glass-field" type="number" step="0.01" min="0" value="300" />
+                  </div>
+                </div>
               </div>
-              <div class="field-block">
-                <label for="regime">Regime</label>
-                <select id="regime" class="glass-select">
-                  <option>Configuracao fiscal pendente</option>
-                  <option>Simples Nacional</option>
-                  <option>Lucro Presumido</option>
-                  <option>VAT registered</option>
-                </select>
+
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Impostos, fees e margem</strong><span>percentuais</span></div>
+                <div class="tax-input-grid">
+                  <div class="field-block">
+                    <label for="tax-import-duty-rate">Tarifa %</label>
+                    <input id="tax-import-duty-rate" class="glass-field" type="number" step="0.01" min="0" value="8" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-excise-rate">Excise %</label>
+                    <input id="tax-excise-rate" class="glass-field" type="number" step="0.01" min="0" value="12" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-destination-tax-rate">Imposto destino %</label>
+                    <input id="tax-destination-tax-rate" class="glass-field" type="number" step="0.01" min="0" placeholder="auto" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-payment-fee-rate">Pagamento %</label>
+                    <input id="tax-payment-fee-rate" class="glass-field" type="number" step="0.01" min="0" value="3" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-marketplace-fee-rate">Marketplace %</label>
+                    <input id="tax-marketplace-fee-rate" class="glass-field" type="number" step="0.01" min="0" value="10" />
+                  </div>
+                  <div class="field-block">
+                    <label for="tax-margin-target-rate">Margem alvo %</label>
+                    <input id="tax-margin-target-rate" class="glass-field" type="number" step="0.01" min="0" value="38" />
+                  </div>
+                </div>
               </div>
-              <div class="range-wrap">
-                <label for="confidence">Qualidade dos dados cadastrais: <strong id="confidence-label">72%</strong></label>
-                <input id="confidence" type="range" min="0" max="100" value="72" />
-              </div>
-              <button class="glass-button primary" type="button" data-action="pulse">Simular calculo</button>
-              <button class="glass-button" type="button">Salvar rascunho</button>
-            </div>
+
+              <button class="glass-button primary" id="tax-simulate-button" type="submit">Calcular impostos e preco real</button>
+            </form>
           </article>
 
-          <aside class="panel" id="documentos">
+          <aside class="panel tax-result-panel" id="documentos">
             <div class="panel-title">
-              <h2>Documento fiscal</h2>
-              <span>fila obrigatoria</span>
+              <h2>Resultado da simulacao</h2>
+              <span id="tax-market-name">aguardando</span>
             </div>
-            <p class="hero-subtitle" style="font-size: 15px; margin-top: 16px;">
-              Nenhuma emissao saira direto do frontend. A interface prepara a intencao, o Worker valida,
-              a fila processa, o adaptador assina e o outbox registra cada mudanca.
-            </p>
-            <div class="glass-divider" style="margin: 18px 0;"></div>
-            <div class="system-row">
-              <div><strong>NF-e</strong><span>adaptador Brasil futuro</span></div>
-              <span class="status-badge pending">planned</span>
+            <div class="tax-market-strip">
+              <div class="tax-mini-card"><strong id="tax-currency-label">--</strong><span>Moeda</span></div>
+              <div class="tax-mini-card"><strong id="tax-market-tax-label">--</strong><span>Imposto destino</span></div>
+              <div class="tax-mini-card"><strong id="tax-source-label">--</strong><span>Fonte</span></div>
             </div>
-            <div class="system-row" style="margin-top: 10px;">
-              <div><strong>NFS-e</strong><span>municipios por plugin</span></div>
-              <span class="status-badge pending">planned</span>
+            <div class="tax-kpi-grid">
+              <div class="tax-kpi"><span>Total cliente</span><strong id="tax-customer-total">--</strong></div>
+              <div class="tax-kpi"><span>Desembolso vendedor</span><strong id="tax-seller-out">--</strong></div>
+              <div class="tax-kpi"><span>Margem estimada</span><strong id="tax-margin">--</strong></div>
+              <div class="tax-kpi"><span>Preco unitario alvo</span><strong id="tax-suggested">--</strong></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Linhas tributarias e fees</strong><span>base x aliquota</span></div>
+              <div class="tax-line-list" id="tax-lines">
+                <div class="tax-line-card"><strong>Nenhuma simulacao</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>
+              </div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Cadeia de valor</strong><span>origem ao mercado</span></div>
+              <div class="tax-chain-list" id="tax-value-chain"></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Documentos e pendencias</strong><span>pre-emissao</span></div>
+              <div class="tax-doc-list" id="tax-docs"></div>
+              <div class="tax-warning-list" id="tax-required-data"></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Alertas</strong><span>compliance</span></div>
+              <div class="tax-warning-list" id="tax-warnings"></div>
             </div>
           </aside>
         </section>
@@ -1878,6 +2198,12 @@ export function renderDashboard(): string {
         pendingInviteToken: new URLSearchParams(window.location.search).get("invite") || ""
       };
 
+      const taxState = {
+        markets: [],
+        rulePackVersion: "",
+        currency: "GBP"
+      };
+
       let feedCounter = 0;
 
       function qs(selector) {
@@ -1902,6 +2228,44 @@ export function renderDashboard(): string {
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#039;");
+      }
+
+      function numberValue(selector) {
+        const node = qs(selector);
+        if (!node) {
+          return 0;
+        }
+        const value = Number(String(node.value || "0").replace(",", "."));
+        return Number.isFinite(value) ? value : 0;
+      }
+
+      function textValue(selector) {
+        const node = qs(selector);
+        return node ? String(node.value || "").trim() : "";
+      }
+
+      function formatCurrency(value, currency) {
+        try {
+          return new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: currency || taxState.currency || "USD",
+            maximumFractionDigits: 2
+          }).format(Number(value || 0));
+        } catch {
+          return (currency || taxState.currency || "USD") + " " + Number(value || 0).toFixed(2);
+        }
+      }
+
+      function formatPercent(value) {
+        return new Intl.NumberFormat("pt-BR", {
+          style: "percent",
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        }).format(Number(value || 0));
+      }
+
+      function findTaxMarket(code) {
+        return taxState.markets.find((market) => market.code === code) || null;
       }
 
       function setAuthMessage(message, tone) {
@@ -2569,6 +2933,222 @@ export function renderDashboard(): string {
         }
       }
 
+      function renderJurisdictionMap(markets) {
+        const map = qs("#jurisdiction-map");
+        if (!map) {
+          return;
+        }
+        if (!markets || markets.length === 0) {
+          map.innerHTML = '<div class="country-tile active"><strong>Sem mercados</strong><span>API indisponivel</span><small>hold</small></div>';
+          return;
+        }
+
+        map.innerHTML = markets.map((market) => {
+          const active = ["BR", "GB", "US", "CA", "SG", "JP"].includes(market.code) ? " active" : "";
+          const fill = market.sourceStatus === "official-seed" ? "0.86" : market.sourceStatus === "manual-required" ? "0.34" : "0.58";
+          const rateLabel = market.standardRate > 0 ? formatPercent(market.standardRate) : "manual";
+          return (
+            '<div class="country-tile' + active + '" style="--fill: ' + fill + ';">' +
+              '<strong>' + escapeHtml(market.name) + '</strong>' +
+              '<span>' + escapeHtml(market.indirectTaxName) + ' / ' + escapeHtml(market.eInvoiceStatus) + '</span>' +
+              '<small>' + escapeHtml(rateLabel) + '</small>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      function populateMarketSelects(markets) {
+        const origin = qs("#tax-origin");
+        const destination = qs("#tax-destination");
+        if (!origin || !destination) {
+          return;
+        }
+
+        const options = markets.map((market) => (
+          '<option value="' + escapeHtml(market.code) + '">' + escapeHtml(market.name) + ' / ' + escapeHtml(market.currency) + '</option>'
+        )).join("");
+        origin.innerHTML = options;
+        destination.innerHTML = options;
+        origin.value = markets.some((market) => market.code === "BR") ? "BR" : (markets[0] && markets[0].code ? markets[0].code : "");
+        destination.value = markets.some((market) => market.code === "GB") ? "GB" : (markets[0] && markets[0].code ? markets[0].code : "");
+      }
+
+      async function loadTaxMarkets() {
+        try {
+          const response = await fetch("/v1/tax/markets", { cache: "no-store" });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Tax markets unavailable");
+          }
+          taxState.markets = Array.isArray(body.markets) ? body.markets : [];
+          taxState.rulePackVersion = body.rule_pack_version || "";
+          renderJurisdictionMap(taxState.markets);
+          populateMarketSelects(taxState.markets);
+          setText("#tax-rule-pack", taxState.rulePackVersion || "rule pack");
+          addFeed("tax.markets", String(taxState.markets.length) + " mercados de exportacao carregados");
+          await runTaxSimulation();
+        } catch (error) {
+          setText("#tax-result-status", "offline");
+          addFeed("tax.markets.error", "Nao foi possivel carregar mercados fiscais");
+        }
+      }
+
+      function collectTaxPayload() {
+        const destinationCode = textValue("#tax-destination") || "GB";
+        const market = findTaxMarket(destinationCode);
+        const destinationTaxOverride = textValue("#tax-destination-tax-rate");
+        const ncm = textValue("#tax-ncm");
+        const payload = {
+          origin_country: textValue("#tax-origin") || "BR",
+          destination_country: destinationCode,
+          currency: market && market.currency ? market.currency : taxState.currency,
+          operation_type: textValue("#tax-operation-type") || "export_goods",
+          customer_type: textValue("#tax-customer-type") || "b2c",
+          incoterm: textValue("#tax-incoterm") || "DDP",
+          channel: textValue("#tax-channel") || "marketplace",
+          ncm: ncm,
+          hs_code: ncm,
+          items: [
+            {
+              description: textValue("#tax-item-description") || "Produto exportado",
+              category: textValue("#tax-item-category") || "goods",
+              quantity: numberValue("#tax-quantity"),
+              unit_price: numberValue("#tax-unit-price"),
+              unit_cost: numberValue("#tax-unit-cost")
+            }
+          ],
+          freight: numberValue("#tax-freight"),
+          insurance: numberValue("#tax-insurance"),
+          packaging_cost: numberValue("#tax-packaging-cost"),
+          preparation_cost: numberValue("#tax-preparation-cost"),
+          export_clearance_cost: numberValue("#tax-export-clearance-cost"),
+          compliance_cost: numberValue("#tax-compliance-cost"),
+          storage_cost: numberValue("#tax-storage-cost"),
+          local_delivery_cost: numberValue("#tax-local-delivery-cost"),
+          marketing_cost: numberValue("#tax-marketing-cost"),
+          import_duty_rate: numberValue("#tax-import-duty-rate"),
+          excise_rate: numberValue("#tax-excise-rate"),
+          payment_fee_rate: numberValue("#tax-payment-fee-rate"),
+          marketplace_fee_rate: numberValue("#tax-marketplace-fee-rate"),
+          margin_target_rate: numberValue("#tax-margin-target-rate")
+        };
+
+        if (destinationTaxOverride !== "") {
+          payload.destination_tax_rate = numberValue("#tax-destination-tax-rate");
+        }
+
+        return payload;
+      }
+
+      async function runTaxSimulation(event) {
+        if (event) {
+          event.preventDefault();
+        }
+
+        const button = qs("#tax-simulate-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Calculando no Worker...";
+        }
+        setText("#tax-result-status", "calculando");
+
+        try {
+          const response = await fetch("/v1/tax/simulate", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify(collectTaxPayload())
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Tax simulation failed");
+          }
+          renderTaxSimulation(body.simulation);
+          addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
+        } catch (error) {
+          setText("#tax-result-status", "erro");
+          const warnings = qs("#tax-warnings");
+          if (warnings) {
+            warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha na simulacao</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
+          }
+          addFeed("tax.simulation.error", "Falha ao calcular impostos");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Calcular impostos e preco real";
+          }
+        }
+      }
+
+      function renderTaxSimulation(simulation) {
+        if (!simulation || !simulation.totals) {
+          return;
+        }
+        const totals = simulation.totals;
+        const market = simulation.market || {};
+        const snapshot = simulation.input_snapshot || {};
+        const currency = snapshot.currency || market.currency || taxState.currency || "USD";
+        taxState.currency = currency;
+
+        setText("#tax-result-status", "estimativa viva");
+        setText("#tax-rule-pack", simulation.rule_pack_version || taxState.rulePackVersion || "rule pack");
+        setText("#tax-market-name", (market.name || "mercado") + " / " + (snapshot.incoterm || "incoterm"));
+        setText("#tax-currency-label", currency);
+        setText("#tax-market-tax-label", (market.indirectTaxName || "Tax") + " " + formatPercent(market.standardRate || 0));
+        setText("#tax-source-label", market.sourceStatus || "seed");
+        setText("#tax-customer-total", formatCurrency(totals.customer_total, currency));
+        setText("#tax-seller-out", formatCurrency(totals.seller_cash_out, currency));
+        setText("#tax-margin", formatCurrency(totals.seller_gross_margin, currency) + " / " + formatPercent(totals.seller_gross_margin_rate));
+        setText("#tax-suggested", formatCurrency(totals.suggested_unit_price, currency));
+
+        const lines = qs("#tax-lines");
+        if (lines) {
+          lines.innerHTML = (simulation.tax_lines || []).map((line) => (
+            '<div class="tax-line-card">' +
+              '<div><strong>' + escapeHtml(line.label) + '</strong>' +
+              '<span>base ' + escapeHtml(formatCurrency(line.base_amount, currency)) + ' / ' + escapeHtml(formatPercent(line.rate)) + ' / pagador ' + escapeHtml(line.payer) + '</span></div>' +
+              '<em class="tax-amount">' + escapeHtml(formatCurrency(line.amount, currency)) + '</em>' +
+            '</div>'
+          )).join("");
+        }
+
+        const chain = qs("#tax-value-chain");
+        if (chain) {
+          chain.innerHTML = (simulation.value_chain || []).map((stage) => {
+            const share = Math.min(1, Math.max(0.04, Number(stage.share || 0)));
+            return (
+              '<div class="tax-chain-card" style="--share: ' + share.toFixed(2) + ';">' +
+                '<div><strong>' + escapeHtml(stage.label) + '</strong>' +
+                '<span>' + escapeHtml(stage.status) + ' / ' + escapeHtml(formatPercent(stage.share || 0)) + '</span></div>' +
+                '<em class="tax-amount">' + escapeHtml(formatCurrency(stage.amount, currency)) + '</em>' +
+              '</div>'
+            );
+          }).join("");
+        }
+
+        const docs = qs("#tax-docs");
+        if (docs) {
+          docs.innerHTML = (simulation.document_checklist || []).map((doc) => (
+            '<div class="tax-doc-card"><span class="tax-status-pill">ok</span><div><strong>' + escapeHtml(doc) + '</strong><span>checklist operacional</span></div></div>'
+          )).join("");
+        }
+
+        const required = qs("#tax-required-data");
+        if (required) {
+          required.innerHTML = (simulation.next_required_data || []).map((item) => (
+            '<div class="tax-warning-card"><strong>' + escapeHtml(item) + '</strong><span>dado requerido para homologacao/precisao</span></div>'
+          )).join("");
+        }
+
+        const warnings = qs("#tax-warnings");
+        if (warnings) {
+          warnings.innerHTML = (simulation.warnings || []).map((warning) => (
+            '<div class="tax-warning-card"><strong>Alerta fiscal</strong><span>' + escapeHtml(warning) + '</span></div>'
+          )).join("");
+        }
+      }
+
       function addFeed(kind, label) {
         const list = qs("#feed-list");
         if (!list) {
@@ -2663,6 +3243,18 @@ export function renderDashboard(): string {
         invitationForm.addEventListener("submit", submitInvitationForm);
       }
 
+      const taxSimulatorForm = qs("#tax-simulator-form");
+      if (taxSimulatorForm) {
+        taxSimulatorForm.addEventListener("submit", runTaxSimulation);
+      }
+
+      ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel"].forEach((selector) => {
+        const node = qs(selector);
+        if (node) {
+          node.addEventListener("change", () => runTaxSimulation());
+        }
+      });
+
       const invitationsList = qs("#invitations-list");
       if (invitationsList) {
         invitationsList.addEventListener("click", handleInvitationListClick);
@@ -2726,6 +3318,7 @@ export function renderDashboard(): string {
       setAuthMode("login");
       renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
+      loadTaxMarkets();
       loadSession()
         .then(() => {
           if (authState.pendingInviteToken) {
