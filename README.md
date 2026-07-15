@@ -51,6 +51,7 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - API meta: `GET /v1/meta`
 - Mercados do simulador fiscal: `GET /v1/tax/markets`
 - Simulacao fiscal: `POST /v1/tax/simulate`
+- Comparacao de mercados: `POST /v1/tax/compare`
 - Auth config: `GET /v1/auth/config`
 - Sessao atual: `GET /v1/me`
 - Sync de usuario autenticado: `POST /v1/session/sync`

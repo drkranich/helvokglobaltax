@@ -29,6 +29,7 @@ O simulador nao emite documentos fiscais e ainda nao substitui regras homologada
 | --- | --- | --- |
 | `GET` | `/v1/tax/markets` | Lista mercados suportados pelo rule pack seed. |
 | `POST` | `/v1/tax/simulate` | Calcula custo total, impostos, fees, margem e documentos. |
+| `POST` | `/v1/tax/compare` | Compara a mesma operacao em varios destinos. |
 
 ## Rule pack
 
@@ -67,6 +68,23 @@ A simulacao retorna `value_chain` com as etapas:
 
 Esse modelo nasceu do caso de uso de exportacao Brasil-Europa, mas foi implementado sem prender o Core a cachaca, bebidas ou Brasil.
 
+## Comparacao de mercados
+
+O comparador executa a mesma simulacao para uma lista de destinos e retorna:
+
+- total estimado ao cliente;
+- indice de custo;
+- imposto indireto do destino;
+- duty;
+- excise;
+- margem estimada;
+- preco unitario sugerido;
+- carga operacional;
+- alertas principais;
+- dados obrigatorios pendentes.
+
+O ranking principal usa `cost_index = customer_total / commercial_subtotal`. Isso evita comparar moedas diferentes como se fossem equivalentes. Valores monetarios continuam sendo exibidos na moeda nativa do mercado ate que uma camada de FX oficial seja adicionada.
+
 ## Guardrails
 
 - O Core calcula com conceitos neutros: duty, excise, indirect tax, fees, margin e value chain.
@@ -80,6 +98,7 @@ Testes adicionados:
 
 - lista global de mercados;
 - simulacao DDP Brasil -> Reino Unido com produto alcoolico;
+- comparacao da mesma exportacao em multiplos mercados;
 - erro estruturado para mercado nao suportado;
 - painel contem o novo simulador operacional.
 

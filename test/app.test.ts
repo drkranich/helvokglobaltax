@@ -162,6 +162,75 @@ describe("Helvok Tax Worker API", () => {
     expect(body.error.code).toBe("unsupported_market");
   });
 
+  it("compares the same export scenario across multiple destination markets", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/tax/compare",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          scenario: {
+            origin_country: "BR",
+            operation_type: "export_goods",
+            customer_type: "b2c",
+            incoterm: "DDP",
+            channel: "marketplace",
+            items: [
+              {
+                description: "Cachaca premium 700ml",
+                category: "beverage_alcohol",
+                quantity: 120,
+                unit_price: 45,
+                unit_cost: 22,
+              },
+            ],
+            freight: 680,
+            insurance: 90,
+            packaging_cost: 240,
+            preparation_cost: 180,
+            export_clearance_cost: 320,
+            compliance_cost: 260,
+            storage_cost: 180,
+            local_delivery_cost: 140,
+            marketing_cost: 300,
+            import_duty_rate: 0.08,
+            excise_rate: 0.12,
+            payment_fee_rate: 0.03,
+            marketplace_fee_rate: 0.1,
+            margin_target_rate: 0.38,
+          },
+          destinations: ["PT", "DE", "GB", "US", "SG"],
+        }),
+      },
+      env,
+    );
+    const body = await response.json<{
+      event_type: string;
+      count: number;
+      summary: {
+        cheapest_market: { market: { code: string }; totals: { cost_index: number; customer_total: number } } | null;
+        best_margin_market: { market: { code: string }; totals: { seller_gross_margin_rate: number } } | null;
+      };
+      comparisons: Array<{
+        market: { code: string; currency: string };
+        totals: { cost_index: number; customer_total: number; suggested_unit_price: number };
+        operational_load: { risk_score: number; warnings: number };
+      }>;
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("tax.market_comparison.completed");
+    expect(body.count).toBe(5);
+    expect(body.summary.cheapest_market?.market.code).toBe(body.comparisons[0]?.market.code);
+    expect(body.summary.best_margin_market?.totals.seller_gross_margin_rate).toBeGreaterThanOrEqual(0);
+    expect(body.comparisons.map((comparison) => comparison.market.code)).toEqual(expect.arrayContaining(["PT", "DE", "GB", "US", "SG"]));
+    expect(body.comparisons[0]?.totals.cost_index).toBeLessThanOrEqual(body.comparisons[body.comparisons.length - 1]?.totals.cost_index ?? 0);
+    expect(body.comparisons.every((comparison) => comparison.operational_load.risk_score >= comparison.operational_load.warnings)).toBe(true);
+  });
+
   it("returns public Supabase Auth configuration", async () => {
     const app = createApp();
     const response = await app.request("/v1/auth/config", {}, env);

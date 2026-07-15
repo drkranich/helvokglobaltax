@@ -1165,6 +1165,86 @@ export function renderDashboard(): string {
         font-size: 10px;
       }
 
+      .market-comparison {
+        display: grid;
+        gap: 14px;
+      }
+
+      .comparison-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .comparison-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .comparison-table {
+        display: grid;
+        gap: 9px;
+      }
+
+      .comparison-row {
+        display: grid;
+        grid-template-columns: minmax(150px, 0.8fr) repeat(5, minmax(92px, 1fr));
+        gap: 10px;
+        align-items: center;
+        min-height: 72px;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(90deg, rgba(47, 100, 255, 0.1), transparent 45%, rgba(216, 138, 29, 0.08)),
+          rgba(247, 251, 255, 0.07);
+      }
+
+      .comparison-row.header {
+        min-height: 42px;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+        text-transform: uppercase;
+        background: rgba(247, 251, 255, 0.05);
+      }
+
+      .comparison-row strong {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+
+      .comparison-row span {
+        display: block;
+        margin-top: 4px;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+      }
+
+      .comparison-value {
+        font-family: var(--font-data);
+        font-size: 12px;
+      }
+
+      .risk-meter {
+        position: relative;
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(247, 251, 255, 0.1);
+      }
+
+      .risk-meter span {
+        display: block;
+        width: var(--risk, 30%);
+        height: 100%;
+        margin: 0;
+        background: linear-gradient(90deg, var(--good), var(--ochre-500), var(--danger));
+      }
+
       .feed {
         display: grid;
         max-height: 520px;
@@ -1498,6 +1578,15 @@ export function renderDashboard(): string {
         .modules-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
+        .comparison-table {
+          overflow-x: auto;
+          padding-bottom: 4px;
+        }
+
+        .comparison-row {
+          min-width: 920px;
+        }
       }
 
       @media (max-width: 760px) {
@@ -1566,6 +1655,8 @@ export function renderDashboard(): string {
         .tax-input-grid.two,
         .tax-kpi-grid,
         .tax-market-strip,
+        .comparison-toolbar,
+        .comparison-summary,
         .member-form,
         .invitation-form,
         .copy-row,
@@ -1656,6 +1747,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#usuarios"><span>Usuarios</span><span class="nav-code">USR</span></a>
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributario</span><span class="nav-code">RUL</span></a>
+          <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integracoes</span><span class="nav-code">SDK</span></a>
@@ -2152,6 +2244,39 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
+        <section class="panel market-comparison" id="mercados">
+          <div class="comparison-toolbar">
+            <div class="panel-title">
+              <h2>Mesa de comparacao de mercados</h2>
+              <span id="tax-compare-status">aguardando simulacao</span>
+            </div>
+            <button class="glass-button primary" id="tax-compare-button" type="button">Comparar mercados</button>
+          </div>
+          <div class="comparison-summary">
+            <div class="tax-mini-card"><strong id="compare-cheapest">--</strong><span>Menor total ao cliente</span></div>
+            <div class="tax-mini-card"><strong id="compare-margin">--</strong><span>Melhor margem</span></div>
+            <div class="tax-mini-card"><strong id="compare-lowest-load">--</strong><span>Menor carga operacional</span></div>
+          </div>
+          <div class="comparison-table" id="tax-comparison-table">
+            <div class="comparison-row header">
+              <span>Mercado</span>
+              <span>Total cliente</span>
+              <span>Imposto destino</span>
+              <span>Margem</span>
+              <span>Preco unitario alvo</span>
+              <span>Carga operacional</span>
+            </div>
+            <div class="comparison-row">
+              <div><strong>Nenhum comparativo</strong><span>Rode o simulador para comparar destinos</span></div>
+              <span class="comparison-value">--</span>
+              <span class="comparison-value">--</span>
+              <span class="comparison-value">--</span>
+              <span class="comparison-value">--</span>
+              <div class="risk-meter"><span style="--risk: 0%;"></span></div>
+            </div>
+          </div>
+        </section>
+
         <section class="modules-grid" id="integracoes">
           <article class="module">
             <h3>Shopify</h3>
@@ -2201,7 +2326,8 @@ export function renderDashboard(): string {
       const taxState = {
         markets: [],
         rulePackVersion: "",
-        currency: "GBP"
+        currency: "GBP",
+        lastComparison: null
       };
 
       let feedCounter = 0;
@@ -3065,6 +3191,7 @@ export function renderDashboard(): string {
             throw new Error(body && body.error && body.error.message ? body.error.message : "Tax simulation failed");
           }
           renderTaxSimulation(body.simulation);
+          runTaxComparison(false);
           addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
         } catch (error) {
           setText("#tax-result-status", "erro");
@@ -3079,6 +3206,97 @@ export function renderDashboard(): string {
             button.textContent = "Calcular impostos e preco real";
           }
         }
+      }
+
+      async function runTaxComparison(showLoading) {
+        const button = qs("#tax-compare-button");
+        if (showLoading && button) {
+          button.disabled = true;
+          button.textContent = "Comparando...";
+        }
+        setText("#tax-compare-status", "comparando mercados");
+
+        const payload = collectTaxPayload();
+        const destinations = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU"];
+
+        try {
+          const response = await fetch("/v1/tax/compare", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              scenario: payload,
+              destinations: destinations,
+              limit: 12
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Tax comparison failed");
+          }
+          taxState.lastComparison = body;
+          renderTaxComparison(body);
+          addFeed(body.event_type || "tax.market_comparison.completed", String(body.count || 0) + " mercados comparados");
+        } catch (error) {
+          setText("#tax-compare-status", "erro");
+          const table = qs("#tax-comparison-table");
+          if (table) {
+            table.innerHTML =
+              '<div class="comparison-row"><div><strong>Comparacao indisponivel</strong><span>' +
+              escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") +
+              '</span></div><span class="comparison-value">--</span><span class="comparison-value">--</span><span class="comparison-value">--</span><span class="comparison-value">--</span><div class="risk-meter"><span style="--risk: 0%;"></span></div></div>';
+          }
+          addFeed("tax.compare.error", "Falha ao comparar mercados");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Comparar mercados";
+          }
+        }
+      }
+
+      function renderTaxComparison(comparison) {
+        const comparisons = comparison && Array.isArray(comparison.comparisons) ? comparison.comparisons : [];
+        const summary = comparison && comparison.summary ? comparison.summary : {};
+        const cheapest = summary.cheapest_market;
+        const bestMargin = summary.best_margin_market;
+        const lowestLoad = summary.lowest_operational_load_market;
+
+        setText("#tax-compare-status", String(comparisons.length) + " mercados / indice sem FX");
+        setText("#compare-cheapest", cheapest && cheapest.market ? cheapest.market.name + " / " + Number(cheapest.totals.cost_index || 0).toFixed(2) + "x" : "--");
+        setText("#compare-margin", bestMargin && bestMargin.market ? bestMargin.market.name + " / " + formatPercent(bestMargin.totals.seller_gross_margin_rate || 0) : "--");
+        setText("#compare-lowest-load", lowestLoad && lowestLoad.market ? lowestLoad.market.name + " / risco " + Number(lowestLoad.operational_load.risk_score || 0) : "--");
+
+        const table = qs("#tax-comparison-table");
+        if (!table) {
+          return;
+        }
+
+        const header =
+          '<div class="comparison-row header">' +
+            '<span>Mercado</span>' +
+            '<span>Total/indice</span>' +
+            '<span>Imposto destino</span>' +
+            '<span>Margem</span>' +
+            '<span>Preco unitario alvo</span>' +
+            '<span>Carga operacional</span>' +
+          '</div>';
+
+        table.innerHTML = header + comparisons.map((item) => {
+          const currency = item.market && item.market.currency ? item.market.currency : "USD";
+          const risk = Math.min(100, Math.max(8, Number(item.operational_load.risk_score || 0) * 7));
+          return (
+            '<div class="comparison-row">' +
+              '<div><strong>' + escapeHtml(item.market.name) + '</strong><span>' + escapeHtml(item.market.code) + ' / ' + escapeHtml(item.market.indirect_tax_name) + '</span></div>' +
+              '<div class="comparison-value">' + escapeHtml(formatCurrency(item.totals.customer_total, currency)) + '<span>' + Number(item.totals.cost_index || 0).toFixed(2) + 'x do subtotal</span></div>' +
+              '<div class="comparison-value">' + escapeHtml(formatCurrency(item.totals.destination_indirect_tax, currency)) + '<span>duty ' + escapeHtml(formatCurrency(item.totals.import_duty, currency)) + '</span></div>' +
+              '<div class="comparison-value">' + escapeHtml(formatCurrency(item.totals.seller_gross_margin, currency)) + '<span>' + escapeHtml(formatPercent(item.totals.seller_gross_margin_rate)) + '</span></div>' +
+              '<div class="comparison-value">' + escapeHtml(formatCurrency(item.totals.suggested_unit_price, currency)) + '<span>moeda nativa</span></div>' +
+              '<div><div class="risk-meter"><span style="--risk: ' + risk.toFixed(0) + '%;"></span></div><span>' + Number(item.operational_load.risk_score || 0) + ' risco / ' + Number(item.operational_load.documents || 0) + ' docs</span></div>' +
+            '</div>'
+          );
+        }).join("");
       }
 
       function renderTaxSimulation(simulation) {
@@ -3246,6 +3464,11 @@ export function renderDashboard(): string {
       const taxSimulatorForm = qs("#tax-simulator-form");
       if (taxSimulatorForm) {
         taxSimulatorForm.addEventListener("submit", runTaxSimulation);
+      }
+
+      const taxCompareButton = qs("#tax-compare-button");
+      if (taxCompareButton) {
+        taxCompareButton.addEventListener("click", () => runTaxComparison(true));
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel"].forEach((selector) => {
