@@ -986,6 +986,14 @@ export function renderDashboard(): string {
         text-align: center;
       }
 
+      .catalog-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
       .catalog-meta-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3033,21 +3041,99 @@ export function renderDashboard(): string {
           return;
         }
 
-        list.innerHTML = normalized.map((item) => {
+        list.innerHTML = normalized.map((item, index) => {
           const currency = item.currency_code || "BRL";
           const price = formatCurrency(item.unit_price || 0, currency);
           const cost = formatCurrency(item.unit_cost || 0, currency);
           const classification = item.ncm_code || item.hs_code || "HS/NCM pendente";
           const origin = item.country_of_origin || "origem pendente";
           return (
-            '<div class="catalog-item-card">' +
+            '<div class="catalog-item-card" data-catalog-index="' + index + '">' +
               '<div><strong>' + escapeHtml(item.name || item.sku || "Item fiscal") + '</strong>' +
               '<span>' + escapeHtml(item.sku || "SKU") + ' / ' + escapeHtml(item.item_kind || "tipo") + ' / ' + escapeHtml(item.category || "categoria") + '</span>' +
               '<span>' + escapeHtml(classification) + ' / origem ' + escapeHtml(origin) + ' / custo ' + escapeHtml(cost) + '</span></div>' +
               '<em>' + escapeHtml(price) + '</em>' +
+              '<div class="catalog-actions">' +
+                '<button class="mini-button" type="button" data-catalog-action="simulate">Usar no simulador</button>' +
+                '<button class="mini-button warn" type="button" data-catalog-action="edit">Editar cadastro</button>' +
+              '</div>' +
             '</div>'
           );
         }).join("");
+      }
+
+      function setFieldValue(selector, value) {
+        const node = qs(selector);
+        if (node) {
+          node.value = value == null ? "" : String(value);
+        }
+      }
+
+      function setSelectValue(selector, value) {
+        const node = qs(selector);
+        if (!node) {
+          return;
+        }
+        const stringValue = value == null ? "" : String(value);
+        const hasOption = Array.from(node.options || []).some((option) => option.value === stringValue);
+        if (hasOption) {
+          node.value = stringValue;
+        }
+      }
+
+      function populateCatalogForm(item) {
+        if (!item) {
+          return;
+        }
+
+        setFieldValue("#catalog-sku", item.sku || "");
+        setFieldValue("#catalog-name", item.name || "");
+        setSelectValue("#catalog-kind", item.item_kind || "goods");
+        setSelectValue("#catalog-category", item.category || "goods");
+        setFieldValue("#catalog-origin", item.country_of_origin || "BR");
+        setFieldValue("#catalog-ncm", item.ncm_code || item.hs_code || "");
+        setFieldValue("#catalog-unit", item.unit_code || "UN");
+        setFieldValue("#catalog-currency", item.currency_code || "BRL");
+        setFieldValue("#catalog-price", item.unit_price || 0);
+        setFieldValue("#catalog-cost", item.unit_cost || 0);
+        setSelectValue("#catalog-status", item.status || "active");
+        setCatalogMessage("Cadastro carregado para edição. Salvar atualiza pelo SKU.", "good");
+      }
+
+      function populateTaxSimulatorFromCatalog(item) {
+        if (!item) {
+          return;
+        }
+
+        setFieldValue("#tax-item-description", item.name || item.sku || "Produto exportado");
+        setSelectValue("#tax-item-category", item.category || "goods");
+        setFieldValue("#tax-ncm", item.ncm_code || item.hs_code || "");
+        setFieldValue("#tax-unit-price", item.unit_price || 0);
+        setFieldValue("#tax-unit-cost", item.unit_cost || 0);
+        setText("#motor-view-status", "catálogo aplicado");
+        setCatalogMessage("Produto aplicado ao simulador fiscal.", "good");
+        addFeed("catalog.to_simulator", (item.sku || "SKU") + " aplicado ao motor tributário");
+        activateView("motor", true);
+        runTaxSimulation();
+      }
+
+      function handleCatalogListClick(event) {
+        const button = event.target && event.target.closest ? event.target.closest("[data-catalog-action]") : null;
+        if (!button) {
+          return;
+        }
+
+        const card = button.closest("[data-catalog-index]");
+        const index = card ? Number(card.getAttribute("data-catalog-index")) : -1;
+        const item = Number.isInteger(index) ? catalogState.items[index] : null;
+
+        if (button.getAttribute("data-catalog-action") === "simulate") {
+          populateTaxSimulatorFromCatalog(item);
+        }
+
+        if (button.getAttribute("data-catalog-action") === "edit") {
+          populateCatalogForm(item);
+        }
       }
 
       async function loadCatalogItems(tenantId) {
@@ -4072,6 +4158,11 @@ export function renderDashboard(): string {
       const catalogItemForm = qs("#catalog-item-form");
       if (catalogItemForm) {
         catalogItemForm.addEventListener("submit", submitCatalogItemForm);
+      }
+
+      const catalogItemsList = qs("#catalog-items-list");
+      if (catalogItemsList) {
+        catalogItemsList.addEventListener("click", handleCatalogListClick);
       }
 
       const invitationForm = qs("#invitation-form");
