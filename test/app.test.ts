@@ -140,6 +140,125 @@ describe("Helvok Tax Worker API", () => {
     );
   });
 
+  it("calls the membership list RPC through Supabase REST", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify([{ id: "membership-1", status: "active" }]), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/admin/tenants/${tenantId}/memberships`,
+      {
+        headers: {
+          "x-helvok-admin-token": "test-admin-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<Record<string, unknown>>();
+
+    expect(response.status).toBe(200);
+    expect(body.memberships).toEqual([{ id: "membership-1", status: "active" }]);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_list_memberships",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId }),
+      }),
+    );
+  });
+
+  it("creates a tenant owner membership through admin RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          membership: {
+            id: "membership-1",
+            status: "active",
+            user: { email: "owner@helvok.tax" },
+            role: { role_key: "owner" },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/memberships",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-helvok-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          email: "Owner@Helvok.Tax",
+          role_key: "owner",
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ membership: { user: { email: string }; role: { role_key: string } } }>();
+
+    expect(response.status).toBe(201);
+    expect(body.membership.user.email).toBe("owner@helvok.tax");
+    expect(body.membership.role.role_key).toBe("owner");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_upsert_membership",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            role_key: "owner",
+            scope_type: "tenant",
+            status: "active",
+            email: "owner@helvok.tax",
+          },
+        }),
+      }),
+    );
+  });
+
+  it("rejects membership creation without a user selector", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/memberships",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-helvok-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          tenant_id: "22222222-2222-4222-8222-222222222222",
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<Record<string, { code: string; message: string }>>();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatchObject({
+      code: "invalid_payload",
+      message: "user_id, auth_user_id, or email is required.",
+    });
+  });
+
   it("returns structured errors when Supabase returns a non-JSON response", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response("upstream unavailable", {

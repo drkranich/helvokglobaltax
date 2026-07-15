@@ -620,6 +620,97 @@ export function renderDashboard(): string {
         padding: 18px;
       }
 
+      .access-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 14px;
+      }
+
+      .access-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .access-matrix {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .access-cell {
+        min-height: 88px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+      }
+
+      .access-cell span {
+        display: block;
+        color: var(--frost-64);
+        font-family: var(--font-data);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .access-cell strong {
+        display: block;
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+        font-family: var(--font-display);
+        font-size: 18px;
+      }
+
+      .access-pulse {
+        position: relative;
+        min-height: 210px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(145deg, rgba(47, 100, 255, 0.18), rgba(216, 138, 29, 0.14)),
+          rgba(247, 251, 255, 0.07);
+      }
+
+      .access-pulse::before {
+        position: absolute;
+        inset: 18px;
+        content: "";
+        border: 1px solid rgba(255, 197, 108, 0.36);
+        transform: skewX(-12deg);
+      }
+
+      .access-pulse::after {
+        position: absolute;
+        left: 12%;
+        right: 12%;
+        top: 50%;
+        height: 2px;
+        content: "";
+        background: linear-gradient(90deg, transparent, var(--ochre-300), var(--royal-300), transparent);
+        animation: scanLine 5.2s ease-in-out infinite;
+      }
+
+      .access-pulse-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 10px;
+        height: 100%;
+        align-content: end;
+        padding: 18px;
+      }
+
+      .access-pulse-copy strong {
+        font-family: var(--font-display);
+        font-size: 24px;
+      }
+
+      .access-pulse-copy span {
+        color: var(--frost-64);
+        line-height: 1.5;
+      }
+
       .jurisdiction-map {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1040,7 +1131,8 @@ export function renderDashboard(): string {
         }
 
         .hero-grid,
-        .work-grid {
+        .work-grid,
+        .access-grid {
           grid-template-columns: 1fr;
         }
 
@@ -1111,7 +1203,8 @@ export function renderDashboard(): string {
         .metrics-grid,
         .modules-grid,
         .jurisdiction-map,
-        .form-grid {
+        .form-grid,
+        .access-matrix {
           grid-template-columns: 1fr;
         }
 
@@ -1215,10 +1308,10 @@ export function renderDashboard(): string {
         <header class="topbar">
           <div class="breadcrumb">
             <span>Tenant</span>
-            <strong>helvok-tax-foundation</strong>
+            <strong id="breadcrumb-tenant">helvok-tax-foundation</strong>
             <span>/</span>
             <span>Organizacao</span>
-            <strong>Helvok Tax</strong>
+            <strong id="breadcrumb-organization">Helvok Tax</strong>
           </div>
           <div class="top-actions">
             <span class="session-chip" id="session-chip">sessao anonima</span>
@@ -1303,6 +1396,48 @@ export function renderDashboard(): string {
             <strong data-count="2">2</strong>
             <small>Base pronta para filas e notificacoes.</small>
           </article>
+        </section>
+
+        <section class="access-grid" aria-label="Acesso multi-tenant">
+          <article class="panel access-panel">
+            <div class="panel-title">
+              <h2>Malha de acesso</h2>
+              <span id="access-state-label">guarded</span>
+            </div>
+            <div class="access-matrix">
+              <div class="access-cell">
+                <span>Usuario core</span>
+                <strong id="access-user-label">aguardando login</strong>
+              </div>
+              <div class="access-cell">
+                <span>Role efetiva</span>
+                <strong id="access-role-label">sem membership</strong>
+              </div>
+              <div class="access-cell">
+                <span>Tenant ativo</span>
+                <strong id="access-tenant-label">convite pendente</strong>
+              </div>
+              <div class="access-cell">
+                <span>Permissoes</span>
+                <strong id="access-permission-label">0 permissoes</strong>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel access-panel">
+            <div class="panel-title">
+              <h2>Owner operacional</h2>
+              <span>RBAC</span>
+            </div>
+            <div class="access-pulse">
+              <div class="access-pulse-copy">
+                <strong id="access-pulse-title">Aguardando primeiro owner</strong>
+                <span id="access-pulse-caption">
+                  Entre com Supabase Auth uma vez; depois a Admin API concede membership no tenant foundation.
+                </span>
+              </div>
+            </div>
+          </aside>
         </section>
 
         <section class="work-grid">
@@ -1604,10 +1739,37 @@ export function renderDashboard(): string {
         const user = session && session.user ? session.user : null;
         const email = user && user.email ? user.email : window.localStorage.getItem(authStorage.email);
         const tenantCount = session && session.counts ? Number(session.counts.tenants || 0) : 0;
+        const tenants = session && Array.isArray(session.tenants) ? session.tenants : [];
+        const organizations = session && Array.isArray(session.organizations) ? session.organizations : [];
+        const permissions = session && Array.isArray(session.permissions) ? session.permissions : [];
+        const primaryTenant = tenants.length > 0 ? tenants[0] : null;
+        const primaryOrganization = organizations.length > 0 ? organizations[0] : null;
+        const roleLabels = Array.from(new Set(tenants.map((tenant) => tenant && tenant.role_key).filter(Boolean))).join(", ");
+        const tenantLabel = primaryTenant
+          ? (primaryTenant.display_name || primaryTenant.legal_name || primaryTenant.slug || "tenant ativo")
+          : "convite pendente";
+        const organizationLabel = primaryOrganization
+          ? (primaryOrganization.trade_name || primaryOrganization.legal_name || "organizacao ativa")
+          : "Helvok Tax";
+
         setText("#session-chip", email ? email + " / tenants " + tenantCount : "perfil sincronizado");
         setText("#session-button", "Sair");
         setText("#auth-core-label", user ? "ready" : "created");
         setText("#auth-tenant-label", tenantCount > 0 ? "linked" : "invite");
+        setText("#access-user-label", email || "perfil sincronizado");
+        setText("#access-role-label", roleLabels || "sem membership");
+        setText("#access-tenant-label", tenantLabel);
+        setText("#access-permission-label", permissions.length + " permissoes");
+        setText("#access-state-label", tenantCount > 0 ? "linked" : "guarded");
+        setText("#access-pulse-title", tenantCount > 0 ? "Owner ligado ao core" : "Aguardando primeiro owner");
+        setText(
+          "#access-pulse-caption",
+          tenantCount > 0
+            ? "Sessao autorizada por membership ativo. O painel agora enxerga tenants, organizacoes e permissoes via RLS."
+            : "Entre com Supabase Auth uma vez; depois a Admin API concede membership no tenant foundation.",
+        );
+        setText("#breadcrumb-tenant", primaryTenant && primaryTenant.slug ? primaryTenant.slug : "helvok-tax-foundation");
+        setText("#breadcrumb-organization", organizationLabel);
         showAuthGate(false);
 
         if (tenantCount === 0) {
