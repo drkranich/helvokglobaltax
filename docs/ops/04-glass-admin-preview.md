@@ -23,7 +23,7 @@ Padrao definido para as proximas telas:
 - Glassmorphism como linguagem principal.
 - Nada com aparencia de blog, pagina estatica ou painel antigo.
 - Fundo vivo com grid, varredura e transparencia.
-- Tons principais: azul royal, laranja ocre e branco.
+- Tons principais: Petróleo, Meia-noite, Dourado e Champagne.
 - Scrollbar transparente/glass.
 - Dropdowns, inputs, botoes e formularios no mesmo estilo glass.
 - Layout de cockpit operacional, nao landing page.

@@ -34,7 +34,7 @@ Exemplos:
 - Brasil: CPF, CNPJ, IE, IM, NF-e, NFC-e, NFS-e, SEFAZ, prefeitura, XML e DANFE.
 - Portugal: NIF, NIPC, VAT Number, fatura e Autoridade Tributaria.
 - Alemanha: VAT ID, Steuernummer, Rechnung e XRechnung quando aplicavel.
-- Franca: TVA, SIREN, SIRET e facture.
+- França: TVA, SIREN, SIRET e facture.
 
 O usuario nao deve ver campos fiscais desnecessarios para o pais, documento ou operacao.
 

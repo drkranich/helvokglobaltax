@@ -136,9 +136,9 @@ Europa nao e um adaptador unico. Cada pais possui modulo proprio:
 
 - Portugal
 - Alemanha
-- Franca
+- França
 - Espanha
-- Italia
+- Itália
 - Holanda
 - Belgica
 - Suica
@@ -188,7 +188,7 @@ Suporte arquitetural:
 
 Preparar:
 
-- Mexico
+- México
 - Chile
 - Argentina
 - Uruguai

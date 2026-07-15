@@ -12,30 +12,35 @@ export function renderDashboard(): string {
     <style>
       :root {
         color-scheme: dark;
-        --royal-950: #06133f;
-        --royal-900: #071a5c;
-        --royal-800: #0a2579;
-        --royal-700: #1536a5;
-        --royal-500: #2f64ff;
-        --royal-300: #8eb4ff;
-        --ochre-600: #b86f16;
-        --ochre-500: #d88a1d;
-        --ochre-300: #ffc56c;
-        --frost: #f7fbff;
-        --frost-80: rgba(247, 251, 255, 0.8);
-        --frost-64: rgba(247, 251, 255, 0.64);
-        --frost-18: rgba(247, 251, 255, 0.18);
-        --frost-10: rgba(247, 251, 255, 0.1);
-        --ink: #05091d;
-        --ink-soft: #0b1436;
-        --glass-blue: rgba(11, 34, 103, 0.48);
-        --glass-deep: rgba(4, 12, 43, 0.64);
-        --line: rgba(247, 251, 255, 0.16);
-        --line-strong: rgba(247, 251, 255, 0.28);
-        --good: #59f1bd;
-        --warn: #ffc56c;
-        --danger: #ff6b6b;
-        --shadow: 0 24px 80px rgba(1, 7, 30, 0.48);
+        --petroleum: #0e3f42;
+        --petroleum-950: #082426;
+        --petroleum-900: #0b3033;
+        --petroleum-800: #0e3f42;
+        --petroleum-700: #14565a;
+        --petroleum-500: #1e7374;
+        --petroleum-300: #73b8b2;
+        --midnight: #050713;
+        --midnight-900: #080d1b;
+        --midnight-800: #10182a;
+        --gold: #c89a3d;
+        --gold-600: #a97824;
+        --gold-500: #c89a3d;
+        --gold-300: #f0c875;
+        --champagne: #f4e6c8;
+        --champagne-80: rgba(244, 230, 200, 0.8);
+        --champagne-64: rgba(244, 230, 200, 0.64);
+        --champagne-18: rgba(244, 230, 200, 0.18);
+        --champagne-10: rgba(244, 230, 200, 0.1);
+        --ink: var(--midnight);
+        --ink-soft: var(--midnight-800);
+        --glass-petroleum: rgba(14, 63, 66, 0.48);
+        --glass-midnight: rgba(5, 7, 19, 0.68);
+        --line: rgba(244, 230, 200, 0.16);
+        --line-strong: rgba(244, 230, 200, 0.28);
+        --good: var(--petroleum-300);
+        --warn: var(--gold-300);
+        --danger: var(--gold-600);
+        --shadow: 0 24px 80px rgba(2, 4, 12, 0.56);
         --radius: 8px;
         --font-display: "Space Grotesk", "Inter Tight", "Segoe UI", sans-serif;
         --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
@@ -56,12 +61,12 @@ export function renderDashboard(): string {
         margin: 0;
         overflow-x: hidden;
         font-family: var(--font-body);
-        color: var(--frost);
+        color: var(--champagne);
         letter-spacing: 0;
         background:
-          linear-gradient(115deg, rgba(7, 26, 92, 0.86), rgba(5, 9, 29, 0.96) 54%, rgba(184, 111, 22, 0.3)),
-          radial-gradient(circle at 18% 16%, rgba(47, 100, 255, 0.38), transparent 30%),
-          linear-gradient(180deg, #06133f 0%, #05091d 100%);
+          linear-gradient(115deg, rgba(14, 63, 66, 0.86), rgba(5, 7, 19, 0.96) 54%, rgba(200, 154, 61, 0.3)),
+          radial-gradient(circle at 18% 16%, rgba(30, 115, 116, 0.38), transparent 30%),
+          linear-gradient(180deg, var(--petroleum-950) 0%, var(--midnight) 100%);
       }
 
       body::before {
@@ -71,8 +76,8 @@ export function renderDashboard(): string {
         pointer-events: none;
         content: "";
         background-image:
-          linear-gradient(rgba(247, 251, 255, 0.045) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(247, 251, 255, 0.045) 1px, transparent 1px);
+          linear-gradient(rgba(244, 230, 200, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(244, 230, 200, 0.045) 1px, transparent 1px);
         background-size: 52px 52px;
         mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.28));
       }
@@ -84,14 +89,14 @@ export function renderDashboard(): string {
         pointer-events: none;
         content: "";
         background:
-          linear-gradient(100deg, transparent 0%, rgba(142, 180, 255, 0.08) 42%, transparent 62%),
-          repeating-linear-gradient(135deg, rgba(255, 197, 108, 0.05) 0 1px, transparent 1px 18px);
+          linear-gradient(100deg, transparent 0%, rgba(115, 184, 178, 0.08) 42%, transparent 62%),
+          repeating-linear-gradient(135deg, rgba(240, 200, 117, 0.05) 0 1px, transparent 1px 18px);
         animation: sweep 13s linear infinite;
       }
 
       ::selection {
         color: var(--ink);
-        background: var(--ochre-300);
+        background: var(--gold-300);
       }
 
       ::-webkit-scrollbar {
@@ -100,12 +105,12 @@ export function renderDashboard(): string {
       }
 
       ::-webkit-scrollbar-track {
-        background: rgba(5, 9, 29, 0.28);
+        background: rgba(5, 7, 19, 0.28);
       }
 
       ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, rgba(142, 180, 255, 0.52), rgba(216, 138, 29, 0.72));
-        border: 3px solid rgba(5, 9, 29, 0.2);
+        background: linear-gradient(180deg, rgba(115, 184, 178, 0.52), rgba(200, 154, 61, 0.72));
+        border: 3px solid rgba(5, 7, 19, 0.2);
         border-radius: 999px;
       }
 
@@ -138,7 +143,7 @@ export function renderDashboard(): string {
         height: 100vh;
         padding: 22px;
         border-right: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(3, 11, 42, 0.76), rgba(7, 26, 92, 0.38));
+        background: linear-gradient(180deg, rgba(5, 7, 19, 0.76), rgba(14, 63, 66, 0.38));
         backdrop-filter: blur(24px) saturate(150%);
       }
 
@@ -162,12 +167,12 @@ export function renderDashboard(): string {
         width: 46px;
         height: 46px;
         overflow: hidden;
-        border: 1px solid rgba(255, 197, 108, 0.42);
+        border: 1px solid rgba(240, 200, 117, 0.42);
         border-radius: var(--radius);
         background:
-          linear-gradient(135deg, rgba(47, 100, 255, 0.62), rgba(216, 138, 29, 0.36)),
-          rgba(247, 251, 255, 0.08);
-        box-shadow: 0 18px 34px rgba(2, 8, 30, 0.34);
+          linear-gradient(135deg, rgba(30, 115, 116, 0.62), rgba(200, 154, 61, 0.36)),
+          rgba(244, 230, 200, 0.08);
+        box-shadow: 0 18px 34px rgba(2, 4, 12, 0.34);
       }
 
       .brand-sigil::before,
@@ -175,13 +180,13 @@ export function renderDashboard(): string {
         position: absolute;
         inset: 8px;
         content: "";
-        border: 1px solid rgba(247, 251, 255, 0.44);
+        border: 1px solid rgba(244, 230, 200, 0.44);
         transform: rotate(45deg);
       }
 
       .brand-sigil::after {
         inset: 15px;
-        border-color: rgba(255, 197, 108, 0.72);
+        border-color: rgba(240, 200, 117, 0.72);
         animation: sigilPulse 2.8s ease-in-out infinite;
       }
 
@@ -196,7 +201,7 @@ export function renderDashboard(): string {
       .brand-copy span {
         display: block;
         margin-top: 4px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -209,8 +214,8 @@ export function renderDashboard(): string {
         padding: 10px 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
-        color: var(--frost-80);
+        background: rgba(244, 230, 200, 0.08);
+        color: var(--champagne-80);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -222,7 +227,7 @@ export function renderDashboard(): string {
         margin-right: 7px;
         border-radius: 999px;
         background: var(--good);
-        box-shadow: 0 0 0 0 rgba(89, 241, 189, 0.6);
+        box-shadow: 0 0 0 0 rgba(115, 184, 178, 0.6);
         animation: livePulse 1.9s ease-out infinite;
       }
 
@@ -241,7 +246,7 @@ export function renderDashboard(): string {
         border: 1px solid transparent;
         border-radius: var(--radius);
         background: transparent;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         text-decoration: none;
         transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
       }
@@ -249,13 +254,13 @@ export function renderDashboard(): string {
       .nav-button:hover,
       .nav-button.active {
         border-color: var(--line);
-        background: rgba(247, 251, 255, 0.1);
-        color: var(--frost);
+        background: rgba(244, 230, 200, 0.1);
+        color: var(--champagne);
         transform: translateX(3px);
       }
 
       .nav-code {
-        color: var(--ochre-300);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 10px;
       }
@@ -270,8 +275,8 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.09);
-        color: var(--frost-64);
+        background: rgba(244, 230, 200, 0.09);
+        color: var(--champagne-64);
         font-size: 12px;
         line-height: 1.55;
       }
@@ -301,7 +306,7 @@ export function renderDashboard(): string {
         padding: 18px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: linear-gradient(135deg, rgba(247, 251, 255, 0.12), rgba(7, 26, 92, 0.3));
+        background: linear-gradient(135deg, rgba(244, 230, 200, 0.12), rgba(14, 63, 66, 0.3));
         backdrop-filter: blur(24px) saturate(150%);
         box-shadow: var(--shadow);
       }
@@ -316,12 +321,12 @@ export function renderDashboard(): string {
       .view-head p {
         max-width: 780px;
         margin: 10px 0 0;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         line-height: 1.55;
       }
 
       .view-kicker {
-        color: var(--ochre-300);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -333,10 +338,10 @@ export function renderDashboard(): string {
         align-items: center;
         justify-content: center;
         padding: 0 12px;
-        border: 1px solid rgba(255, 197, 108, 0.42);
+        border: 1px solid rgba(240, 200, 117, 0.42);
         border-radius: var(--radius);
-        background: rgba(216, 138, 29, 0.12);
-        color: var(--ochre-300);
+        background: rgba(200, 154, 61, 0.12);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 11px;
         white-space: nowrap;
@@ -353,7 +358,7 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(6, 19, 63, 0.62);
+        background: rgba(8, 36, 38, 0.62);
         backdrop-filter: blur(24px) saturate(150%);
         box-shadow: var(--shadow);
       }
@@ -364,13 +369,13 @@ export function renderDashboard(): string {
         gap: 10px;
         align-items: center;
         min-width: 0;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 12px;
       }
 
       .breadcrumb strong {
-        color: var(--frost);
+        color: var(--champagne);
         font-family: var(--font-display);
         font-size: 16px;
       }
@@ -388,8 +393,8 @@ export function renderDashboard(): string {
         min-height: 40px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.1);
-        color: var(--frost);
+        background: rgba(244, 230, 200, 0.1);
+        color: var(--champagne);
         outline: none;
         backdrop-filter: blur(18px) saturate(150%);
       }
@@ -400,17 +405,17 @@ export function renderDashboard(): string {
       }
 
       .glass-field::placeholder {
-        color: rgba(247, 251, 255, 0.48);
+        color: rgba(244, 230, 200, 0.48);
       }
 
       .glass-select {
         padding: 0 36px 0 12px;
-        color: var(--frost);
+        color: var(--champagne);
         appearance: none;
         background-image:
-          linear-gradient(45deg, transparent 50%, var(--ochre-300) 50%),
-          linear-gradient(135deg, var(--ochre-300) 50%, transparent 50%),
-          linear-gradient(90deg, rgba(247, 251, 255, 0.16), rgba(247, 251, 255, 0.16));
+          linear-gradient(45deg, transparent 50%, var(--gold-300) 50%),
+          linear-gradient(135deg, var(--gold-300) 50%, transparent 50%),
+          linear-gradient(90deg, rgba(244, 230, 200, 0.16), rgba(244, 230, 200, 0.16));
         background-position:
           calc(100% - 18px) 17px,
           calc(100% - 13px) 17px,
@@ -420,8 +425,8 @@ export function renderDashboard(): string {
       }
 
       .glass-select option {
-        color: var(--frost);
-        background: var(--royal-950);
+        color: var(--champagne);
+        background: var(--petroleum-950);
       }
 
       .glass-button {
@@ -435,16 +440,16 @@ export function renderDashboard(): string {
       }
 
       .glass-button:hover {
-        border-color: rgba(255, 197, 108, 0.52);
-        background: rgba(216, 138, 29, 0.18);
+        border-color: rgba(240, 200, 117, 0.52);
+        background: rgba(200, 154, 61, 0.18);
         transform: translateY(-1px);
       }
 
       .glass-button.primary {
-        border-color: rgba(255, 197, 108, 0.58);
-        background: linear-gradient(135deg, rgba(216, 138, 29, 0.92), rgba(47, 100, 255, 0.54));
+        border-color: rgba(240, 200, 117, 0.58);
+        background: linear-gradient(135deg, rgba(200, 154, 61, 0.92), rgba(30, 115, 116, 0.54));
         color: white;
-        box-shadow: 0 14px 34px rgba(216, 138, 29, 0.18);
+        box-shadow: 0 14px 34px rgba(200, 154, 61, 0.18);
       }
 
       .hero-grid {
@@ -461,7 +466,7 @@ export function renderDashboard(): string {
       .module {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: linear-gradient(145deg, rgba(247, 251, 255, 0.13), rgba(7, 26, 92, 0.28));
+        background: linear-gradient(145deg, rgba(244, 230, 200, 0.13), rgba(14, 63, 66, 0.28));
         backdrop-filter: blur(26px) saturate(155%);
         box-shadow: var(--shadow);
       }
@@ -479,8 +484,8 @@ export function renderDashboard(): string {
         pointer-events: none;
         content: "";
         background:
-          linear-gradient(90deg, rgba(255, 197, 108, 0.24), transparent 18%, transparent 82%, rgba(142, 180, 255, 0.18)),
-          repeating-linear-gradient(90deg, transparent 0 64px, rgba(247, 251, 255, 0.08) 65px, transparent 66px);
+          linear-gradient(90deg, rgba(240, 200, 117, 0.24), transparent 18%, transparent 82%, rgba(115, 184, 178, 0.18)),
+          repeating-linear-gradient(90deg, transparent 0 64px, rgba(244, 230, 200, 0.08) 65px, transparent 66px);
       }
 
       .hero-panel::after {
@@ -490,7 +495,7 @@ export function renderDashboard(): string {
         top: 26%;
         height: 2px;
         content: "";
-        background: linear-gradient(90deg, transparent, rgba(255, 197, 108, 0.86), rgba(142, 180, 255, 0.86), transparent);
+        background: linear-gradient(90deg, transparent, rgba(240, 200, 117, 0.86), rgba(115, 184, 178, 0.86), transparent);
         animation: scanLine 4.5s ease-in-out infinite;
       }
 
@@ -508,10 +513,10 @@ export function renderDashboard(): string {
         align-items: center;
         gap: 10px;
         padding: 8px 10px;
-        border: 1px solid rgba(255, 197, 108, 0.34);
+        border: 1px solid rgba(240, 200, 117, 0.34);
         border-radius: var(--radius);
-        background: rgba(216, 138, 29, 0.11);
-        color: var(--ochre-300);
+        background: rgba(200, 154, 61, 0.11);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -528,7 +533,7 @@ export function renderDashboard(): string {
 
       .hero-title span {
         color: transparent;
-        background: linear-gradient(92deg, var(--frost), var(--royal-300), var(--ochre-300));
+        background: linear-gradient(92deg, var(--champagne), var(--petroleum-300), var(--gold-300));
         -webkit-background-clip: text;
         background-clip: text;
       }
@@ -536,7 +541,7 @@ export function renderDashboard(): string {
       .hero-subtitle {
         max-width: 690px;
         margin: 0;
-        color: var(--frost-80);
+        color: var(--champagne-80);
         font-size: clamp(15px, 1.7vw, 19px);
         line-height: 1.65;
       }
@@ -553,12 +558,12 @@ export function renderDashboard(): string {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       .strip-cell span {
         display: block;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -592,7 +597,7 @@ export function renderDashboard(): string {
       }
 
       .panel-title span {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -606,7 +611,7 @@ export function renderDashboard(): string {
         padding: 11px 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       .system-row strong {
@@ -617,7 +622,7 @@ export function renderDashboard(): string {
       .system-row span {
         display: block;
         margin-top: 4px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -628,18 +633,18 @@ export function renderDashboard(): string {
         justify-content: center;
         min-width: 72px;
         padding: 7px 9px;
-        border: 1px solid rgba(89, 241, 189, 0.36);
+        border: 1px solid rgba(115, 184, 178, 0.36);
         border-radius: var(--radius);
-        background: rgba(89, 241, 189, 0.1);
+        background: rgba(115, 184, 178, 0.1);
         color: var(--good);
         font-family: var(--font-data);
         font-size: 11px;
       }
 
       .status-badge.pending {
-        border-color: rgba(255, 197, 108, 0.42);
-        background: rgba(255, 197, 108, 0.1);
-        color: var(--ochre-300);
+        border-color: rgba(240, 200, 117, 0.42);
+        background: rgba(240, 200, 117, 0.1);
+        color: var(--gold-300);
       }
 
       .metrics-grid {
@@ -654,7 +659,7 @@ export function renderDashboard(): string {
       }
 
       .metric span {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -671,7 +676,7 @@ export function renderDashboard(): string {
       .metric small {
         display: block;
         margin-top: 12px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
       }
 
       .work-grid {
@@ -706,12 +711,12 @@ export function renderDashboard(): string {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       .access-cell span {
         display: block;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -732,15 +737,15 @@ export function renderDashboard(): string {
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
-          linear-gradient(145deg, rgba(47, 100, 255, 0.18), rgba(216, 138, 29, 0.14)),
-          rgba(247, 251, 255, 0.07);
+          linear-gradient(145deg, rgba(30, 115, 116, 0.18), rgba(200, 154, 61, 0.14)),
+          rgba(244, 230, 200, 0.07);
       }
 
       .access-pulse::before {
         position: absolute;
         inset: 18px;
         content: "";
-        border: 1px solid rgba(255, 197, 108, 0.36);
+        border: 1px solid rgba(240, 200, 117, 0.36);
         transform: skewX(-12deg);
       }
 
@@ -751,7 +756,7 @@ export function renderDashboard(): string {
         top: 50%;
         height: 2px;
         content: "";
-        background: linear-gradient(90deg, transparent, var(--ochre-300), var(--royal-300), transparent);
+        background: linear-gradient(90deg, transparent, var(--gold-300), var(--petroleum-300), transparent);
         animation: scanLine 5.2s ease-in-out infinite;
       }
 
@@ -771,7 +776,7 @@ export function renderDashboard(): string {
       }
 
       .access-pulse-copy span {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         line-height: 1.5;
       }
 
@@ -802,7 +807,7 @@ export function renderDashboard(): string {
       .empty-state {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       .member-card {
@@ -829,7 +834,7 @@ export function renderDashboard(): string {
       .empty-state span {
         display: block;
         margin-top: 5px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -839,10 +844,10 @@ export function renderDashboard(): string {
         justify-content: center;
         min-width: 92px;
         padding: 8px 10px;
-        border: 1px solid rgba(255, 197, 108, 0.42);
+        border: 1px solid rgba(240, 200, 117, 0.42);
         border-radius: var(--radius);
-        color: var(--ochre-300);
-        background: rgba(216, 138, 29, 0.12);
+        color: var(--gold-300);
+        background: rgba(200, 154, 61, 0.12);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -875,9 +880,9 @@ export function renderDashboard(): string {
       }
 
       .invitation-card.pending {
-        border-color: rgba(255, 197, 108, 0.38);
+        border-color: rgba(240, 200, 117, 0.38);
         background:
-          linear-gradient(135deg, rgba(216, 138, 29, 0.16), rgba(247, 251, 255, 0.08));
+          linear-gradient(135deg, rgba(200, 154, 61, 0.16), rgba(244, 230, 200, 0.08));
       }
 
       .invitation-actions {
@@ -892,16 +897,16 @@ export function renderDashboard(): string {
         padding: 0 10px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
-        color: var(--frost-80);
+        background: rgba(244, 230, 200, 0.08);
+        color: var(--champagne-80);
         font-family: var(--font-data);
         font-size: 10px;
         cursor: pointer;
       }
 
       .mini-button.warn {
-        border-color: rgba(255, 107, 107, 0.38);
-        color: #ffb0b0;
+        border-color: rgba(169, 120, 36, 0.38);
+        color: var(--gold-300);
       }
 
       .invitation-link-card {
@@ -909,8 +914,8 @@ export function renderDashboard(): string {
         gap: 10px;
         padding: 12px;
         background:
-          linear-gradient(135deg, rgba(47, 100, 255, 0.2), rgba(216, 138, 29, 0.14)),
-          rgba(247, 251, 255, 0.08);
+          linear-gradient(135deg, rgba(30, 115, 116, 0.2), rgba(200, 154, 61, 0.14)),
+          rgba(244, 230, 200, 0.08);
       }
 
       .copy-row {
@@ -936,7 +941,7 @@ export function renderDashboard(): string {
       }
 
       .audit-card time {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
       }
@@ -944,7 +949,7 @@ export function renderDashboard(): string {
       .empty-state {
         min-height: 86px;
         padding: 14px;
-        color: var(--frost-80);
+        color: var(--champagne-80);
       }
 
       .jurisdiction-map {
@@ -962,8 +967,8 @@ export function renderDashboard(): string {
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
-          linear-gradient(145deg, rgba(47, 100, 255, 0.16), rgba(247, 251, 255, 0.06)),
-          rgba(247, 251, 255, 0.07);
+          linear-gradient(145deg, rgba(30, 115, 116, 0.16), rgba(244, 230, 200, 0.06)),
+          rgba(244, 230, 200, 0.07);
       }
 
       .country-tile::after {
@@ -973,14 +978,14 @@ export function renderDashboard(): string {
         bottom: 0;
         height: 3px;
         content: "";
-        background: linear-gradient(90deg, var(--royal-500), var(--ochre-500));
+        background: linear-gradient(90deg, var(--petroleum-500), var(--gold-500));
         transform-origin: left;
         transform: scaleX(var(--fill, 0.24));
         transition: transform 400ms ease;
       }
 
       .country-tile.active {
-        border-color: rgba(255, 197, 108, 0.48);
+        border-color: rgba(240, 200, 117, 0.48);
         --fill: 0.86;
       }
 
@@ -993,7 +998,7 @@ export function renderDashboard(): string {
       .country-tile span {
         display: block;
         margin-top: 10px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -1001,7 +1006,7 @@ export function renderDashboard(): string {
       .country-tile em {
         display: block;
         margin-top: 8px;
-        color: var(--frost-80);
+        color: var(--champagne-80);
         font-family: var(--font-data);
         font-size: 10px;
         font-style: normal;
@@ -1011,7 +1016,7 @@ export function renderDashboard(): string {
         position: absolute;
         right: 12px;
         bottom: 12px;
-        color: var(--ochre-300);
+        color: var(--gold-300);
         font-family: var(--font-data);
       }
 
@@ -1028,7 +1033,7 @@ export function renderDashboard(): string {
       }
 
       .field-block label {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -1046,12 +1051,12 @@ export function renderDashboard(): string {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       input[type="range"] {
         width: 100%;
-        accent-color: var(--ochre-500);
+        accent-color: var(--gold-500);
       }
 
       .tax-workbench {
@@ -1076,8 +1081,8 @@ export function renderDashboard(): string {
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
-          linear-gradient(135deg, rgba(47, 100, 255, 0.12), rgba(216, 138, 29, 0.08)),
-          rgba(247, 251, 255, 0.07);
+          linear-gradient(135deg, rgba(30, 115, 116, 0.12), rgba(200, 154, 61, 0.08)),
+          rgba(244, 230, 200, 0.07);
       }
 
       .tax-section-head {
@@ -1085,7 +1090,7 @@ export function renderDashboard(): string {
         justify-content: space-between;
         gap: 12px;
         align-items: center;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
         text-transform: uppercase;
@@ -1112,12 +1117,12 @@ export function renderDashboard(): string {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
       }
 
       .tax-kpi span {
         display: block;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
         text-transform: uppercase;
@@ -1154,13 +1159,13 @@ export function renderDashboard(): string {
         padding: 11px 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.075);
+        background: rgba(244, 230, 200, 0.075);
       }
 
       .tax-warning-card {
         align-items: start;
-        border-color: rgba(255, 197, 108, 0.32);
-        color: var(--ochre-300);
+        border-color: rgba(240, 200, 117, 0.32);
+        color: var(--gold-300);
       }
 
       .tax-doc-card {
@@ -1179,7 +1184,7 @@ export function renderDashboard(): string {
         bottom: 0;
         height: 2px;
         content: "";
-        background: linear-gradient(90deg, var(--royal-500), var(--ochre-500));
+        background: linear-gradient(90deg, var(--petroleum-500), var(--gold-500));
         transform-origin: left;
         transform: scaleX(var(--share, 0.1));
       }
@@ -1201,13 +1206,13 @@ export function renderDashboard(): string {
       .tax-chain-card span {
         display: block;
         margin-top: 4px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
       }
 
       .tax-amount {
-        color: var(--ochre-300);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 12px;
         text-align: right;
@@ -1226,10 +1231,10 @@ export function renderDashboard(): string {
         justify-content: center;
         min-height: 28px;
         padding: 0 9px;
-        border: 1px solid rgba(89, 241, 189, 0.34);
+        border: 1px solid rgba(115, 184, 178, 0.34);
         border-radius: var(--radius);
         color: var(--good);
-        background: rgba(89, 241, 189, 0.09);
+        background: rgba(115, 184, 178, 0.09);
         font-family: var(--font-data);
         font-size: 10px;
       }
@@ -1267,17 +1272,17 @@ export function renderDashboard(): string {
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
-          linear-gradient(90deg, rgba(47, 100, 255, 0.1), transparent 45%, rgba(216, 138, 29, 0.08)),
-          rgba(247, 251, 255, 0.07);
+          linear-gradient(90deg, rgba(30, 115, 116, 0.1), transparent 45%, rgba(200, 154, 61, 0.08)),
+          rgba(244, 230, 200, 0.07);
       }
 
       .comparison-row.header {
         min-height: 42px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
         text-transform: uppercase;
-        background: rgba(247, 251, 255, 0.05);
+        background: rgba(244, 230, 200, 0.05);
       }
 
       .comparison-row strong {
@@ -1288,7 +1293,7 @@ export function renderDashboard(): string {
       .comparison-row span {
         display: block;
         margin-top: 4px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
       }
@@ -1303,7 +1308,7 @@ export function renderDashboard(): string {
         height: 8px;
         overflow: hidden;
         border-radius: 999px;
-        background: rgba(247, 251, 255, 0.1);
+        background: rgba(244, 230, 200, 0.1);
       }
 
       .risk-meter span {
@@ -1311,7 +1316,7 @@ export function renderDashboard(): string {
         width: var(--risk, 30%);
         height: 100%;
         margin: 0;
-        background: linear-gradient(90deg, var(--good), var(--ochre-500), var(--danger));
+        background: linear-gradient(90deg, var(--good), var(--gold-500), var(--danger));
       }
 
       .feed {
@@ -1327,7 +1332,7 @@ export function renderDashboard(): string {
         align-items: center;
         padding: 18px;
         border-bottom: 1px solid var(--line);
-        background: rgba(247, 251, 255, 0.06);
+        background: rgba(244, 230, 200, 0.06);
       }
 
       .feed-list {
@@ -1346,11 +1351,11 @@ export function renderDashboard(): string {
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.07);
+        background: rgba(244, 230, 200, 0.07);
       }
 
       .feed-index {
-        color: var(--ochre-300);
+        color: var(--gold-300);
         font-family: var(--font-data);
         font-size: 11px;
       }
@@ -1363,13 +1368,13 @@ export function renderDashboard(): string {
       .feed-copy span {
         display: block;
         margin-top: 4px;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
       }
 
       .feed-time {
-        color: var(--frost-64);
+        color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 10px;
       }
@@ -1393,7 +1398,7 @@ export function renderDashboard(): string {
 
       .module p {
         margin: 12px 0 0;
-        color: var(--frost-64);
+        color: var(--champagne-64);
         line-height: 1.55;
       }
 
@@ -1402,7 +1407,7 @@ export function renderDashboard(): string {
         margin-top: 20px;
         overflow: hidden;
         border-radius: 999px;
-        background: rgba(247, 251, 255, 0.1);
+        background: rgba(244, 230, 200, 0.1);
       }
 
       .module-meter span {
@@ -1410,7 +1415,7 @@ export function renderDashboard(): string {
         width: var(--meter, 40%);
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, var(--royal-500), var(--ochre-500));
+        background: linear-gradient(90deg, var(--petroleum-500), var(--gold-500));
         transition: width 700ms ease;
       }
 
@@ -1429,8 +1434,8 @@ export function renderDashboard(): string {
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.1);
-        color: var(--frost-80);
+        background: rgba(244, 230, 200, 0.1);
+        color: var(--champagne-80);
         font-family: var(--font-data);
         font-size: 11px;
         text-overflow: ellipsis;
@@ -1446,8 +1451,8 @@ export function renderDashboard(): string {
         place-items: center;
         padding: 22px;
         background:
-          linear-gradient(115deg, rgba(5, 9, 29, 0.72), rgba(6, 19, 63, 0.82)),
-          repeating-linear-gradient(90deg, rgba(247, 251, 255, 0.05) 0 1px, transparent 1px 70px);
+          linear-gradient(115deg, rgba(5, 7, 19, 0.72), rgba(8, 36, 38, 0.82)),
+          repeating-linear-gradient(90deg, rgba(244, 230, 200, 0.05) 0 1px, transparent 1px 70px);
         backdrop-filter: blur(18px) saturate(155%);
       }
 
@@ -1463,8 +1468,8 @@ export function renderDashboard(): string {
         padding: 18px;
         border: 1px solid var(--line-strong);
         border-radius: var(--radius);
-        background: linear-gradient(145deg, rgba(247, 251, 255, 0.16), rgba(7, 26, 92, 0.42));
-        box-shadow: 0 34px 120px rgba(1, 7, 30, 0.62);
+        background: linear-gradient(145deg, rgba(244, 230, 200, 0.16), rgba(14, 63, 66, 0.42));
+        box-shadow: 0 34px 120px rgba(2, 4, 12, 0.62);
       }
 
       .auth-story,
@@ -1472,7 +1477,7 @@ export function renderDashboard(): string {
         min-height: 430px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
+        background: rgba(244, 230, 200, 0.08);
         backdrop-filter: blur(24px) saturate(160%);
       }
 
@@ -1490,8 +1495,8 @@ export function renderDashboard(): string {
         inset: 0;
         content: "";
         background:
-          linear-gradient(100deg, rgba(255, 197, 108, 0.22), transparent 34%),
-          repeating-linear-gradient(135deg, rgba(142, 180, 255, 0.09) 0 1px, transparent 1px 18px);
+          linear-gradient(100deg, rgba(240, 200, 117, 0.22), transparent 34%),
+          repeating-linear-gradient(135deg, rgba(115, 184, 178, 0.09) 0 1px, transparent 1px 18px);
       }
 
       .auth-story > * {
@@ -1510,7 +1515,7 @@ export function renderDashboard(): string {
       .auth-story p {
         max-width: 560px;
         margin: 0;
-        color: var(--frost-80);
+        color: var(--champagne-80);
         line-height: 1.65;
       }
 
@@ -1531,15 +1536,15 @@ export function renderDashboard(): string {
         min-height: 38px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
-        color: var(--frost-64);
+        background: rgba(244, 230, 200, 0.08);
+        color: var(--champagne-64);
         cursor: pointer;
       }
 
       .auth-tab.active {
-        border-color: rgba(255, 197, 108, 0.52);
-        background: rgba(216, 138, 29, 0.18);
-        color: var(--frost);
+        border-color: rgba(240, 200, 117, 0.52);
+        background: rgba(200, 154, 61, 0.18);
+        color: var(--champagne);
       }
 
       .auth-message {
@@ -1547,20 +1552,20 @@ export function renderDashboard(): string {
         padding: 11px 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: rgba(247, 251, 255, 0.08);
-        color: var(--frost-64);
+        background: rgba(244, 230, 200, 0.08);
+        color: var(--champagne-64);
         font-size: 13px;
         line-height: 1.45;
       }
 
       .auth-message.good {
-        border-color: rgba(89, 241, 189, 0.35);
+        border-color: rgba(115, 184, 178, 0.35);
         color: var(--good);
       }
 
       .auth-message.warn {
-        border-color: rgba(255, 197, 108, 0.42);
-        color: var(--ochre-300);
+        border-color: rgba(240, 200, 117, 0.42);
+        color: var(--gold-300);
       }
 
       .mobile-brand {
@@ -1569,13 +1574,13 @@ export function renderDashboard(): string {
 
       @keyframes livePulse {
         0% {
-          box-shadow: 0 0 0 0 rgba(89, 241, 189, 0.55);
+          box-shadow: 0 0 0 0 rgba(115, 184, 178, 0.55);
         }
         70% {
-          box-shadow: 0 0 0 12px rgba(89, 241, 189, 0);
+          box-shadow: 0 0 0 12px rgba(115, 184, 178, 0);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(89, 241, 189, 0);
+          box-shadow: 0 0 0 0 rgba(115, 184, 178, 0);
         }
       }
 
@@ -1673,7 +1678,7 @@ export function renderDashboard(): string {
           padding: 14px;
           border: 1px solid var(--line);
           border-radius: var(--radius);
-          background: rgba(6, 19, 63, 0.68);
+          background: rgba(8, 36, 38, 0.68);
           backdrop-filter: blur(22px);
         }
 
@@ -3384,7 +3389,7 @@ export function renderDashboard(): string {
         setText("#tax-compare-status", "comparando mercados");
 
         const payload = collectTaxPayload();
-        const destinations = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU"];
+        const destinations = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU", "AG", "BB", "DO", "JM", "LC", "KN", "VC", "TT"];
 
         try {
           const response = await fetch("/v1/tax/compare", {
@@ -3395,7 +3400,7 @@ export function renderDashboard(): string {
             body: JSON.stringify({
               scenario: payload,
               destinations: destinations,
-              limit: 12
+              limit: 20
             })
           });
           const body = await response.json();

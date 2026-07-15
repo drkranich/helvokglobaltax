@@ -35,6 +35,13 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain('class="app-view" id="motor"');
     expect(body).toContain('class="app-view" id="documentos"');
     expect(body).toContain("function activateView");
+    expect(body).toContain("--petroleum:");
+    expect(body).toContain("--midnight:");
+    expect(body).toContain("--gold:");
+    expect(body).toContain("--champagne:");
+    expect(body).not.toContain("--royal-");
+    expect(body).not.toContain("--ochre-");
+    expect(body).not.toContain("--frost");
   });
 
   it("returns a healthy response", async () => {
@@ -68,10 +75,29 @@ describe("Helvok Tax Worker API", () => {
 
     expect(response.status).toBe(200);
     expect(body.rule_pack_version).toContain("global-indirect-tax-seed");
-    expect(body.count).toBeGreaterThan(40);
-    expect(body.markets.map((market) => market.code)).toEqual(expect.arrayContaining(["BR", "GB", "US", "CA", "SG", "JP"]));
-    expect(body.markets.map((market) => market.name)).toEqual(expect.arrayContaining(["Canadá", "Bélgica", "Suíça", "Emirados Árabes"]));
-    expect(body.markets.map((market) => market.region)).toEqual(expect.arrayContaining(["América Latina", "Ásia", "Oriente Médio", "África"]));
+    expect(body.count).toBeGreaterThan(55);
+    expect(body.markets.map((market) => market.code)).toEqual(expect.arrayContaining(["BR", "GB", "US", "CA", "SG", "JP", "AG", "BB", "DO", "JM", "TT"]));
+    expect(body.markets.map((market) => market.name)).toEqual(
+      expect.arrayContaining([
+        "Canadá",
+        "México",
+        "França",
+        "Itália",
+        "Polônia",
+        "Suécia",
+        "Romênia",
+        "Grécia",
+        "Austrália",
+        "Bélgica",
+        "Suíça",
+        "Emirados Árabes",
+        "Antígua e Barbuda",
+        "República Dominicana",
+        "São Cristóvão e Névis",
+        "São Vicente e Granadinas",
+      ]),
+    );
+    expect(body.markets.map((market) => market.region)).toEqual(expect.arrayContaining(["América Latina", "Caribe", "Ásia", "Oriente Médio", "África"]));
   });
 
   it("simulates a cross-border DDP tax and cost scenario", async () => {

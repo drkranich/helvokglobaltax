@@ -205,9 +205,9 @@ Entregas por onda:
 
 1. Portugal.
 2. Alemanha.
-3. Franca.
+3. França.
 4. Espanha.
-5. Italia.
+5. Itália.
 6. Holanda.
 7. Estados Unidos.
 8. Canada.
