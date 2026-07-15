@@ -1345,6 +1345,12 @@ export function renderDashboard(): string {
         margin-bottom: 8px;
       }
 
+      .fiscal-pipeline-action {
+        justify-self: start;
+        margin-top: 12px;
+        margin-bottom: 18px;
+      }
+
       .tax-mini-card,
       .tax-line-card,
       .tax-doc-card,
@@ -2723,7 +2729,7 @@ export function renderDashboard(): string {
                 <div class="tax-mini-card"><strong id="fiscal-documents-queued">0</strong><span>Fila</span></div>
                 <div class="tax-mini-card"><strong id="fiscal-documents-authorized">0</strong><span>Autorizados</span></div>
               </div>
-              <button class="glass-button primary" id="create-fiscal-document-button" type="button">Criar draft fiscal global</button>
+              <button class="glass-button primary fiscal-pipeline-action" id="create-fiscal-document-button" type="button">Criar draft fiscal global</button>
               <div class="tax-doc-list" id="fiscal-documents-list">
                 <div class="empty-state">
                   <strong>Nenhum documento fiscal criado</strong>
