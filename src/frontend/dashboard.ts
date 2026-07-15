@@ -2538,7 +2538,7 @@ export function renderDashboard(): string {
                     <label for="tax-channel">Canal</label>
                     <select id="tax-channel" class="glass-select">
                       <option value="marketplace" selected>Marketplace</option>
-                      <option value="ecommerce">E-commerce proprio</option>
+                      <option value="ecommerce">E-commerce próprio</option>
                       <option value="distributor">Distribuidor</option>
                       <option value="erp">ERP/SaaS</option>
                     </select>
