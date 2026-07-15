@@ -454,3 +454,105 @@ export function validateCatalogItemPayload(input: unknown): ValidationResult<Jso
 
   return { ok: true, value: payload };
 }
+
+const documentTypePattern = /^[A-Z][A-Z0-9_.:-]{1,64}$/;
+const adapterKeyPattern = /^[a-z][a-z0-9_/.-]{1,96}$/;
+
+function getOptionalStringArray(record: JsonRecord, key: string): string[] | undefined {
+  const value = record[key];
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const items = value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim().toUpperCase());
+
+  return items.length > 0 ? items : undefined;
+}
+
+export function validateFiscalDocumentPayload(input: unknown): ValidationResult<JsonRecord> {
+  if (!isRecord(input)) {
+    return invalid("Request body must be a JSON object.");
+  }
+
+  const tenantId = getOptionalString(input, "tenant_id");
+  const organizationId = getOptionalString(input, "organization_id");
+  const establishmentId = getOptionalString(input, "establishment_id");
+  const environmentId = getOptionalString(input, "environment_id");
+  const authorityId = getOptionalString(input, "authority_id");
+  const countryCode = getOptionalString(input, "country_code")?.toUpperCase() ?? "BR";
+  const documentType = getOptionalString(input, "document_type")?.toUpperCase() ?? "NFE";
+  const adapterKey = getOptionalString(input, "adapter_key") ?? "adapters/brazil/nfe";
+  const operationType = getOptionalString(input, "operation_type")?.toLowerCase() ?? "sale";
+  const currencyCode = getOptionalString(input, "currency_code")?.toUpperCase() ?? "BRL";
+  const totalAmount = getOptionalNumber(input, "total_amount") ?? 0;
+  const taxAmount = getOptionalNumber(input, "tax_amount") ?? 0;
+
+  if (!tenantId || !isUuid(tenantId)) {
+    return invalid("tenant_id must be a valid UUID.");
+  }
+
+  for (const [key, value] of Object.entries({ organization_id: organizationId, establishment_id: establishmentId, environment_id: environmentId, authority_id: authorityId })) {
+    if (value && !isUuid(value)) {
+      return invalid(`${key} must be a valid UUID.`);
+    }
+  }
+
+  if (!countryPattern.test(countryCode)) {
+    return invalid("country_code must be ISO 3166-1 alpha-2.");
+  }
+
+  if (!documentTypePattern.test(documentType)) {
+    return invalid("document_type must be an uppercase fiscal document code.");
+  }
+
+  if (!adapterKeyPattern.test(adapterKey)) {
+    return invalid("adapter_key must be a lowercase adapter path.");
+  }
+
+  if (!currencyPattern.test(currencyCode)) {
+    return invalid("currency_code must be ISO 4217.");
+  }
+
+  if (totalAmount < 0 || taxAmount < 0) {
+    return invalid("total_amount and tax_amount must be greater than or equal to zero.");
+  }
+
+  const payloadRecord = getOptionalRecord(input, "payload") ?? {};
+  const calculationSnapshot = getOptionalRecord(input, "calculation_snapshot") ?? {};
+  const metadata = getOptionalRecord(input, "metadata") ?? {};
+  const jurisdictionPath = getOptionalStringArray(input, "jurisdiction_path") ?? [countryCode];
+  const requestPayload: JsonRecord = {
+    tenant_id: tenantId,
+    country_code: countryCode,
+    document_type: documentType,
+    adapter_key: adapterKey,
+    operation_type: operationType,
+    currency_code: currencyCode,
+    total_amount: totalAmount,
+    tax_amount: taxAmount,
+    jurisdiction_path: jurisdictionPath,
+    payload: payloadRecord,
+    calculation_snapshot: calculationSnapshot,
+    metadata,
+  };
+
+  if (organizationId) {
+    requestPayload.organization_id = organizationId;
+  }
+
+  if (establishmentId) {
+    requestPayload.establishment_id = establishmentId;
+  }
+
+  if (environmentId) {
+    requestPayload.environment_id = environmentId;
+  }
+
+  if (authorityId) {
+    requestPayload.authority_id = authorityId;
+  }
+
+  return { ok: true, value: requestPayload };
+}

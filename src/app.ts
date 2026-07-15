@@ -51,7 +51,7 @@ export function createApp(): Hono<AppEnv> {
         products: "authenticated-catalog-preview",
         tax_simulator: "edge-estimate-engine-preview",
         tax_rules: "seed-rule-pack-preview",
-        fiscal_documents: "planned",
+        fiscal_documents: "global-lifecycle-preview",
         audit: "planned",
       },
     }),

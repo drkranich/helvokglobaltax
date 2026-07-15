@@ -45,7 +45,10 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Produtos e serviços");
     expect(body).toContain("Salvar produto ou serviço");
     expect(body).toContain("Usar no simulador");
+    expect(body).toContain("Documentos fiscais globais");
+    expect(body).toContain("Criar draft fiscal global");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
+    expect(body).toContain("function createFiscalDocumentDraft");
     expect(body).toContain("function initializeCustomSelects");
     expect(body).toContain(".select-panel");
     expect(body).toContain("initializeCustomSelects();");
@@ -77,6 +80,15 @@ describe("Helvok Tax Worker API", () => {
     expect(response.status).toBe(200);
     expect(body.product).toBe("Helvok Tax");
     expect(body.api_version).toBe("v1");
+  });
+
+  it("returns API module manifest", async () => {
+    const app = createApp();
+    const response = await app.request("/v1", {}, env);
+    const body = await response.json<{ modules: Record<string, unknown> }>();
+
+    expect(response.status).toBe(200);
+    expect(body.modules.fiscal_documents).toBe("global-lifecycle-preview");
   });
 
   it("lists global export markets for the tax simulator", async () => {
@@ -594,6 +606,110 @@ describe("Helvok Tax Worker API", () => {
     });
   });
 
+  it("lists fiscal authorities through admin RPC", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify([{ country_code: "BR", authority_code: "BR-SEFAZ-NFE", adapter_key: "adapters/brazil/nfe" }]), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/fiscal/authorities",
+      {
+        headers: {
+          "x-helvok-admin-token": "test-admin-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ authorities: Array<{ authority_code: string }> }>();
+
+    expect(response.status).toBe(200);
+    expect(body.authorities[0]?.authority_code).toBe("BR-SEFAZ-NFE");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_list_fiscal_authorities",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+  });
+
+  it("creates a global fiscal document through admin RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          event_type: "fiscal_document.created",
+          document: {
+            id: "document-1",
+            country_code: "BR",
+            document_type: "NFE",
+            status: "draft",
+          },
+          documents: [],
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/admin/fiscal/documents",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-helvok-admin-token": "test-admin-token",
+        },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          country_code: "br",
+          document_type: "nfe",
+          adapter_key: "adapters/brazil/nfe",
+          total_amount: 1200,
+          tax_amount: 216,
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string; document: { status: string } }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("fiscal_document.created");
+    expect(body.document.status).toBe("draft");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_create_fiscal_document",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            country_code: "BR",
+            document_type: "NFE",
+            adapter_key: "adapters/brazil/nfe",
+            operation_type: "sale",
+            currency_code: "BRL",
+            total_amount: 1200,
+            tax_amount: 216,
+            jurisdiction_path: ["BR"],
+            payload: {},
+            calculation_snapshot: {},
+            metadata: {},
+          },
+        }),
+      }),
+    );
+  });
+
   it("rejects membership creation without a user selector", async () => {
     const app = createApp();
     const response = await app.request(
@@ -954,6 +1070,76 @@ describe("Helvok Tax Worker API", () => {
             unit_price: 99,
             unit_cost: 0,
             status: "draft",
+          },
+        }),
+      }),
+    );
+  });
+
+  it("creates fiscal document drafts through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "fiscal_document.created", document: { status: "draft" }, documents: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/fiscal/documents`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({
+          country_code: "pt",
+          document_type: "einvoice",
+          adapter_key: "adapters/portugal/einvoice",
+          currency_code: "eur",
+          total_amount: 250,
+          tax_amount: 57.5,
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("fiscal_document.created");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_create_fiscal_document",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            country_code: "PT",
+            document_type: "EINVOICE",
+            adapter_key: "adapters/portugal/einvoice",
+            operation_type: "sale",
+            currency_code: "EUR",
+            total_amount: 250,
+            tax_amount: 57.5,
+            jurisdiction_path: ["PT"],
+            payload: {},
+            calculation_snapshot: {},
+            metadata: {},
           },
         }),
       }),

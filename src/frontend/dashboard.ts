@@ -2683,11 +2683,31 @@ export function renderDashboard(): string {
           <div class="view-head">
             <div>
               <span class="view-kicker">Pré-emissão e compliance</span>
-              <h1>Documentos e pendências</h1>
-              <p>Veja o resultado da simulação, checklist documental, dados obrigatórios e alertas antes de avançar para emissão fiscal.</p>
+              <h1>Documentos fiscais globais</h1>
+              <p>Crie drafts internacionais a partir da simulação, acompanhe lifecycle e prepare a futura fila de emissão por adaptador governamental.</p>
             </div>
-            <span class="view-status" id="documents-view-status">pré-emissão</span>
+            <span class="view-status" id="documents-view-status">lifecycle global</span>
           </div>
+          <section class="work-grid">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Pipeline fiscal</h2>
+                <span id="fiscal-documents-count">0 documentos</span>
+              </div>
+              <div class="comparison-summary">
+                <div class="tax-mini-card"><strong id="fiscal-documents-draft">0</strong><span>Drafts</span></div>
+                <div class="tax-mini-card"><strong id="fiscal-documents-queued">0</strong><span>Fila</span></div>
+                <div class="tax-mini-card"><strong id="fiscal-documents-authorized">0</strong><span>Autorizados</span></div>
+              </div>
+              <button class="glass-button primary" id="create-fiscal-document-button" type="button">Criar draft fiscal global</button>
+              <div class="tax-doc-list" id="fiscal-documents-list">
+                <div class="empty-state">
+                  <strong>Nenhum documento fiscal criado</strong>
+                  <span>Rode uma simulação e crie um draft para iniciar o lifecycle internacional.</span>
+                </div>
+              </div>
+            </article>
+
           <aside class="panel tax-result-panel">
             <div class="panel-title">
               <h2>Resultado da simulação</h2>
@@ -2724,6 +2744,7 @@ export function renderDashboard(): string {
               <div class="tax-warning-list" id="tax-warnings"></div>
             </div>
           </aside>
+          </section>
         </section>
 
         <section class="app-view" id="mercados" data-view="mercados" aria-label="Mercados">
@@ -2829,11 +2850,17 @@ export function renderDashboard(): string {
         markets: [],
         rulePackVersion: "",
         currency: "GBP",
+        lastSimulation: null,
         lastComparison: null
       };
 
       const catalogState = {
         items: [],
+        loadedTenantId: ""
+      };
+
+      const documentState = {
+        documents: [],
         loadedTenantId: ""
       };
 
@@ -2961,6 +2988,7 @@ export function renderDashboard(): string {
         setText("#session-button", "Entrar");
         renderTenantAccess(null);
         renderCatalogItems([]);
+        renderFiscalDocuments([]);
         showAuthGate(true);
         addFeed("auth.logout", "Sessão local encerrada");
       }
@@ -3153,6 +3181,68 @@ export function renderDashboard(): string {
             '</div>'
           );
         }).join("");
+      }
+
+      function renderFiscalDocuments(documents) {
+        const list = qs("#fiscal-documents-list");
+        const normalized = Array.isArray(documents) ? documents : [];
+        documentState.documents = normalized;
+
+        const draftCount = normalized.filter((document) => document && document.status === "draft").length;
+        const queuedCount = normalized.filter((document) => document && ["queued", "signing", "signed", "sending"].includes(document.status)).length;
+        const authorizedCount = normalized.filter((document) => document && document.status === "authorized").length;
+
+        setText("#fiscal-documents-count", normalized.length + " documentos");
+        setText("#fiscal-documents-draft", String(draftCount));
+        setText("#fiscal-documents-queued", String(queuedCount));
+        setText("#fiscal-documents-authorized", String(authorizedCount));
+
+        if (!list) {
+          return;
+        }
+
+        if (normalized.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state"><strong>Nenhum documento fiscal criado</strong><span>Crie um draft global antes de assinatura, fila e governo.</span></div>';
+          return;
+        }
+
+        list.innerHTML = normalized.map((document) => {
+          const status = document.status || "draft";
+          const amount = formatCurrency(document.total_amount || 0, document.currency_code || "BRL");
+          return (
+            '<div class="tax-doc-card">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(document.document_type || "DOCUMENT") + ' / ' + escapeHtml(document.country_code || "--") + '</strong>' +
+              '<span>' + escapeHtml(document.adapter_key || "adapter") + ' / ' + escapeHtml(document.lifecycle_stage || "draft") + ' / ' + escapeHtml(amount) + '</span></div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadFiscalDocuments(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          documentState.loadedTenantId = "";
+          renderFiscalDocuments([]);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents", {
+          headers: {
+            authorization: "Bearer " + accessToken
+          },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar documentos fiscais.");
+        }
+
+        documentState.loadedTenantId = tenantId;
+        renderFiscalDocuments(body.documents || []);
+        addFeed("fiscal_documents.loaded", "Documentos fiscais sincronizados");
+        return body.documents || [];
       }
 
       function setFieldValue(selector, value) {
@@ -3527,6 +3617,7 @@ export function renderDashboard(): string {
           addFeed("auth.provisioned", "Usuário autenticado; aguardando membership no tenant");
           renderTenantAccess(null);
           renderCatalogItems([]);
+          renderFiscalDocuments([]);
         } else {
           addFeed("auth.session", "Sessão ligada ao core multi-tenant");
           if (primaryTenant && primaryTenant.id) {
@@ -3537,6 +3628,9 @@ export function renderDashboard(): string {
             loadCatalogItems(primaryTenant.id).catch((error) => {
               setCatalogMessage(error instanceof Error ? error.message : "Não foi possível carregar o catálogo.", "warn");
               addFeed("catalog.error", "Falha ao carregar produtos e serviços");
+            });
+            loadFiscalDocuments(primaryTenant.id).catch((error) => {
+              addFeed("fiscal_documents.error", error instanceof Error ? error.message : "Falha ao carregar documentos fiscais");
             });
           }
         }
@@ -3680,6 +3774,76 @@ export function renderDashboard(): string {
           if (button) {
             button.disabled = false;
             button.textContent = "Salvar produto ou serviço";
+          }
+        }
+      }
+
+      async function createFiscalDocumentDraft() {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+
+        if (!tenantId || !accessToken) {
+          showAuthGate(true);
+          addFeed("fiscal_document.blocked", "Sessão necessária para criar documento fiscal");
+          return;
+        }
+
+        const simulation = taxState.lastSimulation;
+        const market = simulation && simulation.market ? simulation.market : findTaxMarket(textValue("#tax-destination") || "BR");
+        const totals = simulation && simulation.totals ? simulation.totals : {};
+        const payload = collectTaxPayload();
+        const countryCode = payload.destination_country || "BR";
+        const documentType = countryCode === "BR" ? "NFE" : "EINVOICE";
+        const adapterKey = countryCode === "BR" ? "adapters/brazil/nfe" : "adapters/global/einvoice";
+        const button = qs("#create-fiscal-document-button");
+
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Criando draft...";
+        }
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents", {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              country_code: countryCode,
+              jurisdiction_path: [countryCode],
+              document_type: documentType,
+              adapter_key: adapterKey,
+              operation_type: payload.operation_type || "sale",
+              currency_code: payload.currency || (market && market.currency) || "BRL",
+              total_amount: totals.customer_total || 0,
+              tax_amount: totals.destination_indirect_tax || 0,
+              payload: {
+                source: "tax_simulator",
+                scenario: payload
+              },
+              calculation_snapshot: simulation || {},
+              metadata: {
+                source: "helvok-dashboard",
+                lifecycle: "global-draft-before-country-adapter",
+                market: market ? market.name : countryCode
+              }
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Fiscal document draft failed");
+          }
+
+          renderFiscalDocuments(body.documents || (body.document ? [body.document].concat(documentState.documents) : documentState.documents));
+          setText("#documents-view-status", "draft criado");
+          addFeed(body.event_type || "fiscal_document.created", documentType + " draft criado para " + countryCode);
+        } catch (error) {
+          addFeed("fiscal_document.error", error instanceof Error ? error.message : "Falha ao criar draft fiscal");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Criar draft fiscal global";
           }
         }
       }
@@ -4169,6 +4333,7 @@ export function renderDashboard(): string {
         if (!simulation || !simulation.totals) {
           return;
         }
+        taxState.lastSimulation = simulation;
         const totals = simulation.totals;
         const market = simulation.market || {};
         const snapshot = simulation.input_snapshot || {};
@@ -4382,6 +4547,11 @@ export function renderDashboard(): string {
       const taxCompareButton = qs("#tax-compare-button");
       if (taxCompareButton) {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
+      }
+
+      const createFiscalDocumentButton = qs("#create-fiscal-document-button");
+      if (createFiscalDocumentButton) {
+        createFiscalDocumentButton.addEventListener("click", createFiscalDocumentDraft);
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {
