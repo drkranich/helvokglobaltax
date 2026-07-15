@@ -31,6 +31,10 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Helvok Tax");
     expect(body).toContain("Central de comando viva");
     expect(body).toContain("Simulador fiscal operacional");
+    expect(body).toContain('class="app-view active" id="dashboard"');
+    expect(body).toContain('class="app-view" id="motor"');
+    expect(body).toContain('class="app-view" id="documentos"');
+    expect(body).toContain("function activateView");
   });
 
   it("returns a healthy response", async () => {
@@ -59,13 +63,15 @@ describe("Helvok Tax Worker API", () => {
     const body = await response.json<{
       count: number;
       rule_pack_version: string;
-      markets: Array<{ code: string; name: string; indirectTaxName: string }>;
+      markets: Array<{ code: string; name: string; region: string; indirectTaxName: string }>;
     }>();
 
     expect(response.status).toBe(200);
     expect(body.rule_pack_version).toContain("global-indirect-tax-seed");
     expect(body.count).toBeGreaterThan(40);
     expect(body.markets.map((market) => market.code)).toEqual(expect.arrayContaining(["BR", "GB", "US", "CA", "SG", "JP"]));
+    expect(body.markets.map((market) => market.name)).toEqual(expect.arrayContaining(["Canadá", "Bélgica", "Suíça", "Emirados Árabes"]));
+    expect(body.markets.map((market) => market.region)).toEqual(expect.arrayContaining(["América Latina", "Ásia", "Oriente Médio", "África"]));
   });
 
   it("simulates a cross-border DDP tax and cost scenario", async () => {

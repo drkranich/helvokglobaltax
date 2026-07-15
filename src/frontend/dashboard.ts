@@ -280,6 +280,66 @@ export function renderDashboard(): string {
         display: grid;
         gap: 22px;
         padding: 22px;
+        align-content: start;
+      }
+
+      .app-view {
+        display: none;
+        gap: 22px;
+        min-height: calc(100vh - 118px);
+      }
+
+      .app-view.active {
+        display: grid;
+      }
+
+      .view-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: end;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(247, 251, 255, 0.12), rgba(7, 26, 92, 0.3));
+        backdrop-filter: blur(24px) saturate(150%);
+        box-shadow: var(--shadow);
+      }
+
+      .view-head h1 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(28px, 4vw, 52px);
+        line-height: 0.95;
+      }
+
+      .view-head p {
+        max-width: 780px;
+        margin: 10px 0 0;
+        color: var(--frost-64);
+        line-height: 1.55;
+      }
+
+      .view-kicker {
+        color: var(--ochre-300);
+        font-family: var(--font-data);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .view-status {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 197, 108, 0.42);
+        border-radius: var(--radius);
+        background: rgba(216, 138, 29, 0.12);
+        color: var(--ochre-300);
+        font-family: var(--font-data);
+        font-size: 11px;
+        white-space: nowrap;
       }
 
       .topbar {
@@ -936,6 +996,15 @@ export function renderDashboard(): string {
         color: var(--frost-64);
         font-family: var(--font-data);
         font-size: 11px;
+      }
+
+      .country-tile em {
+        display: block;
+        margin-top: 8px;
+        color: var(--frost-80);
+        font-family: var(--font-data);
+        font-size: 10px;
+        font-style: normal;
       }
 
       .country-tile small {
@@ -1618,6 +1687,10 @@ export function renderDashboard(): string {
           position: static;
         }
 
+        .view-head {
+          grid-template-columns: 1fr;
+        }
+
         .top-actions {
           justify-content: stretch;
         }
@@ -1761,7 +1834,7 @@ export function renderDashboard(): string {
         </div>
       </aside>
 
-      <main class="content" id="dashboard">
+      <main class="content" id="app-content">
         <section class="mobile-brand" aria-label="Marca">
           <strong>Helvok Tax</strong>
           <span><i class="pulse-dot"></i>painel operacional na Cloudflare</span>
@@ -1787,6 +1860,7 @@ export function renderDashboard(): string {
           </div>
         </header>
 
+        <section class="app-view active" id="dashboard" data-view="dashboard" aria-label="Dashboard">
         <section class="hero-grid">
           <article class="hero-panel">
             <div class="hero-content">
@@ -1901,8 +1975,18 @@ export function renderDashboard(): string {
             </div>
           </aside>
         </section>
+        </section>
 
-        <section class="members-workbench" id="usuarios" aria-label="Usuários, roles e memberships">
+        <section class="app-view" id="usuarios" data-view="usuarios" aria-label="Usuários">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Acesso multiempresa</span>
+              <h1>Usuários, roles e convites</h1>
+              <p>Gerencie memberships, convites e auditoria de acesso sem misturar operação fiscal com administração de identidade.</p>
+            </div>
+            <span class="view-status" id="users-view-status">RBAC ativo</span>
+          </div>
+        <section class="members-workbench" aria-label="Usuários, roles e memberships">
           <article class="panel members-panel">
             <div class="panel-title">
               <h2>Usuários e memberships</h2>
@@ -2011,9 +2095,19 @@ export function renderDashboard(): string {
             </div>
           </article>
         </section>
+        </section>
 
+        <section class="app-view" id="empresas" data-view="empresas" aria-label="Empresas">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Cobertura fiscal</span>
+              <h1>Malha fiscal por jurisdição</h1>
+              <p>Visualize países, regiões, moedas, impostos indiretos e status dos adaptadores antes de simular ou emitir.</p>
+            </div>
+            <span class="view-status" id="jurisdiction-count-label">carregando mercados</span>
+          </div>
         <section class="work-grid">
-          <article class="panel" id="empresas">
+          <article class="panel">
             <div class="panel-title">
               <h2>Malha fiscal por jurisdição</h2>
               <span>adaptadores</span>
@@ -2023,7 +2117,37 @@ export function renderDashboard(): string {
             </div>
           </article>
 
-          <aside class="feed" id="auditoria">
+          <aside class="panel">
+            <div class="panel-title">
+              <h2>Mapa de cobertura</h2>
+              <span>rule pack</span>
+            </div>
+            <div class="system-row">
+              <div><strong>Américas</strong><span>Brasil, América do Norte e América Latina.</span></div>
+              <span class="status-badge">ativo</span>
+            </div>
+            <div class="system-row">
+              <div><strong>Europa</strong><span>VAT, OSS/IOSS, eInvoice e regimes locais por país.</span></div>
+              <span class="status-badge pending">seed</span>
+            </div>
+            <div class="system-row">
+              <div><strong>Ásia, Oceania e Oriente Médio</strong><span>Mercados preparados para classificação, duty e imposto indireto.</span></div>
+              <span class="status-badge pending">seed</span>
+            </div>
+          </aside>
+        </section>
+        </section>
+
+        <section class="app-view" id="auditoria" data-view="auditoria" aria-label="Auditoria">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Eventos e rastreabilidade</span>
+              <h1>Auditoria viva</h1>
+              <p>Acompanhe eventos do Worker, sessões, simulações e alterações de acesso em uma tela própria de operação.</p>
+            </div>
+            <span class="view-status" id="audit-view-status">stream local</span>
+          </div>
+          <aside class="feed">
             <div class="feed-head">
               <div class="panel-title">
                 <h3>Auditoria viva</h3>
@@ -2034,7 +2158,16 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
-        <section class="work-grid tax-workbench" id="motor">
+        <section class="app-view" id="motor" data-view="motor" aria-label="Motor tributário">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Cálculo e precificação</span>
+              <h1>Motor tributário</h1>
+              <p>Simule impostos, tarifas, fees, margem e preço real por país sem emitir documento fiscal diretamente pelo frontend.</p>
+            </div>
+            <span class="view-status" id="motor-view-status">estimativa edge</span>
+          </div>
+        <section class="work-grid tax-workbench">
           <article class="panel tax-simulator-panel">
             <div class="panel-title">
               <h2>Simulador fiscal operacional</h2>
@@ -2205,8 +2338,19 @@ export function renderDashboard(): string {
               <button class="glass-button primary" id="tax-simulate-button" type="submit">Calcular impostos e preço real</button>
             </form>
           </article>
+        </section>
+        </section>
 
-          <aside class="panel tax-result-panel" id="documentos">
+        <section class="app-view" id="documentos" data-view="documentos" aria-label="Documentos">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Pré-emissão e compliance</span>
+              <h1>Documentos e pendências</h1>
+              <p>Veja o resultado da simulação, checklist documental, dados obrigatórios e alertas antes de avançar para emissão fiscal.</p>
+            </div>
+            <span class="view-status" id="documents-view-status">pré-emissão</span>
+          </div>
+          <aside class="panel tax-result-panel">
             <div class="panel-title">
               <h2>Resultado da simulação</h2>
               <span id="tax-market-name">aguardando</span>
@@ -2244,7 +2388,16 @@ export function renderDashboard(): string {
           </aside>
         </section>
 
-        <section class="panel market-comparison" id="mercados">
+        <section class="app-view" id="mercados" data-view="mercados" aria-label="Mercados">
+        <section class="panel market-comparison">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Exportação e entrada</span>
+              <h1>Mercados internacionais</h1>
+              <p>Compare destinos, carga operacional, margem estimada e preço unitário alvo a partir do mesmo cenário fiscal.</p>
+            </div>
+            <span class="view-status" id="markets-view-status">comparador</span>
+          </div>
           <div class="comparison-toolbar">
             <div class="panel-title">
               <h2>Mesa de comparação de mercados</h2>
@@ -2276,8 +2429,18 @@ export function renderDashboard(): string {
             </div>
           </div>
         </section>
+        </section>
 
-        <section class="modules-grid" id="integracoes">
+        <section class="app-view" id="integracoes" data-view="integracoes" aria-label="Integrações">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Conectores e SDK</span>
+              <h1>Integrações</h1>
+              <p>Organize conectores para e-commerce, ERP, marketplace, pagamentos e SDK público sem parecer uma seção estática de site.</p>
+            </div>
+            <span class="view-status" id="integrations-view-status">roadmap ativo</span>
+          </div>
+        <section class="modules-grid">
           <article class="module">
             <h3>Shopify</h3>
             <p>Conector preparado para pedidos, clientes, produtos e webhooks fiscais.</p>
@@ -2293,6 +2456,7 @@ export function renderDashboard(): string {
             <p>TypeScript, REST, webhooks e CLI vao nascer sobre o mesmo core versionado.</p>
             <div class="module-meter"><span style="--meter: 14%;"></span></div>
           </article>
+        </section>
         </section>
       </main>
     </div>
@@ -3066,9 +3230,11 @@ export function renderDashboard(): string {
         }
         if (!markets || markets.length === 0) {
           map.innerHTML = '<div class="country-tile active"><strong>Sem mercados</strong><span>API indisponível</span><small>pendente</small></div>';
+          setText("#jurisdiction-count-label", "0 mercados");
           return;
         }
 
+        setText("#jurisdiction-count-label", String(markets.length) + " mercados");
         map.innerHTML = markets.map((market) => {
           const active = ["BR", "GB", "US", "CA", "SG", "JP"].includes(market.code) ? " active" : "";
           const fill = market.sourceStatus === "official-seed" ? "0.86" : market.sourceStatus === "manual-required" ? "0.34" : "0.58";
@@ -3076,7 +3242,8 @@ export function renderDashboard(): string {
           return (
             '<div class="country-tile' + active + '" style="--fill: ' + fill + ';">' +
               '<strong>' + escapeHtml(market.name) + '</strong>' +
-              '<span>' + escapeHtml(market.indirectTaxName) + ' / ' + escapeHtml(market.eInvoiceStatus) + '</span>' +
+              '<span>' + escapeHtml(market.region) + ' / ' + escapeHtml(market.code) + ' / ' + escapeHtml(market.currency) + '</span>' +
+              '<em>' + escapeHtml(market.indirectTaxName) + ' / ' + escapeHtml(market.eInvoiceStatus) + '</em>' +
               '<small>' + escapeHtml(rateLabel) + '</small>' +
             '</div>'
           );
@@ -3435,6 +3602,41 @@ export function renderDashboard(): string {
         });
       }
 
+      function activateView(viewId, updateHash) {
+        const targetId = viewId || "dashboard";
+        const target = document.getElementById(targetId) || document.getElementById("dashboard");
+        if (!target) {
+          return;
+        }
+
+        document.querySelectorAll(".app-view").forEach((view) => {
+          view.classList.toggle("active", view === target);
+        });
+
+        document.querySelectorAll(".nav-button").forEach((link) => {
+          const linkTarget = String(link.getAttribute("href") || "").replace("#", "");
+          link.classList.toggle("active", linkTarget === target.id);
+        });
+
+        const label = target.getAttribute("aria-label") || "Dashboard";
+        setText("#breadcrumb-organization", label);
+        if (updateHash) {
+          window.history.replaceState(null, "", "#" + target.id);
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      document.querySelectorAll(".nav-button").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          activateView(String(link.getAttribute("href") || "#dashboard").replace("#", ""), true);
+        });
+      });
+
+      window.addEventListener("hashchange", () => {
+        activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
+      });
+
       document.querySelectorAll("[data-action='pulse']").forEach((button) => {
         button.addEventListener("click", () => {
           refreshStatus();
@@ -3539,6 +3741,7 @@ export function renderDashboard(): string {
       window.setInterval(refreshStatus, 8000);
       bootstrapFeed();
       setAuthMode("login");
+      activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
       renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
       loadTaxMarkets();
