@@ -1,8 +1,10 @@
+type SecretBindings = {
+  HELVOK_ADMIN_TOKEN?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+};
+
+export type AppBindings = Cloudflare.Env & SecretBindings;
+
 export type AppEnv = {
-  Bindings: {
-    APP_NAME: string;
-    APP_ENV: string;
-    API_VERSION: string;
-    SUPABASE_URL: string;
-  };
+  Bindings: AppBindings;
 };

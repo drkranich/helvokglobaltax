@@ -32,6 +32,7 @@ Esta fase transforma o roadmap em uma arquitetura executavel, revisavel e prepar
 | Visao de produto e MVP | [01-product-vision-and-mvp.md](product/01-product-vision-and-mvp.md) |
 | Checagem de ambiente | [01-environment-check.md](ops/01-environment-check.md) |
 | Fundacao Supabase Fase 1 | [02-supabase-phase-1-foundation.md](ops/02-supabase-phase-1-foundation.md) |
+| Worker admin API Fase 2 | [03-worker-admin-api-phase-2.md](ops/03-worker-admin-api-phase-2.md) |
 | Roadmap incremental | [01-incremental-delivery-plan.md](roadmap/01-incremental-delivery-plan.md) |
 
 ## Decisoes registradas

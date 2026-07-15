@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
+import { createAdminRouter } from "./admin/routes";
 import type { AppEnv } from "./env";
 import { jsonResponse } from "./response";
 
@@ -47,8 +48,8 @@ export function createApp(): Hono<AppEnv> {
       api_version: "v1",
       status: "foundation-ready",
       modules: {
-        tenants: "planned",
-        organizations: "planned",
+        tenants: "admin-api-preview",
+        organizations: "admin-api-preview",
         tax_rules: "planned",
         fiscal_documents: "planned",
         audit: "planned",
@@ -80,6 +81,8 @@ export function createApp(): Hono<AppEnv> {
       ],
     }),
   );
+
+  app.route("/v1/admin", createAdminRouter());
 
   app.notFound((c) =>
     jsonResponse(
