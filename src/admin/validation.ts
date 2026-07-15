@@ -31,6 +31,17 @@ function getOptionalRecord(record: JsonRecord, key: string): JsonRecord | undefi
   return isRecord(value) ? value : undefined;
 }
 
+function getOptionalInteger(record: JsonRecord, key: string): number | undefined {
+  const value = record[key];
+  const parsed = typeof value === "number"
+    ? value
+    : typeof value === "string" && value.trim()
+      ? Number(value)
+      : NaN;
+
+  return Number.isInteger(parsed) ? parsed : undefined;
+}
+
 function invalid(message: string, code = "invalid_payload"): ValidationResult<never> {
   return { ok: false, code, message };
 }
@@ -77,6 +88,85 @@ export function validateTenantPayload(input: unknown): ValidationResult<JsonReco
   }
 
   return { ok: true, value: payload };
+}
+
+export function validateInvitationPayload(input: unknown): ValidationResult<JsonRecord> {
+  if (!isRecord(input)) {
+    return invalid("Request body must be a JSON object.");
+  }
+
+  const tenantId = getOptionalString(input, "tenant_id");
+  const email = getOptionalString(input, "email")?.toLowerCase();
+  const roleKey = getOptionalString(input, "role_key")?.toLowerCase() ?? "viewer";
+  const scopeType = getOptionalString(input, "scope_type")?.toLowerCase() ?? "tenant";
+  const scopeId = getOptionalString(input, "scope_id");
+  const expiresInDays = getOptionalInteger(input, "expires_in_days") ?? 7;
+
+  if (!tenantId || !isUuid(tenantId)) {
+    return invalid("tenant_id must be a valid UUID.");
+  }
+
+  if (!email || !emailPattern.test(email)) {
+    return invalid("email must be valid.");
+  }
+
+  if (!roleKeyPattern.test(roleKey)) {
+    return invalid("role_key must be a valid role key.");
+  }
+
+  if (!["tenant", "organization", "establishment", "environment"].includes(scopeType)) {
+    return invalid("scope_type must be tenant, organization, establishment, or environment.");
+  }
+
+  if (scopeType === "tenant" && scopeId) {
+    return invalid("tenant scoped invitation must not include scope_id.");
+  }
+
+  if (scopeType !== "tenant" && (!scopeId || !isUuid(scopeId))) {
+    return invalid("non-tenant scoped invitation requires a valid scope_id.");
+  }
+
+  if (expiresInDays < 1 || expiresInDays > 30) {
+    return invalid("expires_in_days must be an integer from 1 to 30.");
+  }
+
+  const payload: JsonRecord = {
+    tenant_id: tenantId,
+    email,
+    role_key: roleKey,
+    scope_type: scopeType,
+    expires_in_days: expiresInDays,
+  };
+
+  if (scopeId) {
+    payload.scope_id = scopeId;
+  }
+
+  return { ok: true, value: payload };
+}
+
+export function validateInvitationResendPayload(input: unknown): ValidationResult<JsonRecord> {
+  const record = isRecord(input) ? input : {};
+  const expiresInDays = getOptionalInteger(record, "expires_in_days") ?? 7;
+
+  if (expiresInDays < 1 || expiresInDays > 30) {
+    return invalid("expires_in_days must be an integer from 1 to 30.");
+  }
+
+  return { ok: true, value: { expires_in_days: expiresInDays } };
+}
+
+export function validateInvitationAcceptPayload(input: unknown): ValidationResult<JsonRecord> {
+  if (!isRecord(input)) {
+    return invalid("Request body must be a JSON object.");
+  }
+
+  const token = getOptionalString(input, "token");
+  if (!token || !/^[A-Za-z0-9_-]{32,256}$/.test(token)) {
+    return invalid("token must be a valid invitation token.");
+  }
+
+  return { ok: true, value: { token } };
 }
 
 export function validateOrganizationPayload(input: unknown): ValidationResult<JsonRecord> {

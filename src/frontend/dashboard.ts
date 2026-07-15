@@ -113,6 +113,10 @@ export function renderDashboard(): string {
         color: inherit;
       }
 
+      .hidden {
+        display: none !important;
+      }
+
       button,
       input,
       select {
@@ -723,6 +727,7 @@ export function renderDashboard(): string {
       }
 
       .member-list,
+      .invitation-list,
       .role-grid,
       .audit-mini {
         display: grid;
@@ -730,6 +735,8 @@ export function renderDashboard(): string {
       }
 
       .member-card,
+      .invitation-card,
+      .invitation-link-card,
       .role-card,
       .audit-card,
       .empty-state {
@@ -748,6 +755,7 @@ export function renderDashboard(): string {
       }
 
       .member-card strong,
+      .invitation-card strong,
       .role-card strong,
       .audit-card strong {
         display: block;
@@ -755,6 +763,7 @@ export function renderDashboard(): string {
       }
 
       .member-card span,
+      .invitation-card span,
       .role-card span,
       .audit-card span,
       .empty-state span {
@@ -786,6 +795,72 @@ export function renderDashboard(): string {
 
       .member-form .glass-button {
         grid-column: 1 / -1;
+      }
+
+      .invitation-panel {
+        grid-column: 1 / -1;
+      }
+
+      .invitation-form {
+        grid-template-columns: minmax(0, 1fr) minmax(150px, 0.34fr) minmax(130px, 0.28fr);
+      }
+
+      .invitation-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 92px;
+        padding: 13px;
+      }
+
+      .invitation-card.pending {
+        border-color: rgba(255, 197, 108, 0.38);
+        background:
+          linear-gradient(135deg, rgba(216, 138, 29, 0.16), rgba(247, 251, 255, 0.08));
+      }
+
+      .invitation-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .mini-button {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+        color: var(--frost-80);
+        font-family: var(--font-data);
+        font-size: 10px;
+        cursor: pointer;
+      }
+
+      .mini-button.warn {
+        border-color: rgba(255, 107, 107, 0.38);
+        color: #ffb0b0;
+      }
+
+      .invitation-link-card {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        background:
+          linear-gradient(135deg, rgba(47, 100, 255, 0.2), rgba(216, 138, 29, 0.14)),
+          rgba(247, 251, 255, 0.08);
+      }
+
+      .copy-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      .copy-row input {
+        min-width: 0;
       }
 
       .role-card {
@@ -1307,6 +1382,8 @@ export function renderDashboard(): string {
         .jurisdiction-map,
         .form-grid,
         .member-form,
+        .invitation-form,
+        .copy-row,
         .access-matrix {
           grid-template-columns: 1fr;
         }
@@ -1338,6 +1415,10 @@ export function renderDashboard(): string {
             Entre para sincronizar sua sessão com o core multi-tenant. O navegador usa apenas chave pública;
             permissões, tenants e memberships continuam protegidos por RLS e pelo Worker.
           </p>
+          <div class="auth-message hidden" id="invite-accept-card">
+            Link de convite detectado. Entre com o mesmo email convidado e aceite para ativar o acesso no tenant.
+            <button class="glass-button primary" id="invite-accept-button" type="button" style="margin-top: 10px; width: 100%;">Aceitar convite</button>
+          </div>
           <div class="hero-strip">
             <div class="strip-cell"><span>Auth</span><strong id="auth-health-label">online</strong></div>
             <div class="strip-cell"><span>Core user</span><strong id="auth-core-label">sync</strong></div>
@@ -1603,6 +1684,55 @@ export function renderDashboard(): string {
             </div>
             <div class="audit-mini" id="membership-audit"></div>
           </aside>
+
+          <article class="panel members-panel invitation-panel">
+            <div class="panel-title">
+              <h2>Convites de acesso</h2>
+              <span id="invitations-count-label">0 pendentes</span>
+            </div>
+            <form class="member-form invitation-form" id="invitation-form">
+              <div class="field-block">
+                <label for="invite-email">Email convidado</label>
+                <input id="invite-email" class="glass-field" type="email" placeholder="novo@empresa.com" required />
+              </div>
+              <div class="field-block">
+                <label for="invite-role">Role</label>
+                <select id="invite-role" class="glass-select">
+                  <option value="viewer">Viewer</option>
+                  <option value="auditor">Auditor</option>
+                  <option value="developer">Developer</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="fiscal_manager">Fiscal manager</option>
+                  <option value="admin">Admin</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </div>
+              <div class="field-block">
+                <label for="invite-expiry">Expira em</label>
+                <select id="invite-expiry" class="glass-select">
+                  <option value="3">3 dias</option>
+                  <option value="7" selected>7 dias</option>
+                  <option value="14">14 dias</option>
+                  <option value="30">30 dias</option>
+                </select>
+              </div>
+              <button class="glass-button primary" type="submit">Gerar convite</button>
+            </form>
+            <div class="auth-message" id="invitation-message">Convites geram um link unico. Envio automatico por email entra na proxima camada transacional.</div>
+            <div class="invitation-link-card hidden" id="invitation-link-card">
+              <strong>Link de convite gerado</strong>
+              <div class="copy-row">
+                <input id="invitation-link" class="glass-field" readonly value="" />
+                <button class="glass-button" id="copy-invitation-link" type="button">Copiar</button>
+              </div>
+            </div>
+            <div class="invitation-list" id="invitations-list">
+              <div class="empty-state">
+                <strong>Nenhum convite carregado</strong>
+                <span>Os convites pendentes, aceitos, expirados e revogados aparecem aqui.</span>
+              </div>
+            </div>
+          </article>
         </section>
 
         <section class="work-grid">
@@ -1744,7 +1874,8 @@ export function renderDashboard(): string {
         mode: "login",
         config: null,
         session: null,
-        access: null
+        access: null,
+        pendingInviteToken: new URLSearchParams(window.location.search).get("invite") || ""
       };
 
       let feedCounter = 0;
@@ -1834,6 +1965,40 @@ export function renderDashboard(): string {
         renderTenantAccess(null);
         showAuthGate(true);
         addFeed("auth.logout", "Sessao local encerrada");
+      }
+
+      function setInvitationMessage(message, tone) {
+        const node = qs("#invitation-message");
+        if (!node) {
+          return;
+        }
+        node.textContent = message;
+        node.classList.remove("good", "warn");
+        if (tone) {
+          node.classList.add(tone);
+        }
+      }
+
+      function showInvitationLink(url) {
+        const card = qs("#invitation-link-card");
+        const input = qs("#invitation-link");
+        if (input) {
+          input.value = url || "";
+        }
+        if (card) {
+          card.classList.toggle("hidden", !url);
+        }
+      }
+
+      function renderInviteAcceptState() {
+        const card = qs("#invite-accept-card");
+        if (!card) {
+          return;
+        }
+        card.classList.toggle("hidden", !authState.pendingInviteToken);
+        if (authState.pendingInviteToken) {
+          setAuthMessage("Link de convite detectado. Entre com o email convidado e aceite o acesso.", null);
+        }
       }
 
       async function getAuthConfig() {
@@ -1938,14 +2103,19 @@ export function renderDashboard(): string {
         authState.access = access || null;
         const memberships = access && Array.isArray(access.memberships) ? access.memberships : [];
         const roles = access && Array.isArray(access.roles) ? access.roles : [];
+        const invitations = access && Array.isArray(access.invitations) ? access.invitations : [];
         const auditEvents = access && Array.isArray(access.audit_events) ? access.audit_events : [];
         const membersList = qs("#members-list");
+        const invitationsList = qs("#invitations-list");
         const rolesGrid = qs("#roles-grid");
         const auditList = qs("#membership-audit");
         const roleSelect = qs("#member-role");
+        const inviteRoleSelect = qs("#invite-role");
+        const pendingInvitationCount = invitations.filter((invitation) => invitation && invitation.status === "pending").length;
 
         setText("#members-count-label", memberships.length + " memberships");
         setText("#roles-count-label", roles.length + " roles");
+        setText("#invitations-count-label", pendingInvitationCount + " pendentes");
         setText("#access-audit-label", auditEvents.length + " eventos");
 
         if (membersList) {
@@ -1979,12 +2149,43 @@ export function renderDashboard(): string {
               )).join("");
         }
 
-        if (roleSelect && roles.length > 0) {
-          const currentValue = roleSelect.value || "viewer";
-          roleSelect.innerHTML = roles.map((role) => (
-            '<option value="' + escapeHtml(role.role_key) + '">' + escapeHtml(role.name || role.role_key) + '</option>'
-          )).join("");
-          roleSelect.value = roles.some((role) => role.role_key === currentValue) ? currentValue : "viewer";
+        [roleSelect, inviteRoleSelect].forEach((select) => {
+          if (select && roles.length > 0) {
+            const currentValue = select.value || "viewer";
+            select.innerHTML = roles.map((role) => (
+              '<option value="' + escapeHtml(role.role_key) + '">' + escapeHtml(role.name || role.role_key) + '</option>'
+            )).join("");
+            select.value = roles.some((role) => role.role_key === currentValue) ? currentValue : "viewer";
+          }
+        });
+
+        if (invitationsList) {
+          if (invitations.length === 0) {
+            invitationsList.innerHTML =
+              '<div class="empty-state"><strong>Nenhum convite emitido</strong><span>Gere um link unico para convidar usuarios antes do primeiro login.</span></div>';
+          } else {
+            invitationsList.innerHTML = invitations.map((invitation) => {
+              const role = invitation.role || {};
+              const status = invitation.status || "pending";
+              const expiresAt = invitation.expires_at
+                ? new Date(invitation.expires_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                : "--";
+              const actions = status === "pending"
+                ? '<div class="invitation-actions">' +
+                    '<button class="mini-button" type="button" data-invitation-action="resend" data-invitation-id="' + escapeHtml(invitation.id) + '">Reenviar link</button>' +
+                    '<button class="mini-button warn" type="button" data-invitation-action="revoke" data-invitation-id="' + escapeHtml(invitation.id) + '">Revogar</button>' +
+                  '</div>'
+                : '<span class="member-role-badge">' + escapeHtml(status) + '</span>';
+
+              return (
+                '<div class="invitation-card ' + escapeHtml(status) + '">' +
+                  '<div><strong>' + escapeHtml(invitation.email || "email convidado") + '</strong>' +
+                  '<span>' + escapeHtml(role.role_key || "role") + ' / ' + escapeHtml(status) + ' / expira ' + escapeHtml(expiresAt) + '</span></div>' +
+                  actions +
+                '</div>'
+              );
+            }).join("");
+          }
         }
 
         if (auditList) {
@@ -2132,6 +2333,196 @@ export function renderDashboard(): string {
         }
       }
 
+      async function submitInvitationForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const email = qs("#invite-email").value.trim().toLowerCase();
+        const roleKey = qs("#invite-role").value;
+        const expiresInDays = Number(qs("#invite-expiry").value || "7");
+        const accessToken = getStoredAccessToken();
+
+        if (!tenantId) {
+          setInvitationMessage("Sessao sem tenant ativo para convite.", "warn");
+          return;
+        }
+
+        if (!accessToken) {
+          setInvitationMessage("Entre novamente para gerar convites.", "warn");
+          showAuthGate(true);
+          return;
+        }
+
+        setInvitationMessage("Gerando token e registrando convite...", null);
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/invitations", {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              email: email,
+              role_key: roleKey,
+              expires_in_days: expiresInDays
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Invitation creation failed");
+          }
+
+          if (body.access) {
+            renderTenantAccess(body.access);
+          } else {
+            await loadTenantAccess(tenantId);
+          }
+
+          showInvitationLink(body.invitation_url || "");
+          setInvitationMessage("Convite gerado. Copie o link e envie ao usuario convidado.", "good");
+          addFeed(body.event_type || "invitation.created", email + " / " + roleKey);
+          qs("#invite-email").value = "";
+        } catch (error) {
+          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel gerar convite.", "warn");
+          addFeed("invitation.error", "Falha ao gerar convite");
+        }
+      }
+
+      async function resendInvitation(invitationId) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const expiresInDays = Number(qs("#invite-expiry").value || "7");
+        if (!tenantId || !accessToken) {
+          setInvitationMessage("Sessao sem acesso para reenviar convite.", "warn");
+          return;
+        }
+
+        setInvitationMessage("Rotacionando link do convite...", null);
+
+        try {
+          const response = await fetch(
+            "/v1/tenants/" + encodeURIComponent(tenantId) + "/invitations/" + encodeURIComponent(invitationId) + "/resend",
+            {
+              method: "POST",
+              headers: {
+                authorization: "Bearer " + accessToken,
+                "content-type": "application/json"
+              },
+              body: JSON.stringify({ expires_in_days: expiresInDays })
+            }
+          );
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Invitation resend failed");
+          }
+          if (body.access) {
+            renderTenantAccess(body.access);
+          }
+          showInvitationLink(body.invitation_url || "");
+          setInvitationMessage("Novo link gerado. O link antigo deixa de funcionar.", "good");
+          addFeed(body.event_type || "invitation.resent", "Link de convite rotacionado");
+        } catch (error) {
+          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel reenviar convite.", "warn");
+          addFeed("invitation.error", "Falha ao reenviar convite");
+        }
+      }
+
+      async function revokeInvitation(invitationId) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          setInvitationMessage("Sessao sem acesso para revogar convite.", "warn");
+          return;
+        }
+
+        setInvitationMessage("Revogando convite...", null);
+
+        try {
+          const response = await fetch(
+            "/v1/tenants/" + encodeURIComponent(tenantId) + "/invitations/" + encodeURIComponent(invitationId) + "/revoke",
+            {
+              method: "POST",
+              headers: {
+                authorization: "Bearer " + accessToken
+              }
+            }
+          );
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Invitation revoke failed");
+          }
+          if (body.access) {
+            renderTenantAccess(body.access);
+          }
+          setInvitationMessage("Convite revogado e auditado.", "good");
+          addFeed(body.event_type || "invitation.revoked", "Convite revogado");
+        } catch (error) {
+          setInvitationMessage(error instanceof Error ? error.message : "Nao foi possivel revogar convite.", "warn");
+          addFeed("invitation.error", "Falha ao revogar convite");
+        }
+      }
+
+      async function acceptPendingInvitation() {
+        const accessToken = getStoredAccessToken();
+        if (!authState.pendingInviteToken) {
+          setAuthMessage("Nenhum convite detectado nesta URL.", "warn");
+          return;
+        }
+
+        if (!accessToken) {
+          showAuthGate(true);
+          setAuthMessage("Entre com o email convidado antes de aceitar.", "warn");
+          return;
+        }
+
+        setAuthMessage("Aceitando convite e criando membership...", null);
+
+        try {
+          const response = await fetch("/v1/invitations/accept", {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({ token: authState.pendingInviteToken })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Invitation accept failed");
+          }
+          authState.pendingInviteToken = "";
+          window.history.replaceState({}, "", window.location.pathname);
+          renderInviteAcceptState();
+          await syncSession();
+          setAuthMessage("Convite aceito. Membership ativo no tenant.", "good");
+          addFeed(body.event_type || "invitation.accepted", "Convite aceito e auditado");
+        } catch (error) {
+          setAuthMessage(error instanceof Error ? error.message : "Nao foi possivel aceitar o convite.", "warn");
+          addFeed("invitation.error", "Falha ao aceitar convite");
+        }
+      }
+
+      function handleInvitationListClick(event) {
+        const button = event.target.closest("[data-invitation-action]");
+        if (!button) {
+          return;
+        }
+
+        const invitationId = button.getAttribute("data-invitation-id");
+        const action = button.getAttribute("data-invitation-action");
+        if (!invitationId) {
+          return;
+        }
+
+        if (action === "resend") {
+          resendInvitation(invitationId);
+        }
+
+        if (action === "revoke") {
+          revokeInvitation(invitationId);
+        }
+      }
+
       async function submitAuthForm(event) {
         event.preventDefault();
         const email = qs("#auth-email").value.trim().toLowerCase();
@@ -2167,7 +2558,11 @@ export function renderDashboard(): string {
 
           storeAuthSession(payload);
           await syncSession();
-          setAuthMessage("Sessao sincronizada com o core Helvok Tax.", "good");
+          if (authState.pendingInviteToken) {
+            await acceptPendingInvitation();
+          } else {
+            setAuthMessage("Sessao sincronizada com o core Helvok Tax.", "good");
+          }
         } catch (error) {
           setAuthMessage(error instanceof Error ? error.message : "Nao foi possivel autenticar.", "warn");
           addFeed("auth.error", "Falha na autenticacao ou sincronizacao");
@@ -2263,6 +2658,38 @@ export function renderDashboard(): string {
         memberForm.addEventListener("submit", submitMemberForm);
       }
 
+      const invitationForm = qs("#invitation-form");
+      if (invitationForm) {
+        invitationForm.addEventListener("submit", submitInvitationForm);
+      }
+
+      const invitationsList = qs("#invitations-list");
+      if (invitationsList) {
+        invitationsList.addEventListener("click", handleInvitationListClick);
+      }
+
+      const copyInvitationLink = qs("#copy-invitation-link");
+      if (copyInvitationLink) {
+        copyInvitationLink.addEventListener("click", async () => {
+          const input = qs("#invitation-link");
+          const link = input ? input.value : "";
+          if (!link) {
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(link);
+          } else if (input) {
+            input.select();
+          }
+          setInvitationMessage("Link copiado.", "good");
+        });
+      }
+
+      const inviteAcceptButton = qs("#invite-accept-button");
+      if (inviteAcceptButton) {
+        inviteAcceptButton.addEventListener("click", acceptPendingInvitation);
+      }
+
       const authSkip = qs("#auth-skip");
       if (authSkip) {
         authSkip.addEventListener("click", () => {
@@ -2297,8 +2724,16 @@ export function renderDashboard(): string {
       window.setInterval(refreshStatus, 8000);
       bootstrapFeed();
       setAuthMode("login");
+      renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
-      loadSession().catch(() => showAuthGate(true));
+      loadSession()
+        .then(() => {
+          if (authState.pendingInviteToken) {
+            showAuthGate(true);
+            renderInviteAcceptState();
+          }
+        })
+        .catch(() => showAuthGate(true));
       refreshStatus();
     </script>
   </body>

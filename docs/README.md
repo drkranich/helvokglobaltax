@@ -36,6 +36,7 @@ Esta fase transforma o roadmap em uma arquitetura executavel, revisavel e prepar
 | Worker admin API Fase 2 | [03-worker-admin-api-phase-2.md](ops/03-worker-admin-api-phase-2.md) |
 | Admin membership flow | [06-admin-membership-flow.md](ops/06-admin-membership-flow.md) |
 | User role membership workbench | [07-user-role-membership-workbench.md](ops/07-user-role-membership-workbench.md) |
+| Membership invitations | [08-membership-invitations.md](ops/08-membership-invitations.md) |
 | Roadmap incremental | [01-incremental-delivery-plan.md](roadmap/01-incremental-delivery-plan.md) |
 
 ## Decisoes registradas

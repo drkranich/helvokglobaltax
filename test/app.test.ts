@@ -483,4 +483,166 @@ describe("Helvok Tax Worker API", () => {
       }),
     );
   });
+
+  it("creates a membership invitation and returns a one-time invite URL", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            event_type: "invitation.created",
+            invitation: {
+              id: "33333333-3333-4333-8333-333333333333",
+              email: "guest@helvok.tax",
+              status: "pending",
+            },
+            access: { invitations: [] },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+        ),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `https://helvokglobaltax.genialidadefilosofica.workers.dev/v1/tenants/${tenantId}/invitations`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({
+          email: "Guest@Helvok.Tax",
+          role_key: "viewer",
+          expires_in_days: 5,
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{
+      event_type: string;
+      invitation_token: string;
+      invitation_url: string;
+    }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("invitation.created");
+    expect(body.invitation_token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(body.invitation_url).toContain("/app?invite=");
+
+    const secondCall = fetchSpy.mock.calls[1];
+    expect(secondCall?.[0]).toBe(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_create_membership_invitation",
+    );
+    const rpcBody = JSON.parse(String((secondCall?.[1] as RequestInit | undefined)?.body)) as {
+      payload: {
+        email: string;
+        role_key: string;
+        token_hash: string;
+        expires_at: string;
+      };
+    };
+    expect(rpcBody.payload.email).toBe("guest@helvok.tax");
+    expect(rpcBody.payload.role_key).toBe("viewer");
+    expect(rpcBody.payload.token_hash).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(new Date(rpcBody.payload.expires_at).toString()).not.toBe("Invalid Date");
+  });
+
+  it("accepts an invitation after syncing the authenticated user", async () => {
+    const token = "Abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "11111111-1111-4111-8111-111111111111",
+            email: "guest@helvok.tax",
+            user_metadata: {
+              full_name: "Guest User",
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user: { email: "guest@helvok.tax" } }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            event_type: "invitation.accepted",
+            membership: {
+              status: "active",
+              user: { email: "guest@helvok.tax" },
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+        ),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/invitations/accept",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({ token }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string; membership: { status: string } }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("invitation.accepted");
+    expect(body.membership.status).toBe("active");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_sync_user",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_accept_membership_invitation",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          authorization: "Bearer user-access-token",
+        }),
+      }),
+    );
+  });
 });

@@ -65,10 +65,9 @@ O command center recebeu a area `Usuarios` com:
 - contagem de permissoes por role;
 - trilha de auditoria de acesso.
 
-Limite atual intencional:
+Limite superado na entrega seguinte:
 
-- o usuario precisa entrar uma vez para existir em `core.users`;
-- convite por email com aceite e expiracao vira a proxima etapa.
+- convite por link com token hasheado, aceite e expiracao foi entregue em [08-membership-invitations.md](08-membership-invitations.md).
 
 ## Validacoes
 

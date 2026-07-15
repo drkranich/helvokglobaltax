@@ -45,6 +45,7 @@ export function createApp(): Hono<AppEnv> {
         session: "rls-session-preview",
         tenants: "admin-api-preview",
         members: "authenticated-rbac-preview",
+        invitations: "authenticated-invite-preview",
         organizations: "admin-api-preview",
         tax_rules: "planned",
         fiscal_documents: "planned",
