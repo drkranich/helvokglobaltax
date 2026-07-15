@@ -217,6 +217,32 @@ export function createAdminRouter(): Hono<AppEnv> {
     }
   });
 
+  admin.delete("/tenants/:tenantId/catalog/items/:itemId", async (c) => {
+    const tenantId = c.req.param("tenantId");
+    const itemId = c.req.param("itemId");
+
+    if (!isUuid(tenantId) || !isUuid(itemId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_catalog_delete_target",
+            message: "tenantId and itemId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const result = await client.rpc("helvok_admin_delete_catalog_item", { p_tenant_id: tenantId, p_item_id: itemId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
   admin.get("/fiscal/authorities", async (c) => {
     try {
       const client = new SupabaseAdminRpcClient(c.env);

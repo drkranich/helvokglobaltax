@@ -404,6 +404,37 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.delete("/tenants/:tenantId/catalog/items/:itemId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const itemId = c.req.param("itemId");
+    if (!isUuid(tenantId) || !isUuid(itemId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_catalog_delete_target",
+            message: "tenantId and itemId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_catalog_item", { p_tenant_id: tenantId, p_item_id: itemId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/documents", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

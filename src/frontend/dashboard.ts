@@ -1016,6 +1016,12 @@ export function renderDashboard(): string {
         color: var(--gold-300);
       }
 
+      .mini-button.danger {
+        border-color: rgba(216, 92, 92, 0.5);
+        color: #ffb7a8;
+        background: rgba(216, 92, 92, 0.12);
+      }
+
       .invitation-link-card {
         display: grid;
         gap: 10px;
@@ -1265,6 +1271,13 @@ export function renderDashboard(): string {
       .tax-simulator-grid {
         display: grid;
         gap: 12px;
+      }
+
+      .simulation-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
       }
 
       .tax-section {
@@ -2704,6 +2717,11 @@ export function renderDashboard(): string {
               </div>
 
               <button class="glass-button primary" id="tax-simulate-button" type="button">Calcular impostos e preço real</button>
+              <div class="simulation-actions" aria-label="Ações da simulação">
+                <button class="mini-button" id="tax-simulation-pdf-button" type="button">PDF da simulação</button>
+                <button class="mini-button warn" id="tax-simulation-archive-button" type="button">Arquivar simulação</button>
+                <button class="mini-button danger" id="tax-simulation-delete-button" type="button">Excluir simulação</button>
+              </div>
             </form>
           </article>
         </section>
@@ -2865,7 +2883,8 @@ export function renderDashboard(): string {
       const authStorage = {
         access: "helvok_access_token",
         refresh: "helvok_refresh_token",
-        email: "helvok_session_email"
+        email: "helvok_session_email",
+        simulations: "helvok_tax_simulation_archive"
       };
 
       const authState = {
@@ -3206,7 +3225,10 @@ export function renderDashboard(): string {
               '<em>' + escapeHtml(price) + '</em>' +
               '<div class="catalog-actions">' +
                 '<button class="mini-button" type="button" data-catalog-action="simulate">Usar no simulador</button>' +
+                '<button class="mini-button" type="button" data-catalog-action="pdf">PDF</button>' +
+                '<button class="mini-button warn" type="button" data-catalog-action="archive">Arquivar</button>' +
                 '<button class="mini-button warn" type="button" data-catalog-action="edit">Editar cadastro</button>' +
+                '<button class="mini-button danger" type="button" data-catalog-action="delete">Excluir</button>' +
               '</div>' +
             '</div>'
           );
@@ -3437,6 +3459,123 @@ export function renderDashboard(): string {
         runTaxSimulation();
       }
 
+      function catalogPayloadFromItem(item, overrides) {
+        const next = Object.assign({}, item || {}, overrides || {});
+        return {
+          id: next.id,
+          sku: next.sku,
+          name: next.name,
+          item_kind: next.item_kind || "goods",
+          category: next.category || "goods",
+          country_of_origin: next.country_of_origin || "BR",
+          ncm_code: next.ncm_code || next.hs_code || "",
+          hs_code: next.hs_code || next.ncm_code || "",
+          unit_code: next.unit_code || "UN",
+          currency_code: next.currency_code || "BRL",
+          unit_price: Number(next.unit_price || 0),
+          unit_cost: Number(next.unit_cost || 0),
+          status: next.status || "active",
+          metadata: Object.assign({}, next.metadata || {}, { source: "helvok-dashboard" })
+        };
+      }
+
+      function openPrintablePdf(title, rows) {
+        const safeTitle = escapeHtml(title || "Helvok Tax");
+        const htmlRows = (rows || []).map((row) => (
+          "<tr><th>" + escapeHtml(row.label || "") + "</th><td>" + escapeHtml(row.value || "") + "</td></tr>"
+        )).join("");
+        const html =
+          "<!doctype html><html><head><title>" + safeTitle + "</title>" +
+          "<style>body{font-family:Arial,sans-serif;margin:32px;color:#132024}h1{font-size:24px;margin:0 0 18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #c9b37a;padding:10px;text-align:left;vertical-align:top}th{width:34%;background:#f4e6c8}small{display:block;margin-top:22px;color:#667}</style>" +
+          "</head><body><h1>" + safeTitle + "</h1><table>" + htmlRows + "</table><small>Helvok Tax - documento operacional gerado a partir do painel.</small></body></html>";
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+          addFeed("pdf.blocked", "Navegador bloqueou a janela de PDF");
+          return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+      }
+
+      function exportCatalogItemPdf(item) {
+        if (!item) {
+          setCatalogMessage("Selecione um item do catálogo para gerar PDF.", "warn");
+          return;
+        }
+
+        openPrintablePdf("Ficha fiscal - " + (item.name || item.sku || "Item"), [
+          { label: "SKU", value: item.sku || "--" },
+          { label: "Nome", value: item.name || "--" },
+          { label: "Tipo", value: item.item_kind || "--" },
+          { label: "Categoria", value: item.category || "--" },
+          { label: "País de origem", value: item.country_of_origin || "--" },
+          { label: "Classificação HS/NCM", value: item.ncm_code || item.hs_code || "--" },
+          { label: "Preço unitário", value: formatCurrency(item.unit_price || 0, item.currency_code || "BRL") },
+          { label: "Custo unitário", value: formatCurrency(item.unit_cost || 0, item.currency_code || "BRL") },
+          { label: "Status", value: item.status || "--" }
+        ]);
+        addFeed("catalog.pdf", (item.sku || "SKU") + " exportado em PDF");
+      }
+
+      async function archiveCatalogItem(item) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!item || !tenantId || !accessToken) {
+          setCatalogMessage("Entre com uma sessão autorizada para arquivar produtos.", "warn");
+          return;
+        }
+
+        setCatalogMessage("Arquivando item fiscal...", null);
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/catalog/items", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(catalogPayloadFromItem(item, { status: "archived" }))
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível arquivar o item.");
+        }
+
+        renderCatalogItems(body.items || catalogState.items.map((current) => current.id === item.id ? Object.assign({}, current, { status: "archived" }) : current));
+        setCatalogMessage("Item arquivado e auditado.", "good");
+        addFeed(body.event_type || "product.archived", (item.sku || "SKU") + " arquivado");
+      }
+
+      async function deleteCatalogItem(item) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!item || !item.id || !tenantId || !accessToken) {
+          setCatalogMessage("Este item ainda não possui ID para exclusão.", "warn");
+          return;
+        }
+
+        if (!window.confirm("Excluir este item do catálogo? Essa ação remove o cadastro do tenant.")) {
+          return;
+        }
+
+        setCatalogMessage("Excluindo item fiscal...", null);
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/catalog/items/" + encodeURIComponent(item.id), {
+          method: "DELETE",
+          headers: {
+            authorization: "Bearer " + accessToken
+          }
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível excluir o item.");
+        }
+
+        renderCatalogItems(body.items || catalogState.items.filter((current) => current.id !== item.id));
+        setCatalogMessage("Item excluído e auditado.", "good");
+        addFeed(body.event_type || "product.deleted", (item.sku || "SKU") + " excluído");
+      }
+
       function handleCatalogListClick(event) {
         const button = event.target && event.target.closest ? event.target.closest("[data-catalog-action]") : null;
         if (!button) {
@@ -3453,6 +3592,24 @@ export function renderDashboard(): string {
 
         if (button.getAttribute("data-catalog-action") === "edit") {
           populateCatalogForm(item);
+        }
+
+        if (button.getAttribute("data-catalog-action") === "pdf") {
+          exportCatalogItemPdf(item);
+        }
+
+        if (button.getAttribute("data-catalog-action") === "archive") {
+          archiveCatalogItem(item).catch((error) => {
+            setCatalogMessage(error instanceof Error ? error.message : "Não foi possível arquivar o item.", "warn");
+            addFeed("catalog.archive.error", "Falha ao arquivar item");
+          });
+        }
+
+        if (button.getAttribute("data-catalog-action") === "delete") {
+          deleteCatalogItem(item).catch((error) => {
+            setCatalogMessage(error instanceof Error ? error.message : "Não foi possível excluir o item.", "warn");
+            addFeed("catalog.delete.error", "Falha ao excluir item");
+          });
         }
       }
 
@@ -4428,6 +4585,100 @@ export function renderDashboard(): string {
         }
       }
 
+      function requireCurrentSimulation() {
+        if (!taxState.lastSimulation || !taxState.lastSimulation.totals) {
+          setText("#tax-result-status", "sem simulação");
+          addFeed("tax.simulation.empty", "Calcule antes de acionar a simulação");
+          return null;
+        }
+        return taxState.lastSimulation;
+      }
+
+      function exportCurrentSimulationPdf() {
+        const simulation = requireCurrentSimulation();
+        if (!simulation) {
+          return;
+        }
+
+        const totals = simulation.totals || {};
+        const market = simulation.market || {};
+        const snapshot = simulation.input_snapshot || {};
+        const currency = snapshot.currency || market.currency || taxState.currency || "USD";
+        const lines = (simulation.tax_lines || []).map((line) => line.label + ": " + formatCurrency(line.amount || 0, currency)).join(" | ");
+
+        openPrintablePdf("Simulação fiscal - " + (market.name || snapshot.destination_country || "mercado"), [
+          { label: "Origem", value: snapshot.origin_country || "--" },
+          { label: "Destino", value: (market.name || "--") + " / " + (snapshot.destination_country || market.code || "--") },
+          { label: "Incoterm", value: snapshot.incoterm || "--" },
+          { label: "Canal", value: snapshot.channel || "--" },
+          { label: "Total do cliente", value: formatCurrency(totals.customer_total || 0, currency) },
+          { label: "Desembolso vendedor", value: formatCurrency(totals.seller_cash_out || 0, currency) },
+          { label: "Margem estimada", value: formatCurrency(totals.seller_gross_margin || 0, currency) + " / " + formatPercent(totals.seller_gross_margin_rate || 0) },
+          { label: "Preço unitário alvo", value: formatCurrency(totals.suggested_unit_price || 0, currency) },
+          { label: "Linhas tributárias e fees", value: lines || "--" },
+          { label: "Pacote de regras", value: simulation.rule_pack_version || taxState.rulePackVersion || "--" }
+        ]);
+        addFeed("tax.simulation.pdf", "PDF operacional da simulação gerado");
+      }
+
+      function archiveCurrentSimulation() {
+        const simulation = requireCurrentSimulation();
+        if (!simulation) {
+          return;
+        }
+
+        let archive = [];
+        try {
+          archive = JSON.parse(window.localStorage.getItem(authStorage.simulations) || "[]");
+          if (!Array.isArray(archive)) {
+            archive = [];
+          }
+        } catch (_error) {
+          archive = [];
+        }
+        archive.unshift({
+          id: "sim-" + Date.now(),
+          archived_at: new Date().toISOString(),
+          simulation: simulation
+        });
+        window.localStorage.setItem(authStorage.simulations, JSON.stringify(archive.slice(0, 25)));
+        setText("#tax-result-status", "simulação arquivada");
+        addFeed("tax.simulation.archived", "Simulação arquivada localmente");
+      }
+
+      function clearCurrentSimulation() {
+        const simulation = requireCurrentSimulation();
+        if (!simulation) {
+          return;
+        }
+
+        if (!window.confirm("Excluir a simulação atual da tela?")) {
+          return;
+        }
+
+        taxState.lastSimulation = null;
+        setText("#tax-result-status", "simulação excluída");
+        setText("#tax-market-name", "aguardando");
+        setText("#tax-currency-label", "--");
+        setText("#tax-market-tax-label", "--");
+        setText("#tax-source-label", "--");
+        setText("#tax-customer-total", "--");
+        setText("#tax-seller-out", "--");
+        setText("#tax-margin", "--");
+        setText("#tax-suggested", "--");
+        const lines = qs("#tax-lines");
+        if (lines) {
+          lines.innerHTML = '<div class="tax-line-card"><strong>Nenhuma simulação</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>';
+        }
+        ["#tax-value-chain", "#tax-docs", "#tax-required-data", "#tax-warnings"].forEach((selector) => {
+          const node = qs(selector);
+          if (node) {
+            node.innerHTML = "";
+          }
+        });
+        addFeed("tax.simulation.deleted", "Simulação removida da tela");
+      }
+
       function addFeed(kind, label) {
         const list = qs("#feed-list");
         if (!list) {
@@ -4583,6 +4834,21 @@ export function renderDashboard(): string {
       const taxCompareButton = qs("#tax-compare-button");
       if (taxCompareButton) {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
+      }
+
+      const taxSimulationPdfButton = qs("#tax-simulation-pdf-button");
+      if (taxSimulationPdfButton) {
+        taxSimulationPdfButton.addEventListener("click", exportCurrentSimulationPdf);
+      }
+
+      const taxSimulationArchiveButton = qs("#tax-simulation-archive-button");
+      if (taxSimulationArchiveButton) {
+        taxSimulationArchiveButton.addEventListener("click", archiveCurrentSimulation);
+      }
+
+      const taxSimulationDeleteButton = qs("#tax-simulation-delete-button");
+      if (taxSimulationDeleteButton) {
+        taxSimulationDeleteButton.addEventListener("click", clearCurrentSimulation);
       }
 
       const createFiscalDocumentButton = qs("#create-fiscal-document-button");

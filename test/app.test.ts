@@ -49,6 +49,12 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Criar draft fiscal global");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
+    expect(body).toContain("PDF da simulação");
+    expect(body).toContain("Arquivar simulação");
+    expect(body).toContain("Excluir simulação");
+    expect(body).toContain('data-catalog-action="archive"');
+    expect(body).toContain('data-catalog-action="delete"');
+    expect(body).toContain('data-catalog-action="pdf"');
     expect(body).toContain('id="tax-simulator-form" novalidate');
     expect(body).toContain('id="tax-simulate-button" type="button"');
     expect(body).toContain("function initializeCustomSelects");
@@ -608,6 +614,42 @@ describe("Helvok Tax Worker API", () => {
     });
   });
 
+  it("deletes catalog items through admin RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const itemId = "33333333-3333-4333-8333-333333333333";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ event_type: "product.deleted", items: [] }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/admin/tenants/${tenantId}/catalog/items/${itemId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "x-helvok-admin-token": "test-admin-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("product.deleted");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_delete_catalog_item",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_item_id: itemId }),
+      }),
+    );
+  });
+
   it("lists fiscal authorities through admin RPC", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify([{ country_code: "BR", authority_code: "BR-SEFAZ-NFE", adapter_key: "adapters/brazil/nfe" }]), {
@@ -1074,6 +1116,53 @@ describe("Helvok Tax Worker API", () => {
             status: "draft",
           },
         }),
+      }),
+    );
+  });
+
+  it("deletes catalog items through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const itemId = "33333333-3333-4333-8333-333333333333";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "product.deleted", items: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/catalog/items/${itemId}`,
+      {
+        method: "DELETE",
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("product.deleted");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_delete_catalog_item",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_item_id: itemId }),
       }),
     );
   });
