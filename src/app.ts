@@ -5,6 +5,7 @@ import { createAdminRouter } from "./admin/routes";
 import type { AppEnv } from "./env";
 import { renderDashboard } from "./frontend/dashboard";
 import { htmlResponse, jsonResponse } from "./response";
+import { createSessionRouter } from "./session/routes";
 
 export function createApp(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -40,6 +41,8 @@ export function createApp(): Hono<AppEnv> {
       api_version: "v1",
       status: "foundation-ready",
       modules: {
+        auth: "supabase-auth-preview",
+        session: "rls-session-preview",
         tenants: "admin-api-preview",
         organizations: "admin-api-preview",
         tax_rules: "planned",
@@ -75,6 +78,7 @@ export function createApp(): Hono<AppEnv> {
   );
 
   app.route("/v1/admin", createAdminRouter());
+  app.route("/v1", createSessionRouter());
 
   app.notFound((c) =>
     jsonResponse(

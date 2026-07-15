@@ -823,6 +823,150 @@ export function renderDashboard(): string {
         background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
       }
 
+      .session-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        max-width: 240px;
+        padding: 0 12px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.1);
+        color: var(--frost-80);
+        font-family: var(--font-data);
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        backdrop-filter: blur(18px) saturate(150%);
+      }
+
+      .auth-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        background:
+          linear-gradient(115deg, rgba(5, 9, 29, 0.72), rgba(6, 19, 63, 0.82)),
+          repeating-linear-gradient(90deg, rgba(247, 251, 255, 0.05) 0 1px, transparent 1px 70px);
+        backdrop-filter: blur(18px) saturate(155%);
+      }
+
+      .auth-gate.hidden {
+        display: none;
+      }
+
+      .auth-card {
+        width: min(1040px, 100%);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.72fr);
+        gap: 18px;
+        padding: 18px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: linear-gradient(145deg, rgba(247, 251, 255, 0.16), rgba(7, 26, 92, 0.42));
+        box-shadow: 0 34px 120px rgba(1, 7, 30, 0.62);
+      }
+
+      .auth-story,
+      .auth-form-panel {
+        min-height: 430px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+        backdrop-filter: blur(24px) saturate(160%);
+      }
+
+      .auth-story {
+        position: relative;
+        display: grid;
+        align-content: end;
+        gap: 22px;
+        overflow: hidden;
+        padding: clamp(22px, 4vw, 38px);
+      }
+
+      .auth-story::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background:
+          linear-gradient(100deg, rgba(255, 197, 108, 0.22), transparent 34%),
+          repeating-linear-gradient(135deg, rgba(142, 180, 255, 0.09) 0 1px, transparent 1px 18px);
+      }
+
+      .auth-story > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .auth-story h2 {
+        max-width: 610px;
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(42px, 7vw, 84px);
+        line-height: 0.88;
+      }
+
+      .auth-story p {
+        max-width: 560px;
+        margin: 0;
+        color: var(--frost-80);
+        line-height: 1.65;
+      }
+
+      .auth-form-panel {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .auth-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .auth-tab {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+        color: var(--frost-64);
+        cursor: pointer;
+      }
+
+      .auth-tab.active {
+        border-color: rgba(255, 197, 108, 0.52);
+        background: rgba(216, 138, 29, 0.18);
+        color: var(--frost);
+      }
+
+      .auth-message {
+        min-height: 44px;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(247, 251, 255, 0.08);
+        color: var(--frost-64);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .auth-message.good {
+        border-color: rgba(89, 241, 189, 0.35);
+        color: var(--good);
+      }
+
+      .auth-message.warn {
+        border-color: rgba(255, 197, 108, 0.42);
+        color: var(--ochre-300);
+      }
+
       .mobile-brand {
         display: none;
       }
@@ -943,6 +1087,22 @@ export function renderDashboard(): string {
           width: 100%;
         }
 
+        .session-chip {
+          max-width: none;
+          width: 100%;
+        }
+
+        .auth-card {
+          grid-template-columns: 1fr;
+          max-height: calc(100vh - 24px);
+          overflow: auto;
+        }
+
+        .auth-story,
+        .auth-form-panel {
+          min-height: auto;
+        }
+
         .hero-panel {
           min-height: 0;
         }
@@ -973,6 +1133,49 @@ export function renderDashboard(): string {
     </style>
   </head>
   <body>
+    <section class="auth-gate" id="auth-gate" aria-label="Acesso Helvok Tax">
+      <div class="auth-card">
+        <div class="auth-story">
+          <span class="eyebrow"><i class="pulse-dot"></i>Supabase Auth conectado</span>
+          <h2>Acesso fiscal sem painel genérico.</h2>
+          <p>
+            Entre para sincronizar sua sessão com o core multi-tenant. O navegador usa apenas chave pública;
+            permissões, tenants e memberships continuam protegidos por RLS e pelo Worker.
+          </p>
+          <div class="hero-strip">
+            <div class="strip-cell"><span>Auth</span><strong id="auth-health-label">online</strong></div>
+            <div class="strip-cell"><span>Core user</span><strong id="auth-core-label">sync</strong></div>
+            <div class="strip-cell"><span>Tenant</span><strong id="auth-tenant-label">guarded</strong></div>
+          </div>
+        </div>
+        <form class="auth-form-panel" id="auth-form">
+          <div class="panel-title">
+            <h2 id="auth-title">Entrar na Helvok Tax</h2>
+            <span id="auth-mode-label">login</span>
+          </div>
+          <div class="auth-tabs" role="tablist" aria-label="Modo de acesso">
+            <button class="auth-tab active" type="button" data-auth-mode="login">Entrar</button>
+            <button class="auth-tab" type="button" data-auth-mode="signup">Criar acesso</button>
+          </div>
+          <div class="field-block">
+            <label for="auth-name">Nome</label>
+            <input id="auth-name" class="glass-field" autocomplete="name" placeholder="Seu nome" />
+          </div>
+          <div class="field-block">
+            <label for="auth-email">Email</label>
+            <input id="auth-email" class="glass-field" autocomplete="email" inputmode="email" placeholder="voce@empresa.com" required />
+          </div>
+          <div class="field-block">
+            <label for="auth-password">Senha</label>
+            <input id="auth-password" class="glass-field" autocomplete="current-password" type="password" minlength="6" placeholder="minimo 6 caracteres" required />
+          </div>
+          <button class="glass-button primary" id="auth-submit" type="submit">Entrar</button>
+          <button class="glass-button" id="auth-skip" type="button">Ver cockpit sem sessao</button>
+          <div class="auth-message" id="auth-message">Use seu email e senha do Supabase Auth. Se criar acesso e o projeto exigir confirmacao, confirme no email antes de entrar.</div>
+        </form>
+      </div>
+    </section>
+
     <div class="app-shell">
       <aside class="side-rail" aria-label="Navegacao principal">
         <div class="brand">
@@ -1018,11 +1221,13 @@ export function renderDashboard(): string {
             <strong>Helvok Tax</strong>
           </div>
           <div class="top-actions">
+            <span class="session-chip" id="session-chip">sessao anonima</span>
             <input class="glass-field" type="search" placeholder="Buscar regra, documento, pais..." />
             <select class="glass-select" aria-label="Ambiente">
               <option>Sandbox</option>
               <option>Production</option>
             </select>
+            <button class="glass-button" id="session-button" type="button">Entrar</button>
             <button class="glass-button primary" type="button" data-action="pulse">Executar varredura</button>
           </div>
         </header>
@@ -1229,6 +1434,18 @@ export function renderDashboard(): string {
         ["audit.scan", "Auditoria imutavel verificada"]
       ];
 
+      const authStorage = {
+        access: "helvok_access_token",
+        refresh: "helvok_refresh_token",
+        email: "helvok_session_email"
+      };
+
+      const authState = {
+        mode: "login",
+        config: null,
+        session: null
+      };
+
       let feedCounter = 0;
 
       function qs(selector) {
@@ -1243,6 +1460,202 @@ export function renderDashboard(): string {
         const node = qs(selector);
         if (node) {
           node.textContent = value;
+        }
+      }
+
+      function setAuthMessage(message, tone) {
+        const node = qs("#auth-message");
+        if (!node) {
+          return;
+        }
+        node.textContent = message;
+        node.classList.remove("good", "warn");
+        if (tone) {
+          node.classList.add(tone);
+        }
+      }
+
+      function setAuthMode(mode) {
+        authState.mode = mode;
+        document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+          button.classList.toggle("active", button.getAttribute("data-auth-mode") === mode);
+        });
+        setText("#auth-title", mode === "signup" ? "Criar acesso Helvok Tax" : "Entrar na Helvok Tax");
+        setText("#auth-mode-label", mode === "signup" ? "signup" : "login");
+        setText("#auth-submit", mode === "signup" ? "Criar acesso" : "Entrar");
+        const nameField = qs("#auth-name");
+        if (nameField) {
+          nameField.closest(".field-block").style.display = mode === "signup" ? "grid" : "none";
+        }
+      }
+
+      function showAuthGate(show) {
+        const gate = qs("#auth-gate");
+        if (gate) {
+          gate.classList.toggle("hidden", !show);
+        }
+      }
+
+      function getStoredAccessToken() {
+        return window.localStorage.getItem(authStorage.access) || "";
+      }
+
+      function storeAuthSession(payload) {
+        if (payload && payload.access_token) {
+          window.localStorage.setItem(authStorage.access, payload.access_token);
+        }
+        if (payload && payload.refresh_token) {
+          window.localStorage.setItem(authStorage.refresh, payload.refresh_token);
+        }
+        const email = payload && payload.user && payload.user.email ? payload.user.email : "";
+        if (email) {
+          window.localStorage.setItem(authStorage.email, email);
+        }
+      }
+
+      function clearAuthSession() {
+        window.localStorage.removeItem(authStorage.access);
+        window.localStorage.removeItem(authStorage.refresh);
+        window.localStorage.removeItem(authStorage.email);
+        authState.session = null;
+        setText("#session-chip", "sessao anonima");
+        setText("#session-button", "Entrar");
+        showAuthGate(true);
+        addFeed("auth.logout", "Sessao local encerrada");
+      }
+
+      async function getAuthConfig() {
+        if (authState.config) {
+          return authState.config;
+        }
+
+        const response = await fetch("/v1/auth/config", { cache: "no-store" });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Auth config unavailable");
+        }
+        authState.config = body.auth;
+        setText("#auth-health-label", "online");
+        return authState.config;
+      }
+
+      async function callSupabaseAuth(path, payload) {
+        const config = await getAuthConfig();
+        const response = await fetch(config.supabase_url + path, {
+          method: "POST",
+          headers: {
+            apikey: config.supabase_publishable_key,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body.msg || body.message || body.error_description || "Supabase Auth rejected the request");
+        }
+        return body;
+      }
+
+      async function syncSession() {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken) {
+          showAuthGate(true);
+          return null;
+        }
+
+        const response = await fetch("/v1/session/sync", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken
+          }
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Session sync failed");
+        }
+        authState.session = body.session;
+        renderSession(body.session);
+        return body.session;
+      }
+
+      async function loadSession() {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken) {
+          showAuthGate(true);
+          return null;
+        }
+
+        const response = await fetch("/v1/me", {
+          headers: {
+            authorization: "Bearer " + accessToken
+          },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Session unavailable");
+        }
+        authState.session = body.session;
+        renderSession(body.session);
+        return body.session;
+      }
+
+      function renderSession(session) {
+        const user = session && session.user ? session.user : null;
+        const email = user && user.email ? user.email : window.localStorage.getItem(authStorage.email);
+        const tenantCount = session && session.counts ? Number(session.counts.tenants || 0) : 0;
+        setText("#session-chip", email ? email + " / tenants " + tenantCount : "perfil sincronizado");
+        setText("#session-button", "Sair");
+        setText("#auth-core-label", user ? "ready" : "created");
+        setText("#auth-tenant-label", tenantCount > 0 ? "linked" : "invite");
+        showAuthGate(false);
+
+        if (tenantCount === 0) {
+          addFeed("auth.provisioned", "Usuario autenticado; aguardando membership no tenant");
+        } else {
+          addFeed("auth.session", "Sessao ligada ao core multi-tenant");
+        }
+      }
+
+      async function submitAuthForm(event) {
+        event.preventDefault();
+        const email = qs("#auth-email").value.trim().toLowerCase();
+        const password = qs("#auth-password").value;
+        const fullName = qs("#auth-name").value.trim();
+
+        if (!email || !password) {
+          setAuthMessage("Informe email e senha para continuar.", "warn");
+          return;
+        }
+
+        setAuthMessage("Autenticando com Supabase Auth...", null);
+
+        try {
+          const payload = authState.mode === "signup"
+            ? await callSupabaseAuth("/auth/v1/signup", {
+                email: email,
+                password: password,
+                data: {
+                  full_name: fullName || email
+                }
+              })
+            : await callSupabaseAuth("/auth/v1/token?grant_type=password", {
+                email: email,
+                password: password
+              });
+
+          if (!payload.access_token) {
+            setAuthMessage("Acesso criado. Se o Supabase exigir confirmacao, confirme no email e depois entre.", "warn");
+            addFeed("auth.pending", "Acesso criado aguardando confirmacao");
+            return;
+          }
+
+          storeAuthSession(payload);
+          await syncSession();
+          setAuthMessage("Sessao sincronizada com o core Helvok Tax.", "good");
+        } catch (error) {
+          setAuthMessage(error instanceof Error ? error.message : "Nao foi possivel autenticar.", "warn");
+          addFeed("auth.error", "Falha na autenticacao ou sincronizacao");
         }
       }
 
@@ -1321,6 +1734,34 @@ export function renderDashboard(): string {
         });
       });
 
+      document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+        button.addEventListener("click", () => setAuthMode(button.getAttribute("data-auth-mode") || "login"));
+      });
+
+      const authForm = qs("#auth-form");
+      if (authForm) {
+        authForm.addEventListener("submit", submitAuthForm);
+      }
+
+      const authSkip = qs("#auth-skip");
+      if (authSkip) {
+        authSkip.addEventListener("click", () => {
+          showAuthGate(false);
+          addFeed("auth.preview", "Cockpit aberto sem sessao");
+        });
+      }
+
+      const sessionButton = qs("#session-button");
+      if (sessionButton) {
+        sessionButton.addEventListener("click", () => {
+          if (getStoredAccessToken()) {
+            clearAuthSession();
+          } else {
+            showAuthGate(true);
+          }
+        });
+      }
+
       const confidence = qs("#confidence");
       if (confidence) {
         confidence.addEventListener("input", (event) => {
@@ -1335,6 +1776,9 @@ export function renderDashboard(): string {
 
       window.setInterval(refreshStatus, 8000);
       bootstrapFeed();
+      setAuthMode("login");
+      getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
+      loadSession().catch(() => showAuthGate(true));
       refreshStatus();
     </script>
   </body>

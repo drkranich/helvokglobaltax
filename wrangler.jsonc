@@ -12,6 +12,7 @@
     "APP_NAME": "Helvok Tax",
     "APP_ENV": "production",
     "API_VERSION": "v1",
-    "SUPABASE_URL": "https://jlvwudjgfzhhdgttrycj.supabase.co"
+    "SUPABASE_URL": "https://jlvwudjgfzhhdgttrycj.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_00AXf2zRTcOD2d3-k0kwQA_rf7mxezd"
   }
 }

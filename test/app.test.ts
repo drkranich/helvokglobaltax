@@ -7,6 +7,7 @@ const env = {
   APP_ENV: "test",
   API_VERSION: "v1",
   SUPABASE_URL: "https://jlvwudjgfzhhdgttrycj.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "test-publishable-key",
 };
 
 const adminEnv = {
@@ -49,6 +50,27 @@ describe("Helvok Tax Worker API", () => {
     expect(response.status).toBe(200);
     expect(body.product).toBe("Helvok Tax");
     expect(body.api_version).toBe("v1");
+  });
+
+  it("returns public Supabase Auth configuration", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/auth/config", {}, env);
+    const body = await response.json<Record<string, { supabase_url: string; supabase_publishable_key: string }>>();
+
+    expect(response.status).toBe(200);
+    expect(body.auth).toMatchObject({
+      supabase_url: "https://jlvwudjgfzhhdgttrycj.supabase.co",
+      supabase_publishable_key: "test-publishable-key",
+    });
+  });
+
+  it("rejects session routes without a user token", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/me", {}, env);
+    const body = await response.json<Record<string, unknown>>();
+
+    expect(response.status).toBe(401);
+    expect(body.error).toMatchObject({ code: "missing_token" });
   });
 
   it("rejects admin routes without a token", async () => {
@@ -145,5 +167,87 @@ describe("Helvok Tax Worker API", () => {
       code: "supabase_rpc_error",
       message: "Supabase RPC returned a non-JSON response.",
     });
+  });
+
+  it("syncs a Supabase Auth user before returning a session summary", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "11111111-1111-4111-8111-111111111111",
+            email: "Owner@Helvok.Tax",
+            user_metadata: {
+              full_name: "Helvok Owner",
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user: { email: "owner@helvok.tax" } }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user: { email: "owner@helvok.tax" }, counts: { tenants: 0 } }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      "/v1/session/sync",
+      {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ session: { user: { email: string } } }>();
+
+    expect(response.status).toBe(200);
+    expect(body.session.user.email).toBe("owner@helvok.tax");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      1,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/auth/v1/user",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          apikey: "test-publishable-key",
+          authorization: "Bearer user-access-token",
+        }),
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_admin_sync_user",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_session",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          authorization: "Bearer user-access-token",
+        }),
+      }),
+    );
   });
 });

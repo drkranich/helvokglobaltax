@@ -11,6 +11,7 @@ Estado atual:
 - Supabase PostgreSQL com schema core/audit, RLS e migrations iniciais.
 - Bootstrap real do tenant `helvok-tax-foundation`.
 - Primeiro painel visual glassmorphism publicado na rota `/`.
+- Auth/session preview com Supabase Auth, `core.users` e RLS.
 
 ## Principio central
 
@@ -44,6 +45,9 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - API metadata: `GET /v1`
 - API status: `GET /v1/status`
 - API meta: `GET /v1/meta`
+- Auth config: `GET /v1/auth/config`
+- Sessao atual: `GET /v1/me`
+- Sync de usuario autenticado: `POST /v1/session/sync`
 - Admin API protegida: `GET/POST /v1/admin/*`
 
 ## Documentacao
@@ -63,6 +67,7 @@ O Core da plataforma nunca conhece legislacoes especificas como ICMS, VAT, IVA, 
 - [Supabase Phase 1 foundation](docs/ops/02-supabase-phase-1-foundation.md)
 - [Worker admin API Phase 2](docs/ops/03-worker-admin-api-phase-2.md)
 - [Glass admin preview](docs/ops/04-glass-admin-preview.md)
+- [Auth session preview](docs/ops/05-auth-session-preview.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails

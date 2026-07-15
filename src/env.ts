@@ -3,7 +3,11 @@ type SecretBindings = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
-export type AppBindings = Cloudflare.Env & SecretBindings;
+type PublicBindings = {
+  SUPABASE_PUBLISHABLE_KEY?: string;
+};
+
+export type AppBindings = Cloudflare.Env & PublicBindings & SecretBindings;
 
 export type AppEnv = {
   Bindings: AppBindings;
