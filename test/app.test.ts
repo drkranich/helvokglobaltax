@@ -48,6 +48,11 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Usar no simulador");
     expect(body).toContain("Documentos fiscais globais");
     expect(body).toContain("Criar draft fiscal global");
+    expect(body).toContain("aguardando documentos reais");
+    expect(body).toContain("function ensureCurrentSimulation");
+    expect(body).toContain("Fontes e cobertura");
+    expect(body).toContain('id="markets-source-label"');
+    expect(body).toContain('id="markets-validation-label"');
     expect(body).toContain("Planejamento financeiro");
     expect(body).toContain("Helvok Financial Engine");
     expect(body).toContain("Calcular plano financeiro");

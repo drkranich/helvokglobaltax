@@ -2436,20 +2436,20 @@ export function renderDashboard(): string {
 
           <aside class="panel">
             <div class="panel-title">
-              <h2>Mapa de cobertura</h2>
-              <span>rule pack</span>
+              <h2>Fontes e cobertura</h2>
+              <span>somente dados carregados</span>
             </div>
             <div class="system-row">
-              <div><strong>Américas</strong><span>Brasil, América do Norte e América Latina.</span></div>
-              <span class="status-badge">ativo</span>
+              <div><strong>Fonte carregada</strong><span id="markets-source-label">Aguardando API /v1/tax/markets.</span></div>
+              <span class="status-badge" id="markets-source-status">pendente</span>
             </div>
             <div class="system-row">
-              <div><strong>Europa</strong><span>VAT, OSS/IOSS, eInvoice e regimes locais por país.</span></div>
-              <span class="status-badge pending">seed</span>
+              <div><strong>Homologação</strong><span id="markets-validation-label">Mercados estimados ou manuais não autorizam emissão.</span></div>
+              <span class="status-badge pending" id="markets-validation-status">manual</span>
             </div>
             <div class="system-row">
-              <div><strong>Ásia, Oceania e Oriente Médio</strong><span>Mercados preparados para classificação, duty e imposto indireto.</span></div>
-              <span class="status-badge pending">seed</span>
+              <div><strong>Escopo real</strong><span id="markets-scope-label">Nenhum país é tratado como oficial sem fonte marcada no rule pack.</span></div>
+              <span class="status-badge pending" id="markets-scope-status">0</span>
             </div>
           </aside>
         </section>
@@ -2977,7 +2977,7 @@ export function renderDashboard(): string {
               <h1>Documentos fiscais globais</h1>
               <p>Crie drafts internacionais a partir da simulação, acompanhe lifecycle e prepare a futura fila de emissão por adaptador governamental.</p>
             </div>
-            <span class="view-status" id="documents-view-status">lifecycle global</span>
+            <span class="view-status" id="documents-view-status">aguardando documentos reais</span>
           </div>
           <section class="work-grid">
             <article class="panel">
@@ -3498,6 +3498,7 @@ export function renderDashboard(): string {
         setText("#fiscal-documents-draft", String(draftCount));
         setText("#fiscal-documents-queued", String(queuedCount));
         setText("#fiscal-documents-authorized", String(authorizedCount));
+        setText("#documents-view-status", normalized.length > 0 ? normalized.length + " documentos reais" : "sem documentos reais");
 
         if (!list) {
           return;
@@ -3829,6 +3830,7 @@ export function renderDashboard(): string {
       }
 
       async function provisionTaxSimulationCosts() {
+        await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
@@ -3859,6 +3861,7 @@ export function renderDashboard(): string {
       }
 
       async function createLedgerEntryFromSimulation() {
+        await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
@@ -3896,6 +3899,7 @@ export function renderDashboard(): string {
       }
 
       async function createPricingModelFromSimulation() {
+        await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
@@ -3924,6 +3928,7 @@ export function renderDashboard(): string {
       }
 
       async function queueSimulationExport() {
+        await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
@@ -4773,7 +4778,12 @@ export function renderDashboard(): string {
           return;
         }
 
-        const simulation = taxState.lastSimulation;
+        const simulation = await ensureCurrentSimulation();
+        if (!simulation || !simulation.totals) {
+          addFeed("fiscal_document.blocked", "Simulação fiscal real necessária para criar draft");
+          return;
+        }
+
         const market = simulation && simulation.market ? simulation.market : findTaxMarket(textValue("#tax-destination") || "BR");
         const totals = simulation && simulation.totals ? simulation.totals : {};
         const payload = collectTaxPayload();
@@ -5077,20 +5087,35 @@ export function renderDashboard(): string {
         if (!markets || markets.length === 0) {
           map.innerHTML = '<div class="country-tile active"><strong>Sem mercados</strong><span>API indisponível</span><small>pendente</small></div>';
           setText("#jurisdiction-count-label", "0 mercados");
+          setText("#markets-source-label", "Nenhum mercado carregado da API.");
+          setText("#markets-source-status", "offline");
+          setText("#markets-validation-label", "Sem base para simular ou emitir.");
+          setText("#markets-scope-label", "0 oficiais / 0 estimados / 0 manuais");
+          setText("#markets-scope-status", "0");
           return;
         }
 
+        const officialCount = markets.filter((market) => market.sourceStatus === "official-seed").length;
+        const estimatedCount = markets.filter((market) => market.sourceStatus === "estimated-seed").length;
+        const manualCount = markets.filter((market) => market.sourceStatus === "manual-required").length;
         setText("#jurisdiction-count-label", String(markets.length) + " mercados");
+        setText("#markets-source-label", "Dados carregados do endpoint versionado /v1/tax/markets.");
+        setText("#markets-source-status", "online");
+        setText("#markets-validation-label", manualCount + estimatedCount > 0 ? "Há mercados que exigem fonte oficial/homologação antes de emitir." : "Mercados carregados com fonte marcada como oficial.");
+        setText("#markets-validation-status", manualCount + estimatedCount > 0 ? "revisar" : "oficial");
+        setText("#markets-scope-label", officialCount + " oficiais / " + estimatedCount + " estimados / " + manualCount + " manuais");
+        setText("#markets-scope-status", String(markets.length));
         map.innerHTML = markets.map((market) => {
-          const active = ["BR", "GB", "US", "CA", "SG", "JP"].includes(market.code) ? " active" : "";
+          const active = market.sourceStatus === "official-seed" ? " active" : "";
           const fill = market.sourceStatus === "official-seed" ? "0.86" : market.sourceStatus === "manual-required" ? "0.34" : "0.58";
           const rateLabel = market.standardRate > 0 ? formatPercent(market.standardRate) : "manual";
+          const sourceLabel = market.sourceStatus === "official-seed" ? "fonte oficial marcada" : market.sourceStatus === "manual-required" ? "manual obrigatório" : "estimativa seed";
           return (
             '<div class="country-tile' + active + '" style="--fill: ' + fill + ';">' +
               '<strong>' + escapeHtml(market.name) + '</strong>' +
               '<span>' + escapeHtml(market.region) + ' / ' + escapeHtml(market.code) + ' / ' + escapeHtml(market.currency) + '</span>' +
               '<em>' + escapeHtml(market.indirectTaxName) + ' / ' + escapeHtml(market.eInvoiceStatus) + '</em>' +
-              '<small>' + escapeHtml(rateLabel) + '</small>' +
+              '<small>' + escapeHtml(rateLabel) + ' / ' + escapeHtml(sourceLabel) + '</small>' +
             '</div>'
           );
         }).join("");
@@ -5310,6 +5335,7 @@ export function renderDashboard(): string {
           renderTaxSimulation(body.simulation);
           runTaxComparison(false);
           addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
+          return body.simulation;
         } catch (error) {
           setText("#tax-result-status", "erro");
           const warnings = qs("#tax-warnings");
@@ -5323,6 +5349,7 @@ export function renderDashboard(): string {
             button.textContent = "Calcular impostos e preço real";
           }
         }
+        return null;
       }
 
       async function runTaxComparison(showLoading) {
@@ -5494,6 +5521,17 @@ export function renderDashboard(): string {
         return taxState.lastSimulation;
       }
 
+      async function ensureCurrentSimulation() {
+        if (taxState.lastSimulation && taxState.lastSimulation.totals) {
+          return taxState.lastSimulation;
+        }
+
+        setText("#tax-result-status", "calculando antes da ação");
+        addFeed("tax.simulation.autorun", "Calculando simulação antes da ação solicitada");
+        const simulation = await runTaxSimulation();
+        return simulation && simulation.totals ? simulation : requireCurrentSimulation();
+      }
+
       function exportCurrentSimulationPdf() {
         const simulation = requireCurrentSimulation();
         if (!simulation) {
@@ -5521,10 +5559,58 @@ export function renderDashboard(): string {
         addFeed("tax.simulation.pdf", "PDF operacional da simulação gerado");
       }
 
-      function archiveCurrentSimulation() {
-        const simulation = requireCurrentSimulation();
+      async function archiveCurrentSimulation() {
+        const simulation = await ensureCurrentSimulation();
         if (!simulation) {
           return;
+        }
+
+        const button = qs("#tax-simulation-archive-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Arquivando...";
+        }
+
+        const totals = simulation.totals || {};
+        const market = simulation.market || {};
+        const snapshot = simulation.input_snapshot || {};
+        const currency = snapshot.currency || market.currency || taxState.currency || "USD";
+        const title = "Simulação fiscal " + (market.name || snapshot.destination_country || "mercado") + " / " + formatTime(new Date());
+
+        try {
+          if (getActiveTenantId() && getStoredAccessToken()) {
+            const body = await upsertFinancialEntity("financial_reports", {
+              report_type: "calculation_memory",
+              title,
+              filters: {
+                source: "tax_simulation",
+                country: snapshot.destination_country || market.code || null,
+                channel: snapshot.channel || null,
+                currency
+              },
+              result_snapshot: {
+                simulation,
+                totals,
+                archived_at: new Date().toISOString()
+              },
+              reproducibility_hash: "tax-simulation-" + Date.now()
+            });
+            setSelectValue("#financial-entity", "financial_reports");
+            financialState.entity = "financial_reports";
+            renderFinancialRecords(body.records || []);
+            setText("#tax-result-status", "simulação arquivada");
+            setFinancialMessage("Simulação arquivada no financeiro do tenant.", "good");
+            addFeed(body.event_type || "tax.simulation.archived", "Simulação arquivada no Supabase");
+            return;
+          }
+        } catch (error) {
+          setFinancialMessage(error instanceof Error ? error.message : "Falha ao arquivar no Supabase.", "warn");
+          addFeed("tax.simulation.archive.error", "Falha ao arquivar no financeiro");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Arquivar simulação";
+          }
         }
 
         let archive = [];
@@ -5552,11 +5638,8 @@ export function renderDashboard(): string {
           return;
         }
 
-        if (!window.confirm("Excluir a simulação atual da tela?")) {
-          return;
-        }
-
         taxState.lastSimulation = null;
+        taxState.lastComparison = null;
         setText("#tax-result-status", "simulação excluída");
         setText("#tax-market-name", "aguardando");
         setText("#tax-currency-label", "--");
@@ -5799,21 +5882,35 @@ export function renderDashboard(): string {
 
       const taxSimulationProvisionButton = qs("#tax-simulation-provision-button");
       if (taxSimulationProvisionButton) {
-        taxSimulationProvisionButton.addEventListener("click", () => {
-          provisionTaxSimulationCosts().catch((error) => {
+        taxSimulationProvisionButton.addEventListener("click", async () => {
+          taxSimulationProvisionButton.disabled = true;
+          taxSimulationProvisionButton.textContent = "Provisionando...";
+          try {
+            await provisionTaxSimulationCosts();
+          } catch (error) {
             setFinancialMessage(error instanceof Error ? error.message : "Não foi possível provisionar custos.", "warn");
             addFeed("financial.tax_cost.error", "Falha ao provisionar custo fiscal");
-          });
+          } finally {
+            taxSimulationProvisionButton.disabled = false;
+            taxSimulationProvisionButton.textContent = "Provisionar custos";
+          }
         });
       }
 
       const taxSimulationLedgerButton = qs("#tax-simulation-ledger-button");
       if (taxSimulationLedgerButton) {
-        taxSimulationLedgerButton.addEventListener("click", () => {
-          createLedgerEntryFromSimulation().catch((error) => {
+        taxSimulationLedgerButton.addEventListener("click", async () => {
+          taxSimulationLedgerButton.disabled = true;
+          taxSimulationLedgerButton.textContent = "Criando...";
+          try {
+            await createLedgerEntryFromSimulation();
+          } catch (error) {
             setFinancialMessage(error instanceof Error ? error.message : "Não foi possível criar lançamento.", "warn");
             addFeed("financial.entry.error", "Falha ao criar lançamento da simulação");
-          });
+          } finally {
+            taxSimulationLedgerButton.disabled = false;
+            taxSimulationLedgerButton.textContent = "Criar lançamento";
+          }
         });
       }
 
