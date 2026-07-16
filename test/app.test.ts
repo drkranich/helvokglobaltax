@@ -51,6 +51,10 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Planejamento financeiro");
     expect(body).toContain("Helvok Financial Engine");
     expect(body).toContain("Calcular plano financeiro");
+    expect(body).toContain("Lançamentos");
+    expect(body).toContain("Centros de custo");
+    expect(body).toContain("Investimentos");
+    expect(body).toContain("Planilhas e relatórios");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
     expect(body).toContain("PDF da simulação");
@@ -137,6 +141,7 @@ describe("Helvok Tax Worker API", () => {
         engine: string;
         totals: { revenue: number; suggested_unit_price: number; break_even_units: number; roi: number };
         cash_flow: unknown[];
+        calculation_memory: { spreadsheet_exports: string[] };
       };
     }>();
 
@@ -147,6 +152,28 @@ describe("Helvok Tax Worker API", () => {
     expect(body.plan.totals.suggested_unit_price).toBeGreaterThan(0);
     expect(body.plan.totals.break_even_units).toBeGreaterThan(0);
     expect(body.plan.cash_flow).toHaveLength(12);
+    expect(body.plan.calculation_memory.spreadsheet_exports).toEqual(expect.arrayContaining(["XLSX", "CSV", "PDF"]));
+  });
+
+  it("exposes the complete Helvok financial module blueprint", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/financial/blueprint", {}, env);
+    const body = await response.json<{
+      blueprint: {
+        entities: string[];
+        allocation_strategy: string[];
+        screens: string[];
+        automation_events: string[];
+        spreadsheet_exports: string[];
+      };
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.blueprint.entities).toEqual(expect.arrayContaining(["financial_accounts", "financial_entries", "cost_centers", "budgets", "spreadsheet_exports"]));
+    expect(body.blueprint.allocation_strategy).toEqual(expect.arrayContaining(["quantity", "weight", "volume", "value", "hours", "percentage", "custom"]));
+    expect(body.blueprint.screens).toEqual(expect.arrayContaining(["visao financeira", "lancamentos", "orcamento", "relatorios"]));
+    expect(body.blueprint.automation_events).toEqual(expect.arrayContaining(["invoice.authorized", "tax.calculated", "investment.recorded"]));
+    expect(body.blueprint.spreadsheet_exports).toEqual(expect.arrayContaining(["XLSX", "CSV", "PDF"]));
   });
 
   it("lists global export markets for the tax simulator", async () => {

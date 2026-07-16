@@ -2804,6 +2804,17 @@ export function renderDashboard(): string {
               </div>
             </aside>
           </section>
+          <section class="modules-grid" aria-label="Módulos financeiros Helvok">
+            <article class="module"><h3>Lançamentos</h3><p>Ledger por competência, pagamento, origem, documento, pedido, produto, país, canal e tags.</p><div class="module-meter"><span style="--meter: 52%;"></span></div></article>
+            <article class="module"><h3>Centros de custo</h3><p>Rateios por quantidade, peso, volume, valor, horas, porcentagem ou regra personalizada.</p><div class="module-meter"><span style="--meter: 48%;"></span></div></article>
+            <article class="module"><h3>Projetos</h3><p>Custos, orçamento, realizado, desvio, tendência e projeção por operação, cliente e país.</p><div class="module-meter"><span style="--meter: 46%;"></span></div></article>
+            <article class="module"><h3>Orçamento</h3><p>Budget lines por conta, categoria, centro de custo e memória de cálculo reproduzível.</p><div class="module-meter"><span style="--meter: 42%;"></span></div></article>
+            <article class="module"><h3>Investimentos</h3><p>Aportes, financiamento, juros, depreciação, amortização, payback, ROI, VPL e TIR.</p><div class="module-meter"><span style="--meter: 50%;"></span></div></article>
+            <article class="module"><h3>Formação de preços</h3><p>Preço mínimo, markup, margem desejada, canal, país, moeda, B2B, B2C e promoção.</p><div class="module-meter"><span style="--meter: 58%;"></span></div></article>
+            <article class="module"><h3>Cenários</h3><p>Conservador, base, agressivo e personalizado com volume, câmbio, frete, tributos e inadimplência.</p><div class="module-meter"><span style="--meter: 54%;"></span></div></article>
+            <article class="module"><h3>Fluxo de caixa</h3><p>Entradas, saídas, saldo acumulado, prazo de pagamento, prazo de recebimento e capital de giro.</p><div class="module-meter"><span style="--meter: 44%;"></span></div></article>
+            <article class="module"><h3>Planilhas e relatórios</h3><p>XLSX, CSV, PDF, dashboards, demonstrativos, memórias e relatórios por projeto, canal, país, produto e período.</p><div class="module-meter"><span style="--meter: 40%;"></span></div></article>
+          </section>
         </section>
 
         <section class="app-view" id="documentos" data-view="documentos" aria-label="Documentos">
@@ -4545,10 +4556,13 @@ export function renderDashboard(): string {
             ["Custos totais", totals.total_costs],
             ["Markup", totals.markup],
             ["Preço mínimo", totals.minimum_unit_price],
-            ["VPL", totals.npv]
+            ["VPL", totals.npv],
+            ["TIR", totals.irr == null ? 0 : totals.irr],
+            ["Desvio previsto x realizado", totals.variance_amount],
+            ["Custo alocado", totals.allocated_cost]
           ].map((line) => (
             '<div class="tax-line-card"><div><strong>' + escapeHtml(line[0]) + '</strong><span>memória Helvok Financial Engine</span></div><em class="tax-amount">' +
-            escapeHtml(line[0] === "Markup" ? formatPercent(line[1]) : formatCurrency(line[1], currency)) +
+            escapeHtml(line[0] === "Markup" || line[0] === "TIR" ? formatPercent(line[1]) : formatCurrency(line[1], currency)) +
             '</em></div>'
           )).join("");
         }
