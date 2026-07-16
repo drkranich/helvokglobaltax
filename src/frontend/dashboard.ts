@@ -2047,6 +2047,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
           <a class="nav-button" href="#produtos"><span>Produtos</span><span class="nav-code">CAT</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
+          <a class="nav-button" href="#financeiro"><span>Planejamento financeiro</span><span class="nav-code">FIN</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
@@ -2725,6 +2726,84 @@ export function renderDashboard(): string {
             </form>
           </article>
         </section>
+        </section>
+
+        <section class="app-view" id="financeiro" data-view="financeiro" aria-label="Planejamento financeiro">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Helvok Financial Engine</span>
+              <h1>Planejamento financeiro</h1>
+              <p>Modele custos, margem, capital de giro, investimento, payback, ROI, VPL e formação de preço sem misturar regras fiscais ao motor financeiro.</p>
+            </div>
+            <span class="view-status" id="financial-view-status">cost engine preview</span>
+          </div>
+          <section class="work-grid tax-workbench">
+            <article class="panel tax-simulator-panel">
+              <div class="panel-title">
+                <h2>Cost engine operacional</h2>
+                <span id="financial-result-status">aguardando</span>
+              </div>
+              <form class="tax-simulator-grid" id="financial-plan-form" novalidate>
+                <div class="tax-section">
+                  <div class="tax-section-head"><strong>Cenário</strong><span>volume e preço</span></div>
+                  <div class="tax-input-grid">
+                    <div class="field-block">
+                      <label for="financial-scenario">Cenário</label>
+                      <select id="financial-scenario" class="glass-select">
+                        <option value="base" selected>Base</option>
+                        <option value="conservative">Conservador</option>
+                        <option value="aggressive">Agressivo</option>
+                        <option value="custom">Personalizado</option>
+                      </select>
+                    </div>
+                    <div class="field-block"><label for="financial-currency">Moeda</label><input id="financial-currency" class="glass-field" value="BRL" maxlength="3" /></div>
+                    <div class="field-block"><label for="financial-period">Meses</label><input id="financial-period" class="glass-field" type="number" min="1" step="1" value="12" /></div>
+                    <div class="field-block"><label for="financial-volume">Volume</label><input id="financial-volume" class="glass-field" type="number" min="1" step="1" value="1200" /></div>
+                    <div class="field-block"><label for="financial-price">Preço unitário</label><input id="financial-price" class="glass-field" type="number" min="0" step="0.01" value="45" /></div>
+                    <div class="field-block"><label for="financial-unit-cost">Custo unitário</label><input id="financial-unit-cost" class="glass-field" type="number" min="0" step="0.01" value="22" /></div>
+                  </div>
+                </div>
+                <div class="tax-section">
+                  <div class="tax-section-head"><strong>Custos e investimento</strong><span>projeção</span></div>
+                  <div class="tax-input-grid">
+                    <div class="field-block"><label for="financial-fixed-costs">Custos fixos</label><input id="financial-fixed-costs" class="glass-field" type="number" min="0" step="0.01" value="12000" /></div>
+                    <div class="field-block"><label for="financial-logistics-costs">Logística</label><input id="financial-logistics-costs" class="glass-field" type="number" min="0" step="0.01" value="1800" /></div>
+                    <div class="field-block"><label for="financial-tax-costs">Custo tributário</label><input id="financial-tax-costs" class="glass-field" type="number" min="0" step="0.01" value="3200" /></div>
+                    <div class="field-block"><label for="financial-channel-costs">Canal</label><input id="financial-channel-costs" class="glass-field" type="number" min="0" step="0.01" value="1400" /></div>
+                    <div class="field-block"><label for="financial-working-capital">Capital de giro</label><input id="financial-working-capital" class="glass-field" type="number" min="0" step="0.01" value="8000" /></div>
+                    <div class="field-block"><label for="financial-investment">Investimento inicial</label><input id="financial-investment" class="glass-field" type="number" min="0" step="0.01" value="25000" /></div>
+                    <div class="field-block"><label for="financial-target-margin">Margem alvo %</label><input id="financial-target-margin" class="glass-field" type="number" min="0" step="0.01" value="32" /></div>
+                    <div class="field-block"><label for="financial-discount-rate">Desconto mensal %</label><input id="financial-discount-rate" class="glass-field" type="number" min="0" step="0.01" value="1.5" /></div>
+                  </div>
+                </div>
+                <button class="glass-button primary" id="financial-plan-button" type="button">Calcular plano financeiro</button>
+              </form>
+            </article>
+            <aside class="panel tax-result-panel">
+              <div class="panel-title">
+                <h2>Resultado financeiro</h2>
+                <span id="financial-scenario-label">base</span>
+              </div>
+              <div class="tax-kpi-grid">
+                <div class="tax-kpi"><span>Receita projetada</span><strong id="financial-revenue">--</strong></div>
+                <div class="tax-kpi"><span>Margem líquida</span><strong id="financial-net-margin">--</strong></div>
+                <div class="tax-kpi"><span>Preço sugerido</span><strong id="financial-suggested-price">--</strong></div>
+                <div class="tax-kpi"><span>Break-even</span><strong id="financial-break-even">--</strong></div>
+                <div class="tax-kpi"><span>ROI</span><strong id="financial-roi">--</strong></div>
+                <div class="tax-kpi"><span>Payback</span><strong id="financial-payback">--</strong></div>
+              </div>
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Memória de cálculo</strong><span>reprodutível</span></div>
+                <div class="tax-line-list" id="financial-lines">
+                  <div class="tax-line-card"><strong>Nenhum plano calculado</strong><span>calcule para gerar indicadores</span><em class="tax-amount">--</em></div>
+                </div>
+              </div>
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Alertas</strong><span>planejamento</span></div>
+                <div class="tax-warning-list" id="financial-warnings"></div>
+              </div>
+            </aside>
+          </section>
         </section>
 
         <section class="app-view" id="documentos" data-view="documentos" aria-label="Documentos">
@@ -4383,6 +4462,105 @@ export function renderDashboard(): string {
         return payload;
       }
 
+      function collectFinancialPayload() {
+        return {
+          scenario: textValue("#financial-scenario") || "base",
+          currency: textValue("#financial-currency") || "BRL",
+          period_months: numberValue("#financial-period") || 12,
+          volume_units: numberValue("#financial-volume") || 1,
+          unit_price: numberValue("#financial-price"),
+          unit_cost: numberValue("#financial-unit-cost"),
+          fixed_costs: numberValue("#financial-fixed-costs"),
+          logistics_costs: numberValue("#financial-logistics-costs"),
+          tax_costs: numberValue("#financial-tax-costs"),
+          channel_costs: numberValue("#financial-channel-costs"),
+          working_capital: numberValue("#financial-working-capital"),
+          investment_initial: numberValue("#financial-investment"),
+          target_margin_rate: numberValue("#financial-target-margin"),
+          discount_rate: numberValue("#financial-discount-rate")
+        };
+      }
+
+      async function runFinancialPlan(event) {
+        if (event) {
+          event.preventDefault();
+        }
+
+        const button = qs("#financial-plan-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Calculando no Helvok...";
+        }
+        setText("#financial-result-status", "calculando");
+
+        try {
+          const response = await fetch("/v1/financial/plan", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify(collectFinancialPayload())
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Financial plan failed");
+          }
+          renderFinancialPlan(body.plan);
+          addFeed(body.event_type || "financial.plan.calculated", "Plano financeiro recalculado");
+        } catch (error) {
+          setText("#financial-result-status", "erro");
+          const warnings = qs("#financial-warnings");
+          if (warnings) {
+            warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha no planejamento</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
+          }
+          addFeed("financial.plan.error", "Falha ao calcular planejamento");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Calcular plano financeiro";
+          }
+        }
+      }
+
+      function renderFinancialPlan(plan) {
+        if (!plan || !plan.totals) {
+          return;
+        }
+        const currency = plan.currency || "BRL";
+        const totals = plan.totals;
+        setText("#financial-result-status", "plano vivo");
+        setText("#financial-scenario-label", plan.scenario || "base");
+        setText("#financial-revenue", formatCurrency(totals.revenue, currency));
+        setText("#financial-net-margin", formatCurrency(totals.net_margin, currency) + " / " + formatPercent(totals.net_margin_rate));
+        setText("#financial-suggested-price", formatCurrency(totals.suggested_unit_price, currency));
+        setText("#financial-break-even", String(totals.break_even_units || 0) + " un.");
+        setText("#financial-roi", formatPercent(totals.roi || 0));
+        setText("#financial-payback", totals.payback_months ? String(totals.payback_months) + " meses" : "sem payback");
+
+        const lines = qs("#financial-lines");
+        if (lines) {
+          lines.innerHTML = [
+            ["Custos diretos", totals.direct_costs],
+            ["Custos indiretos", totals.indirect_costs],
+            ["Custos totais", totals.total_costs],
+            ["Markup", totals.markup],
+            ["Preço mínimo", totals.minimum_unit_price],
+            ["VPL", totals.npv]
+          ].map((line) => (
+            '<div class="tax-line-card"><div><strong>' + escapeHtml(line[0]) + '</strong><span>memória Helvok Financial Engine</span></div><em class="tax-amount">' +
+            escapeHtml(line[0] === "Markup" ? formatPercent(line[1]) : formatCurrency(line[1], currency)) +
+            '</em></div>'
+          )).join("");
+        }
+
+        const warnings = qs("#financial-warnings");
+        if (warnings) {
+          warnings.innerHTML = (plan.warnings || []).map((warning) => (
+            '<div class="tax-warning-card"><strong>Alerta financeiro</strong><span>' + escapeHtml(warning) + '</span></div>'
+          )).join("");
+        }
+      }
+
       async function runTaxSimulation(event) {
         if (event) {
           event.preventDefault();
@@ -4836,6 +5014,17 @@ export function renderDashboard(): string {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
       }
 
+      const financialPlanForm = qs("#financial-plan-form");
+      if (financialPlanForm) {
+        financialPlanForm.noValidate = true;
+        financialPlanForm.addEventListener("submit", runFinancialPlan);
+      }
+
+      const financialPlanButton = qs("#financial-plan-button");
+      if (financialPlanButton) {
+        financialPlanButton.addEventListener("click", runFinancialPlan);
+      }
+
       const taxSimulationPdfButton = qs("#tax-simulation-pdf-button");
       if (taxSimulationPdfButton) {
         taxSimulationPdfButton.addEventListener("click", exportCurrentSimulationPdf);
@@ -4862,6 +5051,11 @@ export function renderDashboard(): string {
           node.addEventListener("change", () => runTaxSimulation());
         }
       });
+
+      const financialScenario = qs("#financial-scenario");
+      if (financialScenario) {
+        financialScenario.addEventListener("change", () => runFinancialPlan());
+      }
 
       const invitationsList = qs("#invitations-list");
       if (invitationsList) {

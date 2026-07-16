@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import type { AppEnv } from "../env";
 import { jsonResponse } from "../response";
 import { simulateTax, TaxSimulationError, type TaxSimulationInput } from "./engine";
-import { EXPORT_MARKETS, getMarket, RULE_PACK_VERSION } from "./rule-pack";
+import { BRAZIL_STATE_TAX_PROFILES, EXPORT_MARKETS, getMarket, RULE_PACK_VERSION } from "./rule-pack";
 
 type TaxComparePayload = TaxSimulationInput & {
   scenario?: TaxSimulationInput;
@@ -22,6 +22,14 @@ export function createTaxRouter(): Hono<AppEnv> {
       rule_pack_version: RULE_PACK_VERSION,
       count: EXPORT_MARKETS.length,
       markets: EXPORT_MARKETS,
+    }),
+  );
+
+  router.get("/tax/brazil/states", (c) =>
+    jsonResponse(c, {
+      rule_pack_version: RULE_PACK_VERSION,
+      count: BRAZIL_STATE_TAX_PROFILES.length,
+      states: BRAZIL_STATE_TAX_PROFILES,
     }),
   );
 

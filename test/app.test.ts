@@ -41,12 +41,16 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain('class="app-view active" id="dashboard"');
     expect(body).toContain('class="app-view" id="produtos"');
     expect(body).toContain('class="app-view" id="motor"');
+    expect(body).toContain('class="app-view" id="financeiro"');
     expect(body).toContain('class="app-view" id="documentos"');
     expect(body).toContain("Produtos e serviços");
     expect(body).toContain("Salvar produto ou serviço");
     expect(body).toContain("Usar no simulador");
     expect(body).toContain("Documentos fiscais globais");
     expect(body).toContain("Criar draft fiscal global");
+    expect(body).toContain("Planejamento financeiro");
+    expect(body).toContain("Helvok Financial Engine");
+    expect(body).toContain("Calcular plano financeiro");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
     expect(body).toContain("PDF da simulação");
@@ -97,6 +101,52 @@ describe("Helvok Tax Worker API", () => {
 
     expect(response.status).toBe(200);
     expect(body.modules.fiscal_documents).toBe("global-lifecycle-preview");
+    expect(body.modules.financial_planning).toBe("helvok-cost-engine-preview");
+  });
+
+  it("calculates a Helvok financial planning scenario", async () => {
+    const app = createApp();
+    const response = await app.request(
+      "/v1/financial/plan",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          scenario: "base",
+          currency: "BRL",
+          period_months: 12,
+          volume_units: 1200,
+          unit_price: 45,
+          unit_cost: 22,
+          fixed_costs: 12000,
+          logistics_costs: 1800,
+          tax_costs: 3200,
+          channel_costs: 1400,
+          working_capital: 8000,
+          investment_initial: 25000,
+          target_margin_rate: 32,
+        }),
+      },
+      env,
+    );
+    const body = await response.json<{
+      event_type: string;
+      plan: {
+        engine: string;
+        totals: { revenue: number; suggested_unit_price: number; break_even_units: number; roi: number };
+        cash_flow: unknown[];
+      };
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("financial.plan.calculated");
+    expect(body.plan.engine).toBe("helvok-financial-planning-cost-engine");
+    expect(body.plan.totals.revenue).toBeGreaterThan(50000);
+    expect(body.plan.totals.suggested_unit_price).toBeGreaterThan(0);
+    expect(body.plan.totals.break_even_units).toBeGreaterThan(0);
+    expect(body.plan.cash_flow).toHaveLength(12);
   });
 
   it("lists global export markets for the tax simulator", async () => {
@@ -134,6 +184,22 @@ describe("Helvok Tax Worker API", () => {
       ]),
     );
     expect(body.markets.map((market) => market.region)).toEqual(expect.arrayContaining(["América Latina", "Caribe", "Ásia", "Oriente Médio", "África"]));
+  });
+
+  it("lists Brazilian state tax profiles for domestic clients", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/tax/brazil/states", {}, env);
+    const body = await response.json<{
+      count: number;
+      states: Array<{ code: string; name: string; taxFamilies: Array<{ code: string }> }>;
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.count).toBe(27);
+    expect(body.states.map((state) => state.code)).toEqual(expect.arrayContaining(["SP", "MG", "RJ", "BA", "DF"]));
+    expect(body.states.find((state) => state.code === "SP")?.taxFamilies.map((tax) => tax.code)).toEqual(
+      expect.arrayContaining(["ICMS", "ICMS_ST", "DIFAL", "FCP", "ISS", "IPI", "PIS_COFINS"]),
+    );
   });
 
   it("simulates a cross-border DDP tax and cost scenario", async () => {

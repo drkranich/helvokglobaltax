@@ -3,6 +3,7 @@ import { secureHeaders } from "hono/secure-headers";
 
 import { createAdminRouter } from "./admin/routes";
 import type { AppEnv } from "./env";
+import { createFinancialRouter } from "./financial/routes";
 import { renderDashboard } from "./frontend/dashboard";
 import { htmlResponse, jsonResponse } from "./response";
 import { createSessionRouter } from "./session/routes";
@@ -51,6 +52,7 @@ export function createApp(): Hono<AppEnv> {
         products: "authenticated-catalog-preview",
         tax_simulator: "edge-estimate-engine-preview",
         tax_rules: "seed-rule-pack-preview",
+        financial_planning: "helvok-cost-engine-preview",
         fiscal_documents: "global-lifecycle-preview",
         audit: "planned",
       },
@@ -85,6 +87,7 @@ export function createApp(): Hono<AppEnv> {
   app.route("/v1/admin", createAdminRouter());
   app.route("/v1", createSessionRouter());
   app.route("/v1", createTaxRouter());
+  app.route("/v1", createFinancialRouter());
 
   app.notFound((c) =>
     jsonResponse(

@@ -1,4 +1,4 @@
-import { getMarket, RULE_PACK_VERSION, type TaxMarket } from "./rule-pack";
+import { getBrazilStateTaxProfile, getMarket, RULE_PACK_VERSION, type TaxMarket } from "./rule-pack";
 
 export type TaxSimulationItemInput = {
   description?: string;
@@ -11,6 +11,7 @@ export type TaxSimulationItemInput = {
 
 export type TaxSimulationInput = {
   origin_country?: string;
+  origin_region?: string;
   destination_country?: string;
   destination_region?: string;
   currency?: string;
@@ -67,6 +68,7 @@ export type TaxSimulationResult = {
   market: TaxMarket;
   input_snapshot: {
     origin_country: string;
+    origin_region: string | null;
     destination_country: string;
     destination_region: string | null;
     operation_type: string;
@@ -129,6 +131,8 @@ export class TaxSimulationError extends Error {
 export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
   const originCountry = normalizeCountry(input.origin_country, DEFAULT_ORIGIN);
   const destinationCountry = normalizeCountry(input.destination_country, DEFAULT_DESTINATION);
+  const originRegion = cleanOptional(input.origin_region)?.toUpperCase() ?? null;
+  const destinationRegion = cleanOptional(input.destination_region)?.toUpperCase() ?? null;
   const market = getMarket(destinationCountry);
 
   if (!market) {
@@ -243,6 +247,10 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
   const warnings = buildWarnings({
     input,
     market,
+    originCountry,
+    destinationCountry,
+    originRegion,
+    destinationRegion,
     operationType,
     customerType,
     incoterm,
@@ -256,6 +264,10 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
   const nextRequiredData = buildRequiredData({
     input,
     market,
+    originCountry,
+    destinationCountry,
+    originRegion,
+    destinationRegion,
     operationType,
     customerType,
     isGoods,
@@ -269,8 +281,9 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
     market,
     input_snapshot: {
       origin_country: originCountry,
+      origin_region: originRegion,
       destination_country: destinationCountry,
-      destination_region: cleanOptional(input.destination_region),
+      destination_region: destinationRegion,
       operation_type: operationType,
       customer_type: customerType,
       incoterm,
@@ -320,7 +333,7 @@ export function simulateTax(input: TaxSimulationInput): TaxSimulationResult {
       ),
       buildLine("payment_fee", "Taxa de pagamento", "commercial_fee", paymentFeeRate, sellerCashCollected, paymentFee, "seller", market),
       buildLine("marketplace_fee", "Comissão marketplace/canal", "commercial_fee", marketplaceFeeRate, commercialSubtotal, marketplaceFee, channel.includes("market") ? "marketplace" : "seller", market),
-    ],
+    ].concat(buildBrazilStateTaxLines({ originCountry, destinationCountry, originRegion, destinationRegion, destinationTaxBase, market })),
     value_chain: buildValueChain({
       commercialSubtotal,
       itemCost,
@@ -474,6 +487,33 @@ function buildLine(
   };
 }
 
+function buildBrazilStateTaxLines(input: {
+  originCountry: string;
+  destinationCountry: string;
+  originRegion: string | null;
+  destinationRegion: string | null;
+  destinationTaxBase: number;
+  market: TaxMarket;
+}): TaxSimulationLine[] {
+  if (input.originCountry !== "BR" && input.destinationCountry !== "BR") {
+    return [];
+  }
+
+  const profile = getBrazilStateTaxProfile(input.destinationRegion || input.originRegion);
+  if (!profile) {
+    return [
+      buildLine("br_state_tax_profile", "Malha estadual Brasil pendente", "indirect_tax", 0, input.destinationTaxBase, 0, "unknown", input.market),
+    ];
+  }
+
+  return [
+    buildLine("br_icms", `ICMS ${profile.code}`, "indirect_tax", 0, input.destinationTaxBase, 0, "unknown", input.market),
+    buildLine("br_difal", `DIFAL ${profile.code}`, "indirect_tax", 0, input.destinationTaxBase, 0, "unknown", input.market),
+    buildLine("br_fcp", `FCP ${profile.code}`, "indirect_tax", 0, input.destinationTaxBase, 0, "unknown", input.market),
+    buildLine("br_icms_st", `ICMS ST ${profile.code}`, "indirect_tax", 0, input.destinationTaxBase, 0, "unknown", input.market),
+  ];
+}
+
 function calculateSuggestedCommercialPrice(input: {
   fixedCost: number;
   paymentFeeRate: number;
@@ -537,7 +577,9 @@ function stage(
 function buildDocumentChecklist(input: {
   input: TaxSimulationInput;
   originCountry: string;
+  originRegion?: string | null;
   destinationCountry: string;
+  destinationRegion?: string | null;
   operationType: string;
   isGoods: boolean;
   isCrossBorder: boolean;
@@ -574,6 +616,10 @@ function buildDocumentChecklist(input: {
 function buildWarnings(input: {
   input: TaxSimulationInput;
   market: TaxMarket;
+  originCountry?: string;
+  destinationCountry?: string;
+  originRegion?: string | null;
+  destinationRegion?: string | null;
   operationType: string;
   customerType: string;
   incoterm: string;
@@ -620,6 +666,10 @@ function buildWarnings(input: {
 function buildRequiredData(input: {
   input: TaxSimulationInput;
   market: TaxMarket;
+  originCountry?: string;
+  destinationCountry?: string;
+  originRegion?: string | null;
+  destinationRegion?: string | null;
   operationType: string;
   customerType: string;
   isGoods: boolean;

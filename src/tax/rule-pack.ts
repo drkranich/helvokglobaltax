@@ -12,7 +12,142 @@ export type TaxMarket = {
   notes: string[];
 };
 
-export const RULE_PACK_VERSION = "global-indirect-tax-seed-2026.07.15";
+export type BrazilStateTaxFamily = {
+  code: "ICMS" | "ICMS_ST" | "DIFAL" | "FCP" | "FECP" | "ISS" | "IPI" | "PIS_COFINS";
+  name: string;
+  scope: "state" | "municipal" | "federal";
+  status: "manual-required";
+  requiredData: string[];
+  notes: string[];
+};
+
+export type BrazilStateTaxProfile = {
+  code: string;
+  name: string;
+  region: string;
+  sefaz: string;
+  nfeAuthority: string;
+  nfceAuthority: string;
+  nfseMode: "municipal" | "national-standard" | "hybrid";
+  defaultCurrency: "BRL";
+  sourceStatus: "manual-required";
+  taxFamilies: BrazilStateTaxFamily[];
+  operationalNotes: string[];
+};
+
+export const RULE_PACK_VERSION = "global-indirect-tax-seed-2026.07.16-br-states";
+
+const BRAZIL_STATE_FAMILIES: BrazilStateTaxFamily[] = [
+  {
+    code: "ICMS",
+    name: "ICMS interno e interestadual",
+    scope: "state",
+    status: "manual-required",
+    requiredData: ["UF origem", "UF destino", "NCM", "CFOP", "CST/CSOSN", "regime tributario", "tipo de cliente"],
+    notes: ["Alíquota e base dependem da UF, produto, operação, benefício fiscal e vigência legal."],
+  },
+  {
+    code: "ICMS_ST",
+    name: "ICMS Substituição Tributária",
+    scope: "state",
+    status: "manual-required",
+    requiredData: ["NCM/CEST", "MVA", "convênio/protocolo", "UF destino", "regime", "responsável tributário"],
+    notes: ["Pode não aplicar a todos os produtos. Bebidas, cosméticos, autopeças e outros segmentos exigem tabela própria."],
+  },
+  {
+    code: "DIFAL",
+    name: "DIFAL",
+    scope: "state",
+    status: "manual-required",
+    requiredData: ["UF origem", "UF destino", "consumidor final", "contribuinte ICMS", "alíquota interna destino"],
+    notes: ["Regra relevante em operações interestaduais para consumidor final e deve considerar partilha vigente quando aplicável."],
+  },
+  {
+    code: "FCP",
+    name: "FCP / adicional estadual",
+    scope: "state",
+    status: "manual-required",
+    requiredData: ["UF destino", "NCM", "categoria do produto", "base ICMS/DIFAL"],
+    notes: ["Fundo de combate à pobreza/adicional pode existir por UF e por produto."],
+  },
+  {
+    code: "ISS",
+    name: "ISS municipal",
+    scope: "municipal",
+    status: "manual-required",
+    requiredData: ["município", "código de serviço", "local da prestação", "tomador", "retenção"],
+    notes: ["Serviços dependem de legislação municipal e NFS-e do município ou padrão nacional."],
+  },
+  {
+    code: "IPI",
+    name: "IPI",
+    scope: "federal",
+    status: "manual-required",
+    requiredData: ["NCM/TIPI", "industrialização", "CNPJ fabricante/importador", "enquadramento legal"],
+    notes: ["Federal, mas impacta custo e base em operações com mercadorias industrializadas."],
+  },
+  {
+    code: "PIS_COFINS",
+    name: "PIS/COFINS",
+    scope: "federal",
+    status: "manual-required",
+    requiredData: ["regime cumulativo/não cumulativo", "CST", "produto/serviço", "receita tributável"],
+    notes: ["Federal, mas precisa entrar na formação de preço para clientes brasileiros."],
+  },
+];
+
+const BRAZIL_STATES = [
+  ["AC", "Acre", "Norte"],
+  ["AL", "Alagoas", "Nordeste"],
+  ["AP", "Amapá", "Norte"],
+  ["AM", "Amazonas", "Norte"],
+  ["BA", "Bahia", "Nordeste"],
+  ["CE", "Ceará", "Nordeste"],
+  ["DF", "Distrito Federal", "Centro-Oeste"],
+  ["ES", "Espírito Santo", "Sudeste"],
+  ["GO", "Goiás", "Centro-Oeste"],
+  ["MA", "Maranhão", "Nordeste"],
+  ["MT", "Mato Grosso", "Centro-Oeste"],
+  ["MS", "Mato Grosso do Sul", "Centro-Oeste"],
+  ["MG", "Minas Gerais", "Sudeste"],
+  ["PA", "Pará", "Norte"],
+  ["PB", "Paraíba", "Nordeste"],
+  ["PR", "Paraná", "Sul"],
+  ["PE", "Pernambuco", "Nordeste"],
+  ["PI", "Piauí", "Nordeste"],
+  ["RJ", "Rio de Janeiro", "Sudeste"],
+  ["RN", "Rio Grande do Norte", "Nordeste"],
+  ["RS", "Rio Grande do Sul", "Sul"],
+  ["RO", "Rondônia", "Norte"],
+  ["RR", "Roraima", "Norte"],
+  ["SC", "Santa Catarina", "Sul"],
+  ["SP", "São Paulo", "Sudeste"],
+  ["SE", "Sergipe", "Nordeste"],
+  ["TO", "Tocantins", "Norte"],
+] as const;
+
+export const BRAZIL_STATE_TAX_PROFILES: BrazilStateTaxProfile[] = BRAZIL_STATES.map(([code, name, region]) => ({
+  code,
+  name,
+  region,
+  sefaz: `SEFAZ ${code}`,
+  nfeAuthority: `SEFAZ ${code} / Ambiente Nacional NF-e`,
+  nfceAuthority: `SEFAZ ${code} / NFC-e`,
+  nfseMode: "hybrid",
+  defaultCurrency: "BRL",
+  sourceStatus: "manual-required",
+  taxFamilies: BRAZIL_STATE_FAMILIES,
+  operationalNotes: [
+    "Usar UF origem/destino, NCM, CFOP, CST/CSOSN e regime antes de transformar estimativa em emissão.",
+    "Alíquotas internas, benefícios, MVA, FCP e regras de ST devem ser versionados por vigência.",
+    "Serviços exigem município e código de serviço; NFS-e não pode ser deduzida só pela UF.",
+  ],
+}));
+
+export function getBrazilStateTaxProfile(stateCode: string | null | undefined): BrazilStateTaxProfile | undefined {
+  const normalized = typeof stateCode === "string" ? stateCode.trim().toUpperCase() : "";
+  return BRAZIL_STATE_TAX_PROFILES.find((profile) => profile.code === normalized);
+}
 
 export const EXPORT_MARKETS: TaxMarket[] = [
   {
