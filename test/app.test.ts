@@ -51,6 +51,11 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Planejamento financeiro");
     expect(body).toContain("Helvok Financial Engine");
     expect(body).toContain("Calcular plano financeiro");
+    expect(body).toContain("Mesa operacional financeira");
+    expect(body).toContain('id="financial-record-form"');
+    expect(body).toContain('id="financial-records-list"');
+    expect(body).toContain('data-financial-action="archive"');
+    expect(body).toContain('data-financial-action="reverse"');
     expect(body).toContain("Lançamentos");
     expect(body).toContain("Centros de custo");
     expect(body).toContain("Investimentos");
@@ -1326,6 +1331,213 @@ describe("Helvok Tax Worker API", () => {
             metadata: {},
           },
         }),
+      }),
+    );
+  });
+
+  it("loads financial records through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ category: "exportacao", amount: 10839.88 }]), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/financial/financial_entries`,
+      {
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ records: Array<{ amount: number }> }>();
+
+    expect(response.status).toBe(200);
+    expect(body.records[0]?.amount).toBe(10839.88);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_list_financial_records",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_entity: "financial_entries", p_limit: 100 }),
+      }),
+    );
+  });
+
+  it("creates financial records through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "financial.record.created", record: { category: "exportacao" }, records: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/financial/financial_entries`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({
+          category: "exportacao",
+          nature: "expense",
+          currency_code: "brl",
+          amount: 10839.88,
+          country_code: "br",
+          tags: ["BR", "marketplace"],
+        }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(201);
+    expect(body.event_type).toBe("financial.record.created");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_upsert_financial_record",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          payload: {
+            tenant_id: tenantId,
+            entity: "financial_entries",
+            category: "exportacao",
+            nature: "expense",
+            currency_code: "BRL",
+            amount: 10839.88,
+            country_code: "BR",
+            tags: ["BR", "marketplace"],
+          },
+        }),
+      }),
+    );
+  });
+
+  it("archives financial records through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const recordId = "33333333-3333-4333-8333-333333333333";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "financial.record.archived", records: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/financial/investments/${recordId}/archive`,
+      {
+        method: "POST",
+        headers: {
+          authorization: "Bearer user-access-token",
+        },
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("financial.record.archived");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_archive_financial_record",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_entity: "investments", p_record_id: recordId }),
+      }),
+    );
+  });
+
+  it("reverses financial entries through authenticated tenant RPC", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const entryId = "33333333-3333-4333-8333-333333333333";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "financial.entry.reversed", records: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+      );
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/financial/entries/${entryId}/reverse`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer user-access-token",
+        },
+        body: JSON.stringify({ notes: "Estorno solicitado" }),
+      },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("financial.entry.reversed");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_reverse_financial_entry",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_entry_id: entryId, p_notes: "Estorno solicitado" }),
       }),
     );
   });

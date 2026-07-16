@@ -7,6 +7,7 @@ import { jsonResponse } from "../response";
 import {
   isUuid,
   validateCatalogItemPayload,
+  validateFinancialRecordPayload,
   validateFiscalDocumentPayload,
   validateInvitationAcceptPayload,
   validateInvitationPayload,
@@ -130,6 +131,28 @@ function missingTokenResponse(c: Context<AppEnv>): Response {
     },
     401,
   );
+}
+
+function isFinancialEntity(value: string): boolean {
+  return [
+    "accounts",
+    "financial_accounts",
+    "entries",
+    "financial_entries",
+    "cost_centers",
+    "projects",
+    "budgets",
+    "forecasts",
+    "investments",
+    "pricing_models",
+    "product_costs",
+    "logistics_costs",
+    "tax_costs",
+    "channel_costs",
+    "cash_flow_periods",
+    "financial_reports",
+    "spreadsheet_exports",
+  ].includes(value);
 }
 
 function encodeBase64Url(bytes: ArrayBuffer | Uint8Array): string {
@@ -509,6 +532,168 @@ export function createSessionRouter(): Hono<AppEnv> {
       await client.getUser();
       const result = await client.rpc("helvok_current_create_fiscal_document", { payload: validation.value });
       return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.get("/tenants/:tenantId/financial/:entity", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const entity = c.req.param("entity");
+    const limit = Number(c.req.query("limit") || 100);
+    if (!isUuid(tenantId) || !isFinancialEntity(entity)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_financial_list_target",
+            message: "tenantId and entity must identify a supported financial resource.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const records = await client.rpc("helvok_current_list_financial_records", {
+        p_tenant_id: tenantId,
+        p_entity: entity,
+        p_limit: Number.isFinite(limit) ? Math.max(1, Math.min(limit, 500)) : 100,
+      });
+      return jsonResponse(c, { entity, records });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/financial/:entity", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const entity = c.req.param("entity");
+    if (!isUuid(tenantId) || !isFinancialEntity(entity)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_financial_upsert_target",
+            message: "tenantId and entity must identify a supported financial resource.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const requestBody = body && typeof body === "object" && !Array.isArray(body)
+      ? { ...(body as Record<string, unknown>), tenant_id: tenantId, entity }
+      : { tenant_id: tenantId, entity };
+    const validation = validateFinancialRecordPayload(requestBody);
+
+    if (!validation.ok) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: validation.code,
+            message: validation.message,
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upsert_financial_record", { payload: validation.value });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/financial/:entity/:recordId/archive", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const entity = c.req.param("entity");
+    const recordId = c.req.param("recordId");
+    if (!isUuid(tenantId) || !isUuid(recordId) || !isFinancialEntity(entity)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_financial_archive_target",
+            message: "tenantId, entity, and recordId must identify a supported financial record.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_archive_financial_record", {
+        p_tenant_id: tenantId,
+        p_entity: entity,
+        p_record_id: recordId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/financial/entries/:entryId/reverse", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const entryId = c.req.param("entryId");
+    if (!isUuid(tenantId) || !isUuid(entryId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_financial_reverse_target",
+            message: "tenantId and entryId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const notes = body && typeof body === "object" && !Array.isArray(body) && typeof (body as Record<string, unknown>).notes === "string"
+      ? String((body as Record<string, unknown>).notes).trim()
+      : null;
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_reverse_financial_entry", {
+        p_tenant_id: tenantId,
+        p_entry_id: entryId,
+        p_notes: notes,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
     } catch (error) {
       return sessionErrorResponse(c, error);
     }

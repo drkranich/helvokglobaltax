@@ -556,3 +556,182 @@ export function validateFiscalDocumentPayload(input: unknown): ValidationResult<
 
   return { ok: true, value: requestPayload };
 }
+
+const financialEntities = new Set([
+  "financial_accounts",
+  "accounts",
+  "financial_entries",
+  "entries",
+  "cost_centers",
+  "projects",
+  "budgets",
+  "forecasts",
+  "investments",
+  "pricing_models",
+  "product_costs",
+  "logistics_costs",
+  "tax_costs",
+  "channel_costs",
+  "cash_flow_periods",
+  "financial_reports",
+  "spreadsheet_exports",
+]);
+
+const financialSlugs = new Set([
+  "account_type",
+  "allocation_method",
+  "category",
+  "channel",
+  "cost_type",
+  "entity",
+  "export_type",
+  "forecast_type",
+  "model_type",
+  "nature",
+  "provision_status",
+  "report_type",
+  "source_engine",
+  "source_type",
+  "status",
+]);
+
+const financialDates = new Set(["competence_date", "payment_date", "starts_on", "ends_on", "period_start", "period_end", "valid_from", "valid_to"]);
+const financialNumbers = new Set([
+  "actual_inflow",
+  "actual_outflow",
+  "amount",
+  "fixed_amount",
+  "initial_amount",
+  "planned_inflow",
+  "planned_outflow",
+  "rate",
+  "working_capital",
+]);
+const financialJsonFields = new Set([
+  "assumptions",
+  "calculation_memory",
+  "depreciation_policy",
+  "filters",
+  "financing_terms",
+  "metadata",
+  "parameters",
+  "result_snapshot",
+  "source_simulation",
+]);
+
+export function validateFinancialRecordPayload(input: unknown): ValidationResult<JsonRecord> {
+  if (!isRecord(input)) {
+    return invalid("Request body must be a JSON object.");
+  }
+
+  const tenantId = getOptionalString(input, "tenant_id");
+  const entity = getOptionalString(input, "entity")?.toLowerCase();
+  const id = getOptionalString(input, "id");
+
+  if (!tenantId || !isUuid(tenantId)) {
+    return invalid("tenant_id must be a valid UUID.");
+  }
+
+  if (!entity || !financialEntities.has(entity)) {
+    return invalid("entity must be a supported financial entity.");
+  }
+
+  if (id && !isUuid(id)) {
+    return invalid("id must be a valid UUID.");
+  }
+
+  const payload: JsonRecord = {
+    tenant_id: tenantId,
+    entity,
+  };
+
+  if (id) {
+    payload.id = id;
+  }
+
+  for (const [key, value] of Object.entries(input)) {
+    if (["tenant_id", "entity", "id"].includes(key)) {
+      continue;
+    }
+
+    if (key.endsWith("_id")) {
+      const uuidValue = typeof value === "string" && value.trim() ? value.trim() : "";
+      if (uuidValue && !isUuid(uuidValue)) {
+        return invalid(`${key} must be a valid UUID.`);
+      }
+      if (uuidValue) {
+        payload[key] = uuidValue;
+      }
+      continue;
+    }
+
+    if (["country_code"].includes(key)) {
+      const country = typeof value === "string" ? value.trim().toUpperCase() : "";
+      if (country && !countryPattern.test(country)) {
+        return invalid(`${key} must be ISO 3166-1 alpha-2.`);
+      }
+      if (country) {
+        payload[key] = country;
+      }
+      continue;
+    }
+
+    if (["currency_code", "base_currency", "quote_currency"].includes(key)) {
+      const currency = typeof value === "string" ? value.trim().toUpperCase() : "";
+      if (currency && !currencyPattern.test(currency)) {
+        return invalid(`${key} must be ISO 4217.`);
+      }
+      if (currency) {
+        payload[key] = currency;
+      }
+      continue;
+    }
+
+    if (financialNumbers.has(key)) {
+      const numberValue = getOptionalNumber(input, key);
+      if (numberValue === undefined) {
+        return invalid(`${key} must be numeric.`);
+      }
+      payload[key] = numberValue;
+      continue;
+    }
+
+    if (financialDates.has(key)) {
+      const dateValue = typeof value === "string" && value.trim() ? value.trim() : "";
+      if (dateValue && !/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return invalid(`${key} must use YYYY-MM-DD.`);
+      }
+      if (dateValue) {
+        payload[key] = dateValue;
+      }
+      continue;
+    }
+
+    if (financialJsonFields.has(key)) {
+      if (value !== undefined && !isRecord(value)) {
+        return invalid(`${key} must be a JSON object.`);
+      }
+      if (value !== undefined) {
+        payload[key] = value;
+      }
+      continue;
+    }
+
+    if (key === "tags" || key === "jurisdiction_path") {
+      if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+        return invalid(`${key} must be an array of strings.`);
+      }
+      payload[key] = value.map((item) => item.trim()).filter(Boolean);
+      continue;
+    }
+
+    if (financialSlugs.has(key) || ["code", "name", "notes", "reproducibility_hash", "storage_key", "title"].includes(key)) {
+      const stringValue = typeof value === "string" && value.trim() ? value.trim() : "";
+      if (stringValue) {
+        payload[key] = key === "code" ? stringValue.toUpperCase() : stringValue;
+      }
+    }
+  }
+
+  return { ok: true, value: payload };
+}

@@ -1110,6 +1110,95 @@ export function renderDashboard(): string {
         justify-content: flex-end;
       }
 
+      .financial-operations {
+        display: grid;
+        gap: 18px;
+        margin-top: 22px;
+      }
+
+      .financial-toolbar {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.55fr) minmax(0, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .financial-action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .financial-record-form {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .financial-record-form .wide-field,
+      .financial-record-form .glass-button,
+      .financial-message {
+        grid-column: 1 / -1;
+      }
+
+      .financial-list {
+        display: grid;
+        gap: 10px;
+        max-height: 560px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .financial-record-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+        min-height: 104px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(244, 230, 200, 0.1), rgba(8, 36, 38, 0.22)),
+          rgba(244, 230, 200, 0.06);
+      }
+
+      .financial-record-card strong,
+      .financial-record-card span {
+        display: block;
+      }
+
+      .financial-record-card span {
+        margin-top: 5px;
+        color: var(--champagne-64);
+        font-family: var(--font-data);
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .financial-record-card em {
+        justify-self: end;
+        min-width: 106px;
+        padding: 8px 10px;
+        border: 1px solid rgba(240, 200, 117, 0.42);
+        border-radius: var(--radius);
+        background: rgba(200, 154, 61, 0.12);
+        color: var(--gold-300);
+        font-family: var(--font-data);
+        font-size: 11px;
+        font-style: normal;
+        text-align: center;
+      }
+
+      .financial-record-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
       .catalog-meta-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2804,6 +2893,67 @@ export function renderDashboard(): string {
               </div>
             </aside>
           </section>
+          <section class="panel financial-operations" aria-label="Operações financeiras do tenant">
+            <div class="panel-title">
+              <h2>Mesa operacional financeira</h2>
+              <span id="financial-record-count">0 registros</span>
+            </div>
+            <div class="financial-toolbar">
+              <div class="field-block">
+                <label for="financial-entity">Módulo</label>
+                <select id="financial-entity" class="glass-select">
+                  <option value="financial_entries" selected>Lançamentos</option>
+                  <option value="financial_accounts">Contas financeiras</option>
+                  <option value="cost_centers">Centros de custo</option>
+                  <option value="projects">Projetos</option>
+                  <option value="budgets">Orçamentos</option>
+                  <option value="forecasts">Forecasts</option>
+                  <option value="investments">Investimentos</option>
+                  <option value="pricing_models">Formação de preços</option>
+                  <option value="product_costs">Custos de produto</option>
+                  <option value="logistics_costs">Custos logísticos</option>
+                  <option value="tax_costs">Custos tributários</option>
+                  <option value="channel_costs">Custos por canal</option>
+                  <option value="cash_flow_periods">Fluxo de caixa</option>
+                  <option value="financial_reports">Relatórios</option>
+                  <option value="spreadsheet_exports">Exportações</option>
+                </select>
+              </div>
+              <div class="financial-action-row">
+                <button class="mini-button" id="financial-refresh-button" type="button">Atualizar</button>
+                <button class="mini-button" id="financial-export-csv-button" type="button">Gerar CSV</button>
+                <button class="mini-button" id="financial-export-xlsx-button" type="button">Gerar XLSX</button>
+                <button class="mini-button" id="financial-report-pdf-button" type="button">PDF do módulo</button>
+              </div>
+            </div>
+            <form class="financial-record-form" id="financial-record-form" novalidate>
+              <div class="field-block"><label for="financial-record-code">Código</label><input id="financial-record-code" class="glass-field" value="FIN-001" /></div>
+              <div class="field-block"><label for="financial-record-name">Nome</label><input id="financial-record-name" class="glass-field" value="Plano operacional" /></div>
+              <div class="field-block"><label for="financial-record-category">Categoria</label><input id="financial-record-category" class="glass-field" value="exportacao" /></div>
+              <div class="field-block">
+                <label for="financial-record-nature">Natureza</label>
+                <select id="financial-record-nature" class="glass-select">
+                  <option value="revenue">Receita</option>
+                  <option value="expense" selected>Despesa</option>
+                  <option value="cost">Custo</option>
+                  <option value="tax">Tributo</option>
+                  <option value="investment">Investimento</option>
+                  <option value="financing">Financiamento</option>
+                  <option value="adjustment">Ajuste</option>
+                </select>
+              </div>
+              <div class="field-block"><label for="financial-record-amount">Valor</label><input id="financial-record-amount" class="glass-field" type="number" step="0.01" value="10839.88" /></div>
+              <div class="field-block"><label for="financial-record-currency">Moeda</label><input id="financial-record-currency" class="glass-field" value="BRL" maxlength="3" /></div>
+              <div class="field-block"><label for="financial-record-country">País</label><input id="financial-record-country" class="glass-field" value="BR" maxlength="2" /></div>
+              <div class="field-block"><label for="financial-record-channel">Canal</label><input id="financial-record-channel" class="glass-field" value="marketplace" /></div>
+              <div class="field-block wide-field"><label for="financial-record-notes">Memória operacional</label><input id="financial-record-notes" class="glass-field" value="Cenário criado no Helvok Financial Engine" /></div>
+              <button class="glass-button primary" id="financial-record-save-button" type="submit">Salvar registro financeiro</button>
+              <div class="financial-message" id="financial-message">Sessão autenticada habilita gravação multi-tenant.</div>
+            </form>
+            <div class="financial-list" id="financial-records-list">
+              <div class="empty-state"><strong>Nenhum registro financeiro carregado</strong><span>Entre com sessão autorizada e selecione um módulo financeiro.</span></div>
+            </div>
+          </section>
           <section class="modules-grid" aria-label="Módulos financeiros Helvok">
             <article class="module"><h3>Lançamentos</h3><p>Ledger por competência, pagamento, origem, documento, pedido, produto, país, canal e tags.</p><div class="module-meter"><span style="--meter: 52%;"></span></div></article>
             <article class="module"><h3>Centros de custo</h3><p>Rateios por quantidade, peso, volume, valor, horas, porcentagem ou regra personalizada.</p><div class="module-meter"><span style="--meter: 48%;"></span></div></article>
@@ -3003,6 +3153,12 @@ export function renderDashboard(): string {
         loadedTenantId: ""
       };
 
+      const financialState = {
+        entity: "financial_entries",
+        records: [],
+        loadedTenantId: ""
+      };
+
       let feedCounter = 0;
 
       function qs(selector) {
@@ -3128,6 +3284,7 @@ export function renderDashboard(): string {
         renderTenantAccess(null);
         renderCatalogItems([]);
         renderFiscalDocuments([]);
+        renderFinancialRecords([]);
         showAuthGate(true);
         addFeed("auth.logout", "Sessão local encerrada");
       }
@@ -3360,6 +3517,345 @@ export function renderDashboard(): string {
             '</div>'
           );
         }).join("");
+      }
+
+      function setFinancialMessage(message, tone) {
+        const node = qs("#financial-message");
+        if (!node) {
+          return;
+        }
+        node.textContent = message;
+        node.classList.remove("good", "warn");
+        if (tone) {
+          node.classList.add(tone);
+        }
+      }
+
+      function financialEntityLabel(entity) {
+        const labels = {
+          financial_entries: "Lançamentos",
+          financial_accounts: "Contas financeiras",
+          cost_centers: "Centros de custo",
+          projects: "Projetos",
+          budgets: "Orçamentos",
+          forecasts: "Forecasts",
+          investments: "Investimentos",
+          pricing_models: "Formação de preços",
+          product_costs: "Custos de produto",
+          logistics_costs: "Custos logísticos",
+          tax_costs: "Custos tributários",
+          channel_costs: "Custos por canal",
+          cash_flow_periods: "Fluxo de caixa",
+          financial_reports: "Relatórios",
+          spreadsheet_exports: "Exportações"
+        };
+        return labels[entity] || entity || "Financeiro";
+      }
+
+      function renderFinancialRecords(records) {
+        const list = qs("#financial-records-list");
+        const normalized = Array.isArray(records) ? records : [];
+        financialState.records = normalized;
+
+        setText("#financial-record-count", normalized.length + " registros");
+        setText("#financial-view-status", financialState.loadedTenantId ? "operações vivas" : "aguardando sessão");
+
+        if (!list) {
+          return;
+        }
+
+        if (normalized.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state"><strong>Nenhum registro em ' + escapeHtml(financialEntityLabel(financialState.entity)) + '</strong><span>Crie o primeiro registro financeiro auditado para o tenant ativo.</span></div>';
+          return;
+        }
+
+        list.innerHTML = normalized.map((record, index) => {
+          const currency = record.currency_code || "BRL";
+          const amount = record.amount != null ? formatCurrency(record.amount, currency) :
+            record.initial_amount != null ? formatCurrency(record.initial_amount, currency) :
+            record.fixed_amount != null ? formatCurrency(record.fixed_amount, currency) :
+            record.planned_inflow != null ? formatCurrency(record.planned_inflow, currency) : "--";
+          const title = record.name || record.title || record.category || record.code || record.report_type || record.export_type || "Registro financeiro";
+          const subtitle = [
+            record.code,
+            record.nature,
+            record.status,
+            record.country_code,
+            record.channel,
+            record.source_type
+          ].filter(Boolean).join(" / ") || financialEntityLabel(financialState.entity);
+          const dateLabel = record.competence_date || record.period_start || record.valid_from || record.created_at || "";
+          return (
+            '<div class="financial-record-card" data-financial-index="' + index + '">' +
+              '<div><strong>' + escapeHtml(title) + '</strong>' +
+              '<span>' + escapeHtml(subtitle) + '</span>' +
+              '<span>' + escapeHtml(dateLabel) + ' / id ' + escapeHtml(record.id || "--") + '</span></div>' +
+              '<em>' + escapeHtml(amount) + '</em>' +
+              '<div class="financial-record-actions">' +
+                '<button class="mini-button" type="button" data-financial-action="pdf">PDF</button>' +
+                '<button class="mini-button warn" type="button" data-financial-action="archive">Arquivar</button>' +
+                (financialState.entity === "financial_entries" ? '<button class="mini-button danger" type="button" data-financial-action="reverse">Estornar</button>' : '') +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadFinancialRecords(tenantId) {
+        const accessToken = getStoredAccessToken();
+        const entity = textValue("#financial-entity") || financialState.entity || "financial_entries";
+        financialState.entity = entity;
+
+        if (!accessToken || !tenantId) {
+          financialState.loadedTenantId = "";
+          renderFinancialRecords([]);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/financial/" + encodeURIComponent(entity), {
+          headers: {
+            authorization: "Bearer " + accessToken
+          },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar registros financeiros.");
+        }
+
+        financialState.loadedTenantId = tenantId;
+        renderFinancialRecords(body.records || []);
+        addFeed("financial.records.loaded", financialEntityLabel(entity) + " sincronizado");
+        return body.records || [];
+      }
+
+      function collectFinancialRecordPayload(action) {
+        const entity = textValue("#financial-entity") || "financial_entries";
+        const code = textValue("#financial-record-code") || ("FIN-" + Date.now());
+        const name = textValue("#financial-record-name") || financialEntityLabel(entity);
+        const category = textValue("#financial-record-category") || "operacional";
+        const currency = (textValue("#financial-record-currency") || textValue("#financial-currency") || "BRL").toUpperCase();
+        const amount = numberValue("#financial-record-amount") || numberValue("#financial-price") || 0;
+        const country = (textValue("#financial-record-country") || "BR").toUpperCase();
+        const channel = textValue("#financial-record-channel") || "marketplace";
+        const notes = textValue("#financial-record-notes") || "Registro Helvok";
+
+        const base = {
+          code,
+          name,
+          category,
+          currency_code: currency,
+          country_code: country,
+          channel,
+          metadata: {
+            source: "helvok-dashboard",
+            action: action || "manual",
+            entity
+          }
+        };
+
+        if (entity === "financial_entries") {
+          return {
+            ...base,
+            nature: textValue("#financial-record-nature") || "expense",
+            amount,
+            competence_date: new Date().toISOString().slice(0, 10),
+            status: "draft",
+            source_type: action === "simulation" ? "simulation" : "manual",
+            tags: [country, channel, category].filter(Boolean),
+            notes,
+            calculation_memory: {
+              plan: collectFinancialPayload(),
+              tax_simulation: taxState.lastSimulation || null
+            }
+          };
+        }
+
+        if (entity === "financial_accounts") {
+          return { ...base, account_type: "expense", status: "active" };
+        }
+        if (entity === "cost_centers") {
+          return { ...base, allocation_method: "value", status: "active" };
+        }
+        if (entity === "projects") {
+          return { ...base, status: "active", starts_on: new Date().toISOString().slice(0, 10) };
+        }
+        if (entity === "budgets") {
+          return { ...base, period_start: new Date().toISOString().slice(0, 10), period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10), status: "draft" };
+        }
+        if (entity === "forecasts") {
+          return { ...base, forecast_type: "financial", assumptions: collectFinancialPayload(), status: "draft" };
+        }
+        if (entity === "investments") {
+          return { ...base, initial_amount: amount, working_capital: numberValue("#financial-working-capital"), status: "planned", calculation_memory: collectFinancialPayload() };
+        }
+        if (entity === "pricing_models") {
+          return { ...base, model_type: "margin", parameters: collectFinancialPayload(), status: "active", calculation_memory: collectFinancialPayload() };
+        }
+        if (entity === "product_costs") {
+          return { ...base, amount, cost_type: "unit", allocation_method: "quantity", source_type: "manual", valid_from: new Date().toISOString().slice(0, 10) };
+        }
+        if (entity === "logistics_costs") {
+          return { ...base, amount, cost_type: "freight", allocation_method: "value" };
+        }
+        if (entity === "tax_costs") {
+          return { ...base, amount, provision_status: "estimated", source_simulation: taxState.lastSimulation || {}, jurisdiction_path: [country] };
+        }
+        if (entity === "channel_costs") {
+          return { ...base, fixed_amount: amount, cost_type: "commission", rate: numberValue("#tax-marketplace-fee-rate") / 100 };
+        }
+        if (entity === "cash_flow_periods") {
+          return { ...base, period_start: new Date().toISOString().slice(0, 10), period_end: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10), planned_inflow: amount, planned_outflow: numberValue("#financial-fixed-costs"), calculation_memory: collectFinancialPayload() };
+        }
+        if (entity === "financial_reports") {
+          return { ...base, report_type: "dashboard", title: name, filters: { entity }, result_snapshot: { plan: collectFinancialPayload(), records: financialState.records.slice(0, 20) } };
+        }
+        if (entity === "spreadsheet_exports") {
+          return { ...base, export_type: action || "xlsx", source_type: "ledger", status: "queued", filters: { entity }, calculation_memory: { plan: collectFinancialPayload() } };
+        }
+
+        return base;
+      }
+
+      async function saveFinancialRecord(event, action) {
+        if (event) {
+          event.preventDefault();
+        }
+
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const entity = textValue("#financial-entity") || "financial_entries";
+        if (!tenantId || !accessToken) {
+          setFinancialMessage("Entre com uma sessão autorizada para salvar no financeiro.", "warn");
+          showAuthGate(true);
+          return;
+        }
+
+        const button = qs("#financial-record-save-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Salvando no financeiro...";
+        }
+        setFinancialMessage("Gravando operação financeira auditada...", null);
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/financial/" + encodeURIComponent(entity), {
+            method: "POST",
+            headers: {
+              authorization: "Bearer " + accessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify(collectFinancialRecordPayload(action))
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Financial record failed");
+          }
+
+          renderFinancialRecords(body.records || (body.record ? [body.record].concat(financialState.records) : financialState.records));
+          setFinancialMessage("Registro financeiro salvo e auditado.", "good");
+          addFeed(body.event_type || "financial.record.saved", financialEntityLabel(entity) + " salvo");
+        } catch (error) {
+          setFinancialMessage(error instanceof Error ? error.message : "Não foi possível salvar o registro financeiro.", "warn");
+          addFeed("financial.record.error", "Falha ao salvar financeiro");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Salvar registro financeiro";
+          }
+        }
+      }
+
+      async function archiveFinancialRecord(record) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const entity = financialState.entity || "financial_entries";
+        if (!record || !record.id || !tenantId || !accessToken) {
+          return;
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/financial/" + encodeURIComponent(entity) + "/" + encodeURIComponent(record.id) + "/archive", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken
+          }
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Financial archive failed");
+        }
+        renderFinancialRecords(body.records || []);
+        addFeed(body.event_type || "financial.record.archived", financialEntityLabel(entity) + " arquivado");
+      }
+
+      async function reverseFinancialEntry(record) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!record || !record.id || !tenantId || !accessToken) {
+          return;
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/financial/entries/" + encodeURIComponent(record.id) + "/reverse", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({ notes: "Estorno solicitado no Helvok Financial Engine" })
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Financial reversal failed");
+        }
+        renderFinancialRecords(body.records || []);
+        addFeed(body.event_type || "financial.entry.reversed", "Lançamento estornado");
+      }
+
+      function exportFinancialModulePdf() {
+        const entity = financialState.entity || "financial_entries";
+        const rows = financialState.records.slice(0, 24).map((record, index) => ({
+          label: String(index + 1).padStart(2, "0") + " - " + (record.name || record.title || record.category || record.code || record.id || "registro"),
+          value: [
+            record.status,
+            record.nature,
+            record.currency_code,
+            record.amount != null ? record.amount : record.initial_amount
+          ].filter((item) => item !== undefined && item !== null && item !== "").join(" / ") || "--"
+        }));
+        openPrintablePdf("Helvok Financial Engine - " + financialEntityLabel(entity), rows.length > 0 ? rows : [{ label: "Módulo", value: "Sem registros carregados" }]);
+        addFeed("financial.report.pdf", "PDF financeiro gerado");
+      }
+
+      async function queueFinancialExport(exportType) {
+        const currentEntity = textValue("#financial-entity") || "financial_entries";
+        setSelectValue("#financial-entity", "spreadsheet_exports");
+        await saveFinancialRecord(null, exportType);
+        setSelectValue("#financial-entity", currentEntity);
+      }
+
+      async function handleFinancialListClick(event) {
+        const button = event.target.closest("[data-financial-action]");
+        const card = event.target.closest("[data-financial-index]");
+        if (!button || !card) {
+          return;
+        }
+
+        const record = financialState.records[Number(card.getAttribute("data-financial-index") || "-1")];
+        const action = button.getAttribute("data-financial-action");
+        try {
+          if (action === "pdf") {
+            openPrintablePdf("Registro financeiro - " + (record.name || record.title || record.category || record.id || "Helvok"), Object.entries(record || {}).slice(0, 18).map(([key, value]) => ({ label: key, value: typeof value === "object" ? JSON.stringify(value) : String(value) })));
+            addFeed("financial.record.pdf", "PDF do registro financeiro gerado");
+          } else if (action === "archive") {
+            await archiveFinancialRecord(record);
+          } else if (action === "reverse") {
+            await reverseFinancialEntry(record);
+          }
+        } catch (error) {
+          setFinancialMessage(error instanceof Error ? error.message : "Ação financeira falhou.", "warn");
+          addFeed("financial.action.error", "Falha em ação financeira");
+        }
       }
 
       async function loadFiscalDocuments(tenantId) {
@@ -3895,6 +4391,7 @@ export function renderDashboard(): string {
           renderTenantAccess(null);
           renderCatalogItems([]);
           renderFiscalDocuments([]);
+          renderFinancialRecords([]);
         } else {
           addFeed("auth.session", "Sessão ligada ao core multi-tenant");
           if (primaryTenant && primaryTenant.id) {
@@ -3908,6 +4405,10 @@ export function renderDashboard(): string {
             });
             loadFiscalDocuments(primaryTenant.id).catch((error) => {
               addFeed("fiscal_documents.error", error instanceof Error ? error.message : "Falha ao carregar documentos fiscais");
+            });
+            loadFinancialRecords(primaryTenant.id).catch((error) => {
+              setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar financeiro.", "warn");
+              addFeed("financial.records.error", "Falha ao carregar financeiro");
             });
           }
         }
@@ -5037,6 +5538,51 @@ export function renderDashboard(): string {
       const financialPlanButton = qs("#financial-plan-button");
       if (financialPlanButton) {
         financialPlanButton.addEventListener("click", runFinancialPlan);
+      }
+
+      const financialRecordForm = qs("#financial-record-form");
+      if (financialRecordForm) {
+        financialRecordForm.noValidate = true;
+        financialRecordForm.addEventListener("submit", saveFinancialRecord);
+      }
+
+      const financialEntity = qs("#financial-entity");
+      if (financialEntity) {
+        financialEntity.addEventListener("change", () => {
+          financialState.entity = textValue("#financial-entity") || "financial_entries";
+          loadFinancialRecords(getActiveTenantId()).catch((error) => {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar o módulo financeiro.", "warn");
+          });
+        });
+      }
+
+      const financialRefreshButton = qs("#financial-refresh-button");
+      if (financialRefreshButton) {
+        financialRefreshButton.addEventListener("click", () => {
+          loadFinancialRecords(getActiveTenantId()).catch((error) => {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível atualizar financeiro.", "warn");
+          });
+        });
+      }
+
+      const financialRecordsList = qs("#financial-records-list");
+      if (financialRecordsList) {
+        financialRecordsList.addEventListener("click", handleFinancialListClick);
+      }
+
+      const financialCsvButton = qs("#financial-export-csv-button");
+      if (financialCsvButton) {
+        financialCsvButton.addEventListener("click", () => queueFinancialExport("csv"));
+      }
+
+      const financialXlsxButton = qs("#financial-export-xlsx-button");
+      if (financialXlsxButton) {
+        financialXlsxButton.addEventListener("click", () => queueFinancialExport("xlsx"));
+      }
+
+      const financialReportPdfButton = qs("#financial-report-pdf-button");
+      if (financialReportPdfButton) {
+        financialReportPdfButton.addEventListener("click", exportFinancialModulePdf);
       }
 
       const taxSimulationPdfButton = qs("#tax-simulation-pdf-button");
