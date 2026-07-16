@@ -2932,7 +2932,7 @@ export function renderDashboard(): string {
             <form class="financial-record-form" id="financial-record-form" novalidate>
               <div class="field-block"><label for="financial-record-code">Código</label><input id="financial-record-code" class="glass-field" value="FIN-001" /></div>
               <div class="field-block"><label for="financial-record-name">Nome</label><input id="financial-record-name" class="glass-field" value="Plano operacional" /></div>
-              <div class="field-block"><label for="financial-record-category">Categoria</label><input id="financial-record-category" class="glass-field" value="exportacao" /></div>
+              <div class="field-block"><label for="financial-record-category">Categoria</label><input id="financial-record-category" class="glass-field" value="exportação" /></div>
               <div class="field-block">
                 <label for="financial-record-nature">Natureza</label>
                 <select id="financial-record-nature" class="glass-select">
@@ -3614,6 +3614,8 @@ export function renderDashboard(): string {
         if (!accessToken || !tenantId) {
           financialState.loadedTenantId = "";
           renderFinancialRecords([]);
+          setFinancialMessage("Entre com uma sessão autorizada do tenant para carregar dados financeiros reais.", "warn");
+          showAuthGate(true);
           return [];
         }
 
@@ -3830,6 +3832,10 @@ export function renderDashboard(): string {
       }
 
       async function provisionTaxSimulationCosts() {
+        if (!requireTenantWriteSession("Provisionar custos")) {
+          return null;
+        }
+
         await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
@@ -3855,12 +3861,18 @@ export function renderDashboard(): string {
         };
 
         const body = await upsertFinancialEntity("tax_costs", payload);
+        setText("#tax-result-status", "custos provisionados");
+        showTaxActionMessage("Provisão criada", "Custo tributário registrado em Custos tributários do financeiro.", "good");
         setFinancialMessage("Custo tributário provisionado a partir da simulação.", "good");
         addFeed(body.event_type || "financial.tax_cost.provisioned", "Provisão fiscal criada para " + context.country);
         return body;
       }
 
       async function createLedgerEntryFromSimulation() {
+        if (!requireTenantWriteSession("Criar lançamento")) {
+          return null;
+        }
+
         await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
@@ -3890,6 +3902,8 @@ export function renderDashboard(): string {
         };
 
         const body = await upsertFinancialEntity("financial_entries", payload);
+        setText("#tax-result-status", "lançamento criado");
+        showTaxActionMessage("Lançamento criado", "Draft financeiro registrado a partir da simulação fiscal.", "good");
         setSelectValue("#financial-entity", "financial_entries");
         financialState.entity = "financial_entries";
         renderFinancialRecords(body.records || []);
@@ -3899,13 +3913,17 @@ export function renderDashboard(): string {
       }
 
       async function createPricingModelFromSimulation() {
+        if (!requireTenantWriteSession("Criar modelo de preço")) {
+          return null;
+        }
+
         await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
         }
 
-        return upsertFinancialEntity("pricing_models", {
+        const body = await upsertFinancialEntity("pricing_models", {
           name: "Preço real " + context.country + " / " + context.channel,
           model_type: "country",
           currency_code: context.currency,
@@ -3925,16 +3943,25 @@ export function renderDashboard(): string {
             source: "tax_simulation"
           }
         });
+        setFinancialMessage("Modelo de preço criado a partir da simulação.", "good");
+        setText("#tax-result-status", "preço modelado");
+        showTaxActionMessage("Modelo de preço criado", "Formação de preço vinculada à simulação fiscal.", "good");
+        addFeed(body.event_type || "financial.pricing_model.created", "Modelo de preço da simulação criado");
+        return body;
       }
 
       async function queueSimulationExport() {
+        if (!requireTenantWriteSession("Gerar exportação da simulação")) {
+          return null;
+        }
+
         await ensureCurrentSimulation();
         const context = simulationFinancialContext();
         if (!context) {
           return null;
         }
 
-        return upsertFinancialEntity("spreadsheet_exports", {
+        const body = await upsertFinancialEntity("spreadsheet_exports", {
           export_type: "xlsx",
           source_type: "pricing",
           status: "queued",
@@ -3951,9 +3978,18 @@ export function renderDashboard(): string {
             source: "tax_simulation"
           }
         });
+        setFinancialMessage("Exportação XLSX da simulação enfileirada.", "good");
+        setText("#tax-result-status", "exportação enfileirada");
+        showTaxActionMessage("Exportação enfileirada", "XLSX da simulação registrado em Exportações.", "good");
+        addFeed(body.event_type || "financial.export.queued", "Exportação da simulação enfileirada");
+        return body;
       }
 
       async function materializeTaxSimulationFinancially() {
+        if (!requireTenantWriteSession("Draft + financeiro")) {
+          return;
+        }
+
         const button = qs("#tax-simulation-bundle-button");
         if (button) {
           button.disabled = true;
@@ -3984,6 +4020,8 @@ export function renderDashboard(): string {
         const accessToken = getStoredAccessToken();
         const entity = financialState.entity || "financial_entries";
         if (!record || !record.id || !tenantId || !accessToken) {
+          showAuthGate(true);
+          setFinancialMessage("Selecione um registro real e entre com sessão autorizada para arquivar.", "warn");
           return;
         }
 
@@ -3998,6 +4036,7 @@ export function renderDashboard(): string {
           throw new Error(body && body.error && body.error.message ? body.error.message : "Financial archive failed");
         }
         renderFinancialRecords(body.records || []);
+        setFinancialMessage("Registro financeiro arquivado.", "good");
         addFeed(body.event_type || "financial.record.archived", financialEntityLabel(entity) + " arquivado");
       }
 
@@ -4005,6 +4044,8 @@ export function renderDashboard(): string {
         const tenantId = getActiveTenantId();
         const accessToken = getStoredAccessToken();
         if (!record || !record.id || !tenantId || !accessToken) {
+          showAuthGate(true);
+          setFinancialMessage("Selecione um lançamento real e entre com sessão autorizada para estornar.", "warn");
           return;
         }
 
@@ -4020,6 +4061,7 @@ export function renderDashboard(): string {
         if (!response.ok) {
           throw new Error(body && body.error && body.error.message ? body.error.message : "Financial reversal failed");
         }
+        setFinancialMessage("Lançamento financeiro estornado.", "good");
         renderFinancialRecords(body.records || []);
         addFeed(body.event_type || "financial.entry.reversed", "Lançamento estornado");
       }
@@ -4040,10 +4082,38 @@ export function renderDashboard(): string {
       }
 
       async function queueFinancialExport(exportType) {
-        const currentEntity = textValue("#financial-entity") || "financial_entries";
+        if (!hasTenantWriteSession()) {
+          showAuthGate(true);
+          setFinancialMessage("Entre com uma sessão autorizada para gerar exportações reais.", "warn");
+          throw new Error("Sessão autorizada necessária para gerar exportação.");
+        }
+
+        const currentEntity = textValue("#financial-entity") || financialState.entity || "financial_entries";
+        const payload = {
+          export_type: exportType,
+          source_type: currentEntity === "cash_flow_periods" ? "cash_flow" : currentEntity === "pricing_models" ? "pricing" : currentEntity === "budgets" ? "budget" : currentEntity === "investments" ? "investment" : "ledger",
+          status: "queued",
+          filters: {
+            entity: currentEntity,
+            source: "financial_module"
+          },
+          calculation_memory: {
+            plan: collectFinancialPayload(),
+            records: financialState.records.slice(0, 50)
+          },
+          metadata: {
+            source: "financial_module",
+            requested_at: new Date().toISOString()
+          }
+        };
+
         setSelectValue("#financial-entity", "spreadsheet_exports");
-        await saveFinancialRecord(null, exportType);
-        setSelectValue("#financial-entity", currentEntity);
+        financialState.entity = "spreadsheet_exports";
+        const body = await upsertFinancialEntity("spreadsheet_exports", payload);
+        renderFinancialRecords(body.records || []);
+        setFinancialMessage("Exportação " + exportType.toUpperCase() + " enfileirada com dados reais do tenant.", "good");
+        addFeed(body.event_type || "financial.export.queued", "Exportação " + exportType.toUpperCase() + " enfileirada");
+        return body;
       }
 
       async function handleFinancialListClick(event) {
@@ -5512,6 +5582,39 @@ export function renderDashboard(): string {
         }
       }
 
+      function showTaxActionMessage(title, message, tone) {
+        const warnings = qs("#tax-warnings");
+        if (!warnings) {
+          return;
+        }
+
+        const cardClass = tone === "good" ? "tax-line-card" : "tax-warning-card";
+        const current = warnings.innerHTML || "";
+        warnings.innerHTML =
+          '<div class="' + cardClass + '"><strong>' + escapeHtml(title) + '</strong><span>' + escapeHtml(message) + '</span></div>' +
+          current;
+      }
+
+      function hasTenantWriteSession() {
+        return Boolean(getActiveTenantId() && getStoredAccessToken());
+      }
+
+      function requireTenantWriteSession(actionLabel) {
+        if (hasTenantWriteSession()) {
+          return true;
+        }
+
+        showAuthGate(true);
+        setText("#tax-result-status", "login necessário");
+        showTaxActionMessage(
+          "Sessão necessária",
+          actionLabel + " grava dados reais no Supabase. Entre com uma conta autorizada do tenant para continuar.",
+          "warn",
+        );
+        addFeed("tax.action.auth_required", actionLabel + " exige sessão do tenant");
+        return false;
+      }
+
       function requireCurrentSimulation() {
         if (!taxState.lastSimulation || !taxState.lastSimulation.totals) {
           setText("#tax-result-status", "sem simulação");
@@ -5848,6 +5951,20 @@ export function renderDashboard(): string {
 
       const financialRefreshButton = qs("#financial-refresh-button");
       if (financialRefreshButton) {
+        financialRefreshButton.addEventListener("click", async (event) => {
+          event.stopImmediatePropagation();
+          financialRefreshButton.disabled = true;
+          financialRefreshButton.textContent = "Atualizando...";
+          try {
+            await loadFinancialRecords(getActiveTenantId());
+            setFinancialMessage("Registros financeiros atualizados.", "good");
+          } catch (error) {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível atualizar financeiro.", "warn");
+          } finally {
+            financialRefreshButton.disabled = false;
+            financialRefreshButton.textContent = "Atualizar registros";
+          }
+        }, true);
         financialRefreshButton.addEventListener("click", () => {
           loadFinancialRecords(getActiveTenantId()).catch((error) => {
             setFinancialMessage(error instanceof Error ? error.message : "Não foi possível atualizar financeiro.", "warn");
@@ -5862,11 +5979,37 @@ export function renderDashboard(): string {
 
       const financialCsvButton = qs("#financial-export-csv-button");
       if (financialCsvButton) {
+        financialCsvButton.addEventListener("click", async (event) => {
+          event.stopImmediatePropagation();
+          financialCsvButton.disabled = true;
+          financialCsvButton.textContent = "Gerando CSV...";
+          try {
+            await queueFinancialExport("csv");
+          } catch (error) {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível gerar CSV.", "warn");
+          } finally {
+            financialCsvButton.disabled = false;
+            financialCsvButton.textContent = "Exportar CSV";
+          }
+        }, true);
         financialCsvButton.addEventListener("click", () => queueFinancialExport("csv"));
       }
 
       const financialXlsxButton = qs("#financial-export-xlsx-button");
       if (financialXlsxButton) {
+        financialXlsxButton.addEventListener("click", async (event) => {
+          event.stopImmediatePropagation();
+          financialXlsxButton.disabled = true;
+          financialXlsxButton.textContent = "Gerando XLSX...";
+          try {
+            await queueFinancialExport("xlsx");
+          } catch (error) {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível gerar XLSX.", "warn");
+          } finally {
+            financialXlsxButton.disabled = false;
+            financialXlsxButton.textContent = "Exportar XLSX";
+          }
+        }, true);
         financialXlsxButton.addEventListener("click", () => queueFinancialExport("xlsx"));
       }
 

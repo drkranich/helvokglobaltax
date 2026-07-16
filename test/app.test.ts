@@ -50,6 +50,8 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Criar draft fiscal global");
     expect(body).toContain("aguardando documentos reais");
     expect(body).toContain("function ensureCurrentSimulation");
+    expect(body).toContain("function requireTenantWriteSession");
+    expect(body).toContain("function queueFinancialExport");
     expect(body).toContain("Fontes e cobertura");
     expect(body).toContain('id="markets-source-label"');
     expect(body).toContain('id="markets-validation-label"');
@@ -61,6 +63,8 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain('id="financial-records-list"');
     expect(body).toContain('data-financial-action="archive"');
     expect(body).toContain('data-financial-action="reverse"');
+    expect(body).toContain("Gerando CSV...");
+    expect(body).toContain("Gerando XLSX...");
     expect(body).toContain("Lançamentos");
     expect(body).toContain("Centros de custo");
     expect(body).toContain("Investimentos");
