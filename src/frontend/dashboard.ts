@@ -2809,6 +2809,9 @@ export function renderDashboard(): string {
               <button class="glass-button primary" id="tax-simulate-button" type="button">Calcular impostos e preço real</button>
               <div class="simulation-actions" aria-label="Ações da simulação">
                 <button class="mini-button" id="tax-simulation-pdf-button" type="button">PDF da simulação</button>
+                <button class="mini-button" id="tax-simulation-provision-button" type="button">Provisionar custos</button>
+                <button class="mini-button" id="tax-simulation-ledger-button" type="button">Criar lançamento</button>
+                <button class="mini-button" id="tax-simulation-bundle-button" type="button">Draft + financeiro</button>
                 <button class="mini-button warn" id="tax-simulation-archive-button" type="button">Arquivar simulação</button>
                 <button class="mini-button danger" id="tax-simulation-delete-button" type="button">Excluir simulação</button>
               </div>
@@ -3763,6 +3766,210 @@ export function renderDashboard(): string {
           if (button) {
             button.disabled = false;
             button.textContent = "Salvar registro financeiro";
+          }
+        }
+      }
+
+      async function upsertFinancialEntity(entity, payload) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          showAuthGate(true);
+          throw new Error("Sessão autorizada necessária para gravar financeiro.");
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/financial/" + encodeURIComponent(entity), {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Financial upsert failed");
+        }
+
+        if ((textValue("#financial-entity") || financialState.entity) === entity) {
+          renderFinancialRecords(body.records || (body.record ? [body.record].concat(financialState.records) : financialState.records));
+        }
+        return body;
+      }
+
+      function simulationFinancialContext() {
+        const simulation = requireCurrentSimulation();
+        if (!simulation) {
+          return null;
+        }
+
+        const totals = simulation.totals || {};
+        const market = simulation.market || {};
+        const snapshot = simulation.input_snapshot || collectTaxPayload();
+        const currency = snapshot.currency || market.currency || taxState.currency || "USD";
+        const country = snapshot.destination_country || market.code || textValue("#tax-destination") || "GB";
+        const channel = snapshot.channel || textValue("#tax-channel") || "marketplace";
+        const category = snapshot.items && snapshot.items[0] ? snapshot.items[0].category : textValue("#tax-item-category") || "goods";
+        const taxAmount = Number(totals.destination_indirect_tax || 0) + Number(totals.import_duty || 0) + Number(totals.excise_tax || 0);
+        const sellerOut = Number(totals.seller_cash_out || 0);
+
+        return {
+          simulation,
+          totals,
+          market,
+          snapshot,
+          currency,
+          country,
+          channel,
+          category,
+          taxAmount,
+          sellerOut,
+          today: new Date().toISOString().slice(0, 10)
+        };
+      }
+
+      async function provisionTaxSimulationCosts() {
+        const context = simulationFinancialContext();
+        if (!context) {
+          return null;
+        }
+
+        const payload = {
+          name: "Provisão tributária " + context.country,
+          code: "TAX-" + context.country + "-" + Date.now(),
+          amount: context.taxAmount,
+          currency_code: context.currency,
+          country_code: context.country,
+          channel: context.channel,
+          provision_status: "estimated",
+          source_engine: "helvok-tax-engine",
+          source_simulation: context.simulation,
+          jurisdiction_path: context.simulation.jurisdiction_path || [context.country],
+          metadata: {
+            source: "tax_simulation",
+            category: context.category,
+            rule_pack: context.simulation.rule_pack_version || taxState.rulePackVersion || null
+          }
+        };
+
+        const body = await upsertFinancialEntity("tax_costs", payload);
+        setFinancialMessage("Custo tributário provisionado a partir da simulação.", "good");
+        addFeed(body.event_type || "financial.tax_cost.provisioned", "Provisão fiscal criada para " + context.country);
+        return body;
+      }
+
+      async function createLedgerEntryFromSimulation() {
+        const context = simulationFinancialContext();
+        if (!context) {
+          return null;
+        }
+
+        const payload = {
+          category: "simulacao_fiscal_" + context.category,
+          nature: "tax",
+          amount: context.taxAmount || context.sellerOut,
+          currency_code: context.currency,
+          competence_date: context.today,
+          status: "draft",
+          source_type: "simulation",
+          country_code: context.country,
+          channel: context.channel,
+          tags: [context.country, context.channel, context.category, "tax_simulation"].filter(Boolean),
+          notes: "Lançamento criado a partir do simulador fiscal Helvok",
+          calculation_memory: {
+            simulation: context.simulation,
+            totals: context.totals
+          },
+          metadata: {
+            source: "tax_simulation",
+            ready_for_review: true
+          }
+        };
+
+        const body = await upsertFinancialEntity("financial_entries", payload);
+        setSelectValue("#financial-entity", "financial_entries");
+        financialState.entity = "financial_entries";
+        renderFinancialRecords(body.records || []);
+        setFinancialMessage("Lançamento financeiro criado como draft.", "good");
+        addFeed(body.event_type || "financial.entry.created", "Lançamento da simulação criado");
+        return body;
+      }
+
+      async function createPricingModelFromSimulation() {
+        const context = simulationFinancialContext();
+        if (!context) {
+          return null;
+        }
+
+        return upsertFinancialEntity("pricing_models", {
+          name: "Preço real " + context.country + " / " + context.channel,
+          model_type: "country",
+          currency_code: context.currency,
+          parameters: {
+            suggested_unit_price: context.totals.suggested_unit_price || 0,
+            customer_total: context.totals.customer_total || 0,
+            seller_cash_out: context.totals.seller_cash_out || 0,
+            margin_rate: context.totals.seller_gross_margin_rate || 0,
+            country: context.country,
+            channel: context.channel
+          },
+          status: "active",
+          calculation_memory: {
+            simulation: context.simulation
+          },
+          metadata: {
+            source: "tax_simulation"
+          }
+        });
+      }
+
+      async function queueSimulationExport() {
+        const context = simulationFinancialContext();
+        if (!context) {
+          return null;
+        }
+
+        return upsertFinancialEntity("spreadsheet_exports", {
+          export_type: "xlsx",
+          source_type: "pricing",
+          status: "queued",
+          filters: {
+            source: "tax_simulation",
+            country: context.country,
+            channel: context.channel
+          },
+          calculation_memory: {
+            simulation: context.simulation,
+            financial_plan: collectFinancialPayload()
+          },
+          metadata: {
+            source: "tax_simulation"
+          }
+        });
+      }
+
+      async function materializeTaxSimulationFinancially() {
+        const button = qs("#tax-simulation-bundle-button");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Criando pacote...";
+        }
+
+        try {
+          await provisionTaxSimulationCosts();
+          await createLedgerEntryFromSimulation();
+          await createPricingModelFromSimulation();
+          await queueSimulationExport();
+          await createFiscalDocumentDraft();
+          addFeed("tax.simulation.materialized", "Simulação virou provisão, lançamento, preço, exportação e draft");
+          activateView("financeiro", true);
+        } catch (error) {
+          setFinancialMessage(error instanceof Error ? error.message : "Não foi possível materializar a simulação.", "warn");
+          addFeed("tax.simulation.materialize.error", "Falha ao criar pacote fiscal-financeiro");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Draft + financeiro";
           }
         }
       }
@@ -5588,6 +5795,31 @@ export function renderDashboard(): string {
       const taxSimulationPdfButton = qs("#tax-simulation-pdf-button");
       if (taxSimulationPdfButton) {
         taxSimulationPdfButton.addEventListener("click", exportCurrentSimulationPdf);
+      }
+
+      const taxSimulationProvisionButton = qs("#tax-simulation-provision-button");
+      if (taxSimulationProvisionButton) {
+        taxSimulationProvisionButton.addEventListener("click", () => {
+          provisionTaxSimulationCosts().catch((error) => {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível provisionar custos.", "warn");
+            addFeed("financial.tax_cost.error", "Falha ao provisionar custo fiscal");
+          });
+        });
+      }
+
+      const taxSimulationLedgerButton = qs("#tax-simulation-ledger-button");
+      if (taxSimulationLedgerButton) {
+        taxSimulationLedgerButton.addEventListener("click", () => {
+          createLedgerEntryFromSimulation().catch((error) => {
+            setFinancialMessage(error instanceof Error ? error.message : "Não foi possível criar lançamento.", "warn");
+            addFeed("financial.entry.error", "Falha ao criar lançamento da simulação");
+          });
+        });
+      }
+
+      const taxSimulationBundleButton = qs("#tax-simulation-bundle-button");
+      if (taxSimulationBundleButton) {
+        taxSimulationBundleButton.addEventListener("click", materializeTaxSimulationFinancially);
       }
 
       const taxSimulationArchiveButton = qs("#tax-simulation-archive-button");

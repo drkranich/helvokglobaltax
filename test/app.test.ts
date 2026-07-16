@@ -62,6 +62,12 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Planilhas e relatórios");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
+    expect(body).toContain("Provisionar custos");
+    expect(body).toContain("Criar lançamento");
+    expect(body).toContain("Draft + financeiro");
+    expect(body).toContain('id="tax-simulation-provision-button"');
+    expect(body).toContain("function provisionTaxSimulationCosts");
+    expect(body).toContain("function materializeTaxSimulationFinancially");
     expect(body).toContain("PDF da simulação");
     expect(body).toContain("Arquivar simulação");
     expect(body).toContain("Excluir simulação");
