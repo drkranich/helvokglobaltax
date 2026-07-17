@@ -43,7 +43,13 @@ function europeCountryAdapter(code: string, key: string): AdapterManifest {
     documentFamilies: ["VAT_INVOICE", "EINVOICE"],
     taxFamilies: ["VAT", "OSS", "IOSS", "EORI", "INTRASTAT"],
     requirements: [
-      GOVERNMENT_ENROLLMENT_REQUIREMENT(`Registro de VAT/IVA local ou OSS/IOSS para vendas B2C cross-border em ${countryName}`),
+      GOVERNMENT_ENROLLMENT_REQUIREMENT(`Registro de VAT/IVA local em ${countryName}, obrigatório quando o tenant ultrapassa o threshold OSS/IOSS de EUR 10.000/ano em vendas B2C cross-border na UE (regra única da UE desde julho/2021) ou vende localmente a partir de um estabelecimento no país`),
+      {
+        key: "eu_oss_ioss_threshold",
+        label: "Threshold único da UE de EUR 10.000/ano em vendas B2C cross-border para decidir entre VAT local vs OSS/IOSS",
+        category: "government_enrollment",
+        required_for_production: true,
+      },
       {
         key: "eu_eori_registration",
         label: "Número EORI para operações de importação/exportação com a UE",
@@ -61,7 +67,10 @@ function europeCountryAdapter(code: string, key: string): AdapterManifest {
     officialSources: market?.sourceUrl ? [market.sourceUrl] : [],
     notes:
       `Cada país da Europa é um módulo próprio (não existe adaptador único de "VAT europeu"). Formato local declarado: ${eInvoiceStatus}. ` +
-      "Nenhuma alíquota real ou transmissão a autoridade está implementada ainda.",
+      (market?.ratesVerifiedAt
+        ? `Alíquota padrão${market.reducedRates?.length ? " e reduzida(s)" : ""} verificada em fonte oficial/autoritativa em ${market.ratesVerifiedAt}. `
+        : "Alíquota ainda não verificada em fonte oficial para este país. ") +
+      "Transmissão real à autoridade e assinatura de documento seguem não implementadas: dependem do tenant ter registro fiscal local/OSS e credencial de e-invoicing do país, exatamente como o Brasil depende de CNPJ e credenciamento SEFAZ.",
   });
 }
 
