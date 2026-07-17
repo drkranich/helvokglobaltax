@@ -1514,6 +1514,7 @@ export function renderDashboard(): string {
       }
 
       .tax-warning-card {
+        grid-template-columns: minmax(0, 1fr);
         align-items: start;
         border-color: rgba(240, 200, 117, 0.32);
         color: var(--gold-300);
