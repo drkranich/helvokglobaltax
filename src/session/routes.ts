@@ -23,6 +23,12 @@ import {
   SupabaseConfigurationError,
   SupabaseRpcError,
 } from "../supabase";
+import {
+  CertificateEncryptionConfigError,
+  encryptTextToBase64,
+  encryptToBase64,
+  loadCertificateEncryptionKey,
+} from "../fiscal/certificate-crypto";
 
 function extractBearerToken(authorization: string | undefined): string | null {
   if (!authorization) {
@@ -38,6 +44,19 @@ function extractBearerToken(authorization: string | undefined): string | null {
 }
 
 function sessionErrorResponse(c: Context<AppEnv>, error: unknown): Response {
+  if (error instanceof CertificateEncryptionConfigError) {
+    return jsonResponse(
+      c,
+      {
+        error: {
+          code: "certificate_encryption_not_configured",
+          message: error.message,
+        },
+      },
+      503,
+    );
+  }
+
   if (error instanceof SupabaseConfigurationError) {
     return jsonResponse(
       c,
@@ -699,6 +718,175 @@ export function createSessionRouter(): Hono<AppEnv> {
       const result = await client.rpc("helvok_current_delete_fiscal_registration", {
         p_tenant_id: tenantId,
         p_registration_id: registrationId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const certificates = await client.rpc("helvok_current_list_fiscal_certificates", { p_tenant_id: tenantId });
+      return jsonResponse(c, { certificates });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/fiscal/registrations/:registrationId/certificate", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const registrationId = c.req.param("registrationId");
+    if (!isUuid(tenantId) || !isUuid(registrationId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_registration_certificate_target",
+            message: "tenantId and registrationId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    const fileName = typeof payload.file_name === "string" ? payload.file_name.trim() : "";
+    const certificateBase64 = typeof payload.certificate_base64 === "string" ? payload.certificate_base64.trim() : "";
+    const password = typeof payload.password === "string" ? payload.password : "";
+
+    if (!fileName) {
+      return jsonResponse(c, { error: { code: "invalid_file_name", message: "file_name is required." } }, 400);
+    }
+    if (!certificateBase64) {
+      return jsonResponse(
+        c,
+        { error: { code: "invalid_certificate_base64", message: "certificate_base64 (the .pfx file content, base64-encoded) is required." } },
+        400,
+      );
+    }
+    if (!password) {
+      return jsonResponse(c, { error: { code: "invalid_password", message: "password is required." } }, 400);
+    }
+
+    try {
+      const encryptionKey = await loadCertificateEncryptionKey(c.env.HELVOK_CERT_ENCRYPTION_KEY);
+      const encryptedPayload = await encryptToBase64(encryptionKey, certificateBase64);
+      const encryptedPassword = await encryptTextToBase64(encryptionKey, password);
+
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upload_fiscal_certificate", {
+        p_tenant_id: tenantId,
+        p_payload: {
+          fiscal_registration_id: registrationId,
+          certificate_type: typeof payload.certificate_type === "string" ? payload.certificate_type : "a1",
+          file_name: fileName,
+          encrypted_payload: encryptedPayload.ciphertext_base64,
+          payload_iv: encryptedPayload.iv_base64,
+          encrypted_password: encryptedPassword.ciphertext_base64,
+          password_iv: encryptedPassword.iv_base64,
+          issued_to: typeof payload.issued_to === "string" ? payload.issued_to : undefined,
+          issuer: typeof payload.issuer === "string" ? payload.issuer : undefined,
+          valid_from: typeof payload.valid_from === "string" ? payload.valid_from : undefined,
+          valid_until: typeof payload.valid_until === "string" ? payload.valid_until : undefined,
+        },
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/fiscal/certificates/:certificateId/revoke", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const certificateId = c.req.param("certificateId");
+    if (!isUuid(tenantId) || !isUuid(certificateId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_certificate_revoke_target",
+            message: "tenantId and certificateId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_revoke_fiscal_certificate", {
+        p_tenant_id: tenantId,
+        p_certificate_id: certificateId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/fiscal/certificates/:certificateId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const certificateId = c.req.param("certificateId");
+    if (!isUuid(tenantId) || !isUuid(certificateId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_certificate_delete_target",
+            message: "tenantId and certificateId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_fiscal_certificate", {
+        p_tenant_id: tenantId,
+        p_certificate_id: certificateId,
       });
       return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
     } catch (error) {

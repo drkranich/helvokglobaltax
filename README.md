@@ -20,6 +20,8 @@ Estado atual:
 - Motor financeiro com lançamentos, estorno de `posted`/`paid` e planejamento de custos.
 - Scaffold de 40 adaptadores fiscais por país/jurisdição (Brasil, EUA, Canadá, 14 países da Europa, 8 da América Latina, 7 da Ásia-Pacífico, 3 do Oriente Médio), todos em status `planned` e sem transmissão real a nenhuma autoridade.
 - Painéis de homologação por país e de rejeições de documentos fiscais.
+- Cadastro fiscal por tenant (CNPJ/EIN/VAT id, regime tributário, inscrição estadual/municipal, endereço fiscal) — o Helvok Tax nunca emite com CNPJ próprio, quem precisa desse cadastro é a organização de cada tenant.
+- Armazenamento de certificado digital (A1) por cadastro fiscal, criptografado com AES-256-GCM (chave só existe como secret do Cloudflare Worker) antes de tocar o banco; API nunca retorna o certificado nem a senha, só metadados de status.
 
 ## Principio central
 
@@ -72,6 +74,9 @@ O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IV
 - Adaptador por chave: `GET /v1/fiscal/adapters/:adapterKey`
 - Rejeições de documentos fiscais (admin): `GET /v1/admin/tenants/:tenantId/fiscal/rejections`
 - Rejeições de documentos fiscais (autenticado): `GET /v1/tenants/:tenantId/fiscal/rejections`
+- Organizações do tenant (autenticado): `GET /v1/tenants/:tenantId/organizations`
+- Cadastro fiscal do tenant: `GET/POST /v1/tenants/:tenantId/fiscal/registrations`, `POST .../:registrationId/archive`, `DELETE .../:registrationId`
+- Certificado digital do cadastro fiscal: `GET /v1/tenants/:tenantId/fiscal/certificates`, `POST /v1/tenants/:tenantId/fiscal/registrations/:registrationId/certificate`, `POST /v1/tenants/:tenantId/fiscal/certificates/:certificateId/revoke`, `DELETE .../:certificateId`
 - Admin API protegida: `GET/POST /v1/admin/*`
 
 ## Documentação

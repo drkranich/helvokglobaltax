@@ -2572,6 +2572,32 @@ export function renderDashboard(): string {
             </form>
           </aside>
         </section>
+
+        <section class="work-grid">
+          <article class="panel">
+            <div class="panel-title">
+              <h2>Certificado digital (A1)</h2>
+              <span id="fiscal-certificate-target-label">nenhum cadastro selecionado</span>
+            </div>
+            <p>O certificado é criptografado (AES-256-GCM) antes de sair do navegador do servidor — a senha nunca é gravada em texto puro. Clique em "Certificado" em um cadastro fiscal ao lado para selecionar o alvo do upload.</p>
+            <form id="fiscal-certificate-form">
+              <div class="field-block">
+                <label for="fiscal-certificate-file">Arquivo .pfx/.p12</label>
+                <input id="fiscal-certificate-file" class="glass-field" type="file" accept=".pfx,.p12" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-certificate-password">Senha do certificado</label>
+                <input id="fiscal-certificate-password" class="glass-field" type="password" placeholder="senha do .pfx" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-certificate-valid-until">Válido até</label>
+                <input id="fiscal-certificate-valid-until" class="glass-field" type="date" />
+              </div>
+              <button class="glass-button primary" id="fiscal-certificate-upload-button" type="submit">Enviar certificado</button>
+              <div class="financial-message" id="fiscal-certificate-message">Nenhum certificado enviado nesta sessão.</div>
+            </form>
+          </article>
+        </section>
         </section>
 
         <section class="app-view" id="produtos" data-view="produtos" aria-label="Produtos e serviços">
@@ -3309,6 +3335,8 @@ export function renderDashboard(): string {
       const fiscalRegistrationState = {
         registrations: [],
         organizations: [],
+        certificates: [],
+        certificateTargetRegistrationId: "",
         loadedTenantId: ""
       };
 
@@ -3775,15 +3803,24 @@ export function renderDashboard(): string {
           const status = registration.status || "draft";
           const canArchive = status !== "archived";
           const canDelete = ["draft", "archived"].includes(String(status).toLowerCase());
+          const activeCert = (fiscalRegistrationState.certificates || []).find((cert) =>
+            cert && cert.fiscal_registration_id === registration.id && cert.status === "active"
+          );
+          const certLine = activeCert
+            ? 'Certificado: ' + escapeHtml(activeCert.file_name || "arquivo") + (activeCert.valid_until ? ' / válido até ' + escapeHtml(activeCert.valid_until) : '')
+            : 'Certificado: nenhum enviado';
           return (
             '<div class="tax-doc-card" data-fiscal-registration-index="' + index + '">' +
               '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
               '<div><strong>' + escapeHtml(registration.country_code || "--") + ' / ' + escapeHtml(registration.tax_id || "sem tax id") + '</strong>' +
               '<span>' + escapeHtml(registration.tax_id_label || "tax_id") + ' / regime ' + escapeHtml(registration.tax_regime || "standard") +
                 (registration.secondary_registration ? ' / ' + escapeHtml(registration.secondary_registration_label || "reg. secundário") + ' ' + escapeHtml(registration.secondary_registration) : '') +
+                '<br />' + certLine +
               '</span></div>' +
               '<div class="financial-record-actions fiscal-document-actions">' +
                 '<button class="mini-button" type="button" data-fiscal-registration-action="edit">Editar</button>' +
+                '<button class="mini-button" type="button" data-fiscal-registration-action="select-certificate">' + (activeCert ? 'Trocar certificado' : 'Certificado') + '</button>' +
+                (activeCert ? '<button class="mini-button warn" type="button" data-fiscal-registration-action="revoke-certificate">Revogar certificado</button>' : '') +
                 (canArchive ? '<button class="mini-button warn" type="button" data-fiscal-registration-action="archive">Arquivar</button>' : '') +
                 (canDelete ? '<button class="mini-button danger" type="button" data-fiscal-registration-action="delete">Excluir</button>' : '') +
               '</div>' +
@@ -3954,6 +3991,168 @@ export function renderDashboard(): string {
         }
       }
 
+      async function loadFiscalCertificates(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          fiscalRegistrationState.certificates = [];
+          renderFiscalRegistrations(fiscalRegistrationState.registrations);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/certificates", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar certificados.");
+        }
+
+        fiscalRegistrationState.certificates = body.certificates || [];
+        renderFiscalRegistrations(fiscalRegistrationState.registrations);
+        return fiscalRegistrationState.certificates;
+      }
+
+      function selectFiscalCertificateTarget(registration) {
+        if (!registration || !registration.id) {
+          return;
+        }
+        fiscalRegistrationState.certificateTargetRegistrationId = registration.id;
+        setText("#fiscal-certificate-target-label", (registration.country_code || "país") + " / " + (registration.tax_id || "sem tax id"));
+        const messageNode = qs("#fiscal-certificate-message");
+        if (messageNode) {
+          messageNode.textContent = "Selecionado: " + (registration.country_code || "país") + " / " + (registration.tax_id || "sem tax id") + " — escolha o arquivo .pfx e a senha.";
+        }
+        const form = qs("#fiscal-certificate-form");
+        if (form && form.scrollIntoView) {
+          form.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("Falha ao ler o arquivo do certificado."));
+          reader.onload = () => {
+            const result = String(reader.result || "");
+            const commaIndex = result.indexOf(",");
+            resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function submitFiscalCertificateForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#fiscal-certificate-message");
+        const registrationId = fiscalRegistrationState.certificateTargetRegistrationId;
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para enviar o certificado.";
+          }
+          return;
+        }
+        if (!registrationId) {
+          if (messageNode) {
+            messageNode.textContent = "Selecione um cadastro fiscal clicando em \"Certificado\" antes de enviar o arquivo.";
+          }
+          return;
+        }
+
+        const fileInput = qs("#fiscal-certificate-file");
+        const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+        const password = (qs("#fiscal-certificate-password") || {}).value || "";
+        const validUntil = (qs("#fiscal-certificate-valid-until") || {}).value || "";
+
+        if (!file) {
+          if (messageNode) {
+            messageNode.textContent = "Escolha o arquivo .pfx/.p12 do certificado.";
+          }
+          return;
+        }
+        if (!password) {
+          if (messageNode) {
+            messageNode.textContent = "Informe a senha do certificado.";
+          }
+          return;
+        }
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Enviando e criptografando certificado...";
+          }
+          const certificateBase64 = await fileToBase64(file);
+          const response = await fetch(
+            "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/registrations/" + encodeURIComponent(registrationId) + "/certificate",
+            {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                authorization: "Bearer " + accessToken
+              },
+              body: JSON.stringify({
+                file_name: file.name,
+                certificate_base64: certificateBase64,
+                password: password,
+                valid_until: validUntil || undefined
+              })
+            }
+          );
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao enviar certificado.");
+          }
+
+          fiscalRegistrationState.certificates = body.certificates || [];
+          renderFiscalRegistrations(fiscalRegistrationState.registrations);
+          if (messageNode) {
+            messageNode.textContent = "Certificado enviado e criptografado (" + file.name + ").";
+          }
+          if (fileInput) {
+            fileInput.value = "";
+          }
+          const passwordInput = qs("#fiscal-certificate-password");
+          if (passwordInput) {
+            passwordInput.value = "";
+          }
+          addFeed(body.event_type || "fiscal_certificate.uploaded", "Certificado digital enviado");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao enviar certificado.";
+          }
+          addFeed("fiscal_certificate.error", error instanceof Error ? error.message : "Falha no upload de certificado");
+        }
+      }
+
+      async function revokeFiscalCertificateForRegistration(registration) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken || !registration) {
+          return;
+        }
+        const activeCert = (fiscalRegistrationState.certificates || []).find((cert) =>
+          cert && cert.fiscal_registration_id === registration.id && cert.status === "active"
+        );
+        if (!activeCert) {
+          return;
+        }
+
+        const response = await fetch(
+          "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/certificates/" + encodeURIComponent(activeCert.id) + "/revoke",
+          { method: "POST", headers: { authorization: "Bearer " + accessToken } }
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao revogar certificado.");
+        }
+        fiscalRegistrationState.certificates = body.certificates || [];
+        renderFiscalRegistrations(fiscalRegistrationState.registrations);
+        addFeed(body.event_type || "fiscal_certificate.revoked", "Certificado digital revogado");
+      }
+
       async function handleFiscalRegistrationListClick(event) {
         const button = event.target.closest("[data-fiscal-registration-action]");
         const card = event.target.closest("[data-fiscal-registration-index]");
@@ -3970,6 +4169,10 @@ export function renderDashboard(): string {
             await deleteFiscalRegistration(registration);
           } else if (action === "edit") {
             editFiscalRegistrationDraft(registration);
+          } else if (action === "select-certificate") {
+            selectFiscalCertificateTarget(registration);
+          } else if (action === "revoke-certificate") {
+            await revokeFiscalCertificateForRegistration(registration);
           }
         } catch (error) {
           addFeed("fiscal_registration.action.error", error instanceof Error ? error.message : "Falha na ação do cadastro fiscal");
@@ -5430,7 +5633,7 @@ export function renderDashboard(): string {
             loadOrganizationsForFiscalRegistration(primaryTenant.id).catch((error) => {
               addFeed("fiscal_registration.organizations.error", error instanceof Error ? error.message : "Falha ao carregar organizações");
             });
-            loadFiscalRegistrations(primaryTenant.id).catch((error) => {
+            loadFiscalRegistrations(primaryTenant.id).then(() => loadFiscalCertificates(primaryTenant.id)).catch((error) => {
               addFeed("fiscal_registration.error", error instanceof Error ? error.message : "Falha ao carregar cadastros fiscais");
             });
             loadFinancialRecords(primaryTenant.id).catch((error) => {
@@ -6611,7 +6814,7 @@ export function renderDashboard(): string {
               loadFiscalDocuments(tenantId),
               loadFiscalRejections(tenantId),
               loadOrganizationsForFiscalRegistration(tenantId),
-              loadFiscalRegistrations(tenantId),
+              loadFiscalRegistrations(tenantId).then(() => loadFiscalCertificates(tenantId)),
               loadFinancialRecords(tenantId)
             ]);
           }
@@ -6969,6 +7172,11 @@ export function renderDashboard(): string {
       const fiscalRegistrationForm = qs("#fiscal-registration-form");
       if (fiscalRegistrationForm) {
         fiscalRegistrationForm.addEventListener("submit", submitFiscalRegistrationForm);
+      }
+
+      const fiscalCertificateForm = qs("#fiscal-certificate-form");
+      if (fiscalCertificateForm) {
+        fiscalCertificateForm.addEventListener("submit", submitFiscalCertificateForm);
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {

@@ -57,6 +57,7 @@ export function createApp(): Hono<AppEnv> {
         fiscal_documents: "global-lifecycle-preview",
         fiscal_adapters: "country-adapter-scaffold-preview",
         fiscal_registrations: "tenant-registration-preview",
+        fiscal_certificates: "encrypted-storage-preview",
         audit: "planned",
       },
     }),

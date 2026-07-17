@@ -328,6 +328,31 @@ export function createAdminRouter(): Hono<AppEnv> {
     }
   });
 
+  admin.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
+    const tenantId = c.req.param("tenantId");
+
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const certificates = await client.rpc("helvok_admin_list_fiscal_certificates", { p_tenant_id: tenantId });
+      return jsonResponse(c, { certificates });
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
   admin.post("/fiscal/documents", async (c) => {
     const validation = validateFiscalDocumentPayload(await readJsonBody(c));
 
