@@ -74,6 +74,10 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("Planilhas e relatórios");
     expect(body).toContain("function populateTaxSimulatorFromCatalog");
     expect(body).toContain("function createFiscalDocumentDraft");
+    expect(body).toContain("function handleFiscalDocumentListClick");
+    expect(body).toContain('data-fiscal-document-action="delete"');
+    expect(body).toContain('data-fiscal-document-action="archive"');
+    expect(body).toContain('data-fiscal-document-action="edit"');
     expect(body).toContain("Provisionar custos");
     expect(body).toContain("Criar lançamento");
     expect(body).toContain("Draft + financeiro");
@@ -1349,6 +1353,68 @@ describe("Helvok Tax Worker API", () => {
             metadata: {},
           },
         }),
+      }),
+    );
+  });
+
+  it("archives and deletes fiscal documents through authenticated tenant RPCs", async () => {
+    const tenantId = "22222222-2222-4222-8222-222222222222";
+    const documentId = "33333333-3333-4333-8333-333333333333";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "fiscal_document.archived", documents: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "11111111-1111-4111-8111-111111111111", email: "owner@helvok.tax" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ event_type: "fiscal_document.deleted", documents: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+
+    const app = createApp();
+    const archiveResponse = await app.request(
+      `/v1/tenants/${tenantId}/fiscal/documents/${documentId}/archive`,
+      { method: "POST", headers: { authorization: "Bearer user-access-token" } },
+      adminEnv,
+    );
+    const deleteResponse = await app.request(
+      `/v1/tenants/${tenantId}/fiscal/documents/${documentId}`,
+      { method: "DELETE", headers: { authorization: "Bearer user-access-token" } },
+      adminEnv,
+    );
+
+    expect(archiveResponse.status).toBe(200);
+    expect(deleteResponse.status).toBe(200);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_archive_fiscal_document",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_document_id: documentId }),
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      4,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_delete_fiscal_document",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_document_id: documentId }),
       }),
     );
   });

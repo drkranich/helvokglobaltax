@@ -537,6 +537,112 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.patch("/tenants/:tenantId/fiscal/documents/:documentId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const documentId = c.req.param("documentId");
+    if (!isUuid(tenantId) || !isUuid(documentId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_document_target",
+            message: "tenantId and documentId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_update_fiscal_document", {
+        p_tenant_id: tenantId,
+        p_document_id: documentId,
+        payload,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/fiscal/documents/:documentId/archive", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const documentId = c.req.param("documentId");
+    if (!isUuid(tenantId) || !isUuid(documentId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_document_archive_target",
+            message: "tenantId and documentId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_archive_fiscal_document", {
+        p_tenant_id: tenantId,
+        p_document_id: documentId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/fiscal/documents/:documentId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const documentId = c.req.param("documentId");
+    if (!isUuid(tenantId) || !isUuid(documentId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_document_delete_target",
+            message: "tenantId and documentId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_fiscal_document", {
+        p_tenant_id: tenantId,
+        p_document_id: documentId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/financial/:entity", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

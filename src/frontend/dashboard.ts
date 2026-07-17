@@ -1152,7 +1152,7 @@ export function renderDashboard(): string {
 
       .financial-record-card {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(118px, auto);
         gap: 12px;
         align-items: start;
         min-height: 104px;
@@ -1197,6 +1197,12 @@ export function renderDashboard(): string {
         flex-wrap: wrap;
         gap: 8px;
         justify-content: flex-end;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .financial-record-actions .mini-button {
+        flex: 0 1 auto;
       }
 
       .catalog-meta-grid {
@@ -3162,7 +3168,8 @@ export function renderDashboard(): string {
 
       const documentState = {
         documents: [],
-        loadedTenantId: ""
+        loadedTenantId: "",
+        editingDocumentId: ""
       };
 
       const financialState = {
@@ -3568,14 +3575,22 @@ export function renderDashboard(): string {
           return;
         }
 
-        list.innerHTML = normalized.map((document) => {
+        list.innerHTML = normalized.map((document, index) => {
           const status = document.status || "draft";
           const amount = formatCurrency(document.total_amount || 0, document.currency_code || "BRL");
+          const canDelete = ["draft", "archived", "rejected"].includes(String(status).toLowerCase());
+          const canArchive = !["authorized", "cancelled", "archived"].includes(String(status).toLowerCase());
           return (
-            '<div class="tax-doc-card">' +
+            '<div class="tax-doc-card" data-fiscal-document-index="' + index + '">' +
               '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
               '<div><strong>' + escapeHtml(document.document_type || "DOCUMENT") + ' / ' + escapeHtml(document.country_code || "--") + '</strong>' +
               '<span>' + escapeHtml(document.adapter_key || "adapter") + ' / ' + escapeHtml(document.lifecycle_stage || "draft") + ' / ' + escapeHtml(amount) + '</span></div>' +
+              '<div class="financial-record-actions fiscal-document-actions">' +
+                '<button class="mini-button" type="button" data-fiscal-document-action="pdf">PDF</button>' +
+                '<button class="mini-button" type="button" data-fiscal-document-action="edit">Editar</button>' +
+                (canArchive ? '<button class="mini-button warn" type="button" data-fiscal-document-action="archive">Arquivar</button>' : '') +
+                (canDelete ? '<button class="mini-button danger" type="button" data-fiscal-document-action="delete">Excluir</button>' : '') +
+              '</div>' +
             '</div>'
           );
         }).join("");
@@ -3634,6 +3649,9 @@ export function renderDashboard(): string {
 
         list.innerHTML = normalized.map((record, index) => {
           const currency = record.currency_code || "BRL";
+          const status = String(record.status || "").toLowerCase();
+          const isFinancialEntry = financialState.entity === "financial_entries";
+          const mustReverse = isFinancialEntry && ["posted", "paid"].includes(status);
           const amount = record.amount != null ? formatCurrency(record.amount, currency) :
             record.initial_amount != null ? formatCurrency(record.initial_amount, currency) :
             record.fixed_amount != null ? formatCurrency(record.fixed_amount, currency) :
@@ -3656,8 +3674,8 @@ export function renderDashboard(): string {
               '<em>' + escapeHtml(amount) + '</em>' +
               '<div class="financial-record-actions">' +
                 '<button class="mini-button" type="button" data-financial-action="pdf">PDF</button>' +
-                '<button class="mini-button warn" type="button" data-financial-action="archive">Arquivar</button>' +
-                (financialState.entity === "financial_entries" ? '<button class="mini-button danger" type="button" data-financial-action="reverse">Estornar</button>' : '') +
+                (mustReverse ? '' : '<button class="mini-button warn" type="button" data-financial-action="archive">Arquivar</button>') +
+                (isFinancialEntry ? '<button class="mini-button danger" type="button" data-financial-action="reverse">Estornar</button>' : '') +
               '</div>' +
             '</div>'
           );
@@ -4221,6 +4239,125 @@ export function renderDashboard(): string {
         renderFiscalDocuments(body.documents || []);
         addFeed("fiscal_documents.loaded", "Documentos fiscais sincronizados");
         return body.documents || [];
+      }
+
+      function exportFiscalDocumentPdf(document) {
+        if (!document) {
+          return;
+        }
+
+        openPrintablePdf(
+          "Documento fiscal - " + (document.document_type || "Helvok") + " / " + (document.country_code || "--"),
+          [
+            { label: "Status", value: document.status || "draft" },
+            { label: "Lifecycle", value: document.lifecycle_stage || "draft" },
+            { label: "Adaptador", value: document.adapter_key || "--" },
+            { label: "País", value: document.country_code || "--" },
+            { label: "Moeda", value: document.currency_code || "--" },
+            { label: "Valor total", value: formatCurrency(document.total_amount || 0, document.currency_code || "BRL") },
+            { label: "Imposto", value: formatCurrency(document.tax_amount || 0, document.currency_code || "BRL") },
+            { label: "ID", value: document.id || "--" }
+          ]
+        );
+        addFeed("fiscal_document.pdf", "PDF do documento fiscal gerado");
+      }
+
+      function editFiscalDocumentDraft(document) {
+        if (!document) {
+          return;
+        }
+
+        const scenario = document.payload && document.payload.scenario ? document.payload.scenario : {};
+        const item = scenario.items && scenario.items[0] ? scenario.items[0] : {};
+        documentState.editingDocumentId = document.id || "";
+        setFieldValue("#tax-origin", scenario.origin_country || "BR");
+        setFieldValue("#tax-destination", scenario.destination_country || document.country_code || "GB");
+        setFieldValue("#tax-operation-type", scenario.operation_type || "export_goods");
+        setFieldValue("#tax-customer-type", scenario.customer_type || "b2c");
+        setFieldValue("#tax-incoterm", scenario.incoterm || "DDP");
+        setFieldValue("#tax-channel", scenario.channel || "marketplace");
+        setFieldValue("#tax-ncm", scenario.ncm || scenario.hs_code || "");
+        setFieldValue("#tax-item-description", item.description || document.document_type || "");
+        setFieldValue("#tax-item-category", item.category || "goods");
+        setFieldValue("#tax-quantity", item.quantity || 1);
+        setFieldValue("#tax-unit-price", item.unit_price || 0);
+        setFieldValue("#tax-unit-cost", item.unit_cost || 0);
+        setText("#documents-view-status", "editando draft " + (document.document_type || "documento"));
+        const createButton = qs("#create-fiscal-document-button");
+        if (createButton) {
+          createButton.textContent = "Atualizar draft fiscal";
+        }
+        activateView("motor", true);
+        runTaxSimulation();
+      }
+
+      async function archiveFiscalDocument(document) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!document || !document.id || !tenantId || !accessToken) {
+          showAuthGate(true);
+          addFeed("fiscal_document.blocked", "Sessão necessária para arquivar documento fiscal");
+          return;
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents/" + encodeURIComponent(document.id) + "/archive", {
+          method: "POST",
+          headers: { authorization: "Bearer " + accessToken }
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Fiscal document archive failed");
+        }
+        renderFiscalDocuments(body.documents || []);
+        setText("#documents-view-status", "documento arquivado");
+        addFeed(body.event_type || "fiscal_document.archived", "Documento fiscal arquivado");
+      }
+
+      async function deleteFiscalDocument(document) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!document || !document.id || !tenantId || !accessToken) {
+          showAuthGate(true);
+          addFeed("fiscal_document.blocked", "Sessão necessária para excluir documento fiscal");
+          return;
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents/" + encodeURIComponent(document.id), {
+          method: "DELETE",
+          headers: { authorization: "Bearer " + accessToken }
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Fiscal document delete failed");
+        }
+        renderFiscalDocuments(body.documents || []);
+        setText("#documents-view-status", "documento excluído");
+        addFeed(body.event_type || "fiscal_document.deleted", "Documento fiscal excluído");
+      }
+
+      async function handleFiscalDocumentListClick(event) {
+        const button = event.target.closest("[data-fiscal-document-action]");
+        const card = event.target.closest("[data-fiscal-document-index]");
+        if (!button || !card) {
+          return;
+        }
+
+        const document = documentState.documents[Number(card.getAttribute("data-fiscal-document-index") || "-1")];
+        const action = button.getAttribute("data-fiscal-document-action");
+        try {
+          if (action === "pdf") {
+            exportFiscalDocumentPdf(document);
+          } else if (action === "edit") {
+            editFiscalDocumentDraft(document);
+          } else if (action === "archive") {
+            await archiveFiscalDocument(document);
+          } else if (action === "delete") {
+            await deleteFiscalDocument(document);
+          }
+        } catch (error) {
+          setText("#documents-view-status", "erro");
+          addFeed("fiscal_document.action.error", error instanceof Error ? error.message : "Falha na ação do documento fiscal");
+        }
       }
 
       function setFieldValue(selector, value) {
@@ -4944,32 +5081,37 @@ export function renderDashboard(): string {
         }
 
         try {
-          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents", {
-            method: "POST",
+          const documentPayload = {
+            country_code: countryCode,
+            jurisdiction_path: [countryCode],
+            document_type: documentType,
+            adapter_key: adapterKey,
+            operation_type: payload.operation_type || "sale",
+            currency_code: payload.currency || (market && market.currency) || "BRL",
+            total_amount: totals.customer_total || 0,
+            tax_amount: totals.destination_indirect_tax || 0,
+            payload: {
+              source: "tax_simulator",
+              scenario: payload
+            },
+            calculation_snapshot: simulation || {},
+            metadata: {
+              source: "helvok-dashboard",
+              lifecycle: "global-draft-before-country-adapter",
+              market: market ? market.name : countryCode
+            }
+          };
+          const editingDocumentId = documentState.editingDocumentId || "";
+          const endpoint = editingDocumentId
+            ? "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents/" + encodeURIComponent(editingDocumentId)
+            : "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/documents";
+          const response = await fetch(endpoint, {
+            method: editingDocumentId ? "PATCH" : "POST",
             headers: {
               authorization: "Bearer " + accessToken,
               "content-type": "application/json"
             },
-            body: JSON.stringify({
-              country_code: countryCode,
-              jurisdiction_path: [countryCode],
-              document_type: documentType,
-              adapter_key: adapterKey,
-              operation_type: payload.operation_type || "sale",
-              currency_code: payload.currency || (market && market.currency) || "BRL",
-              total_amount: totals.customer_total || 0,
-              tax_amount: totals.destination_indirect_tax || 0,
-              payload: {
-                source: "tax_simulator",
-                scenario: payload
-              },
-              calculation_snapshot: simulation || {},
-              metadata: {
-                source: "helvok-dashboard",
-                lifecycle: "global-draft-before-country-adapter",
-                market: market ? market.name : countryCode
-              }
-            })
+            body: JSON.stringify(documentPayload)
           });
           const body = await response.json();
           if (!response.ok) {
@@ -4977,8 +5119,9 @@ export function renderDashboard(): string {
           }
 
           renderFiscalDocuments(body.documents || (body.document ? [body.document].concat(documentState.documents) : documentState.documents));
-          setText("#documents-view-status", "draft criado");
-          addFeed(body.event_type || "fiscal_document.created", documentType + " draft criado para " + countryCode);
+          documentState.editingDocumentId = "";
+          setText("#documents-view-status", editingDocumentId ? "draft atualizado" : "draft criado");
+          addFeed(body.event_type || "fiscal_document.created", documentType + (editingDocumentId ? " draft atualizado para " : " draft criado para ") + countryCode);
         } catch (error) {
           addFeed("fiscal_document.error", error instanceof Error ? error.message : "Falha ao criar draft fiscal");
         } finally {
@@ -5478,8 +5621,12 @@ export function renderDashboard(): string {
           if (!response.ok) {
             throw new Error(body && body.error && body.error.message ? body.error.message : "Tax simulation failed");
           }
+          if (!body.simulation || !body.simulation.totals) {
+            throw new Error("O Worker não retornou totais de imposto para esta simulação.");
+          }
           renderTaxSimulation(body.simulation);
           runTaxComparison(false);
+          setText("#tax-result-status", "calculado " + formatCurrency(body.simulation.totals.customer_total || 0, body.simulation.input_snapshot && body.simulation.input_snapshot.currency ? body.simulation.input_snapshot.currency : taxState.currency));
           addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
           return body.simulation;
         } catch (error) {
@@ -6186,6 +6333,11 @@ export function renderDashboard(): string {
       const createFiscalDocumentButton = qs("#create-fiscal-document-button");
       if (createFiscalDocumentButton) {
         createFiscalDocumentButton.addEventListener("click", createFiscalDocumentDraft);
+      }
+
+      const fiscalDocumentsList = qs("#fiscal-documents-list");
+      if (fiscalDocumentsList) {
+        fiscalDocumentsList.addEventListener("click", handleFiscalDocumentListClick);
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {
