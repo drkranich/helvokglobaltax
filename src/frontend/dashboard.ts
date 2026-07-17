@@ -2862,6 +2862,43 @@ export function renderDashboard(): string {
               </div>
             </form>
           </article>
+
+          <aside class="panel tax-result-panel">
+            <div class="panel-title">
+              <h2>Resultado da simulação</h2>
+              <span id="tax-market-name">aguardando</span>
+            </div>
+            <div class="tax-market-strip">
+              <div class="tax-mini-card"><strong id="tax-currency-label">--</strong><span>Moeda</span></div>
+              <div class="tax-mini-card"><strong id="tax-market-tax-label">--</strong><span>Imposto destino</span></div>
+              <div class="tax-mini-card"><strong id="tax-source-label">--</strong><span>Fonte</span></div>
+            </div>
+            <div class="tax-kpi-grid">
+              <div class="tax-kpi"><span>Total cliente</span><strong id="tax-customer-total">--</strong></div>
+              <div class="tax-kpi"><span>Desembolso vendedor</span><strong id="tax-seller-out">--</strong></div>
+              <div class="tax-kpi"><span>Margem estimada</span><strong id="tax-margin">--</strong></div>
+              <div class="tax-kpi"><span>Preço unitário alvo</span><strong id="tax-suggested">--</strong></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Linhas tributárias e fees</strong><span>base x alíquota</span></div>
+              <div class="tax-line-list" id="tax-lines">
+                <div class="tax-line-card"><strong>Nenhuma simulação</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>
+              </div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Cadeia de valor</strong><span>origem ao mercado</span></div>
+              <div class="tax-chain-list" id="tax-value-chain"></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Documentos e pendências</strong><span>pre-emissão</span></div>
+              <div class="tax-doc-list" id="tax-docs"></div>
+              <div class="tax-warning-list" id="tax-required-data"></div>
+            </div>
+            <div class="tax-section">
+              <div class="tax-section-head"><strong>Alertas</strong><span>compliance</span></div>
+              <div class="tax-warning-list" id="tax-warnings"></div>
+            </div>
+          </aside>
         </section>
         </section>
 
@@ -3043,43 +3080,6 @@ export function renderDashboard(): string {
                 </div>
               </div>
             </article>
-
-          <aside class="panel tax-result-panel">
-            <div class="panel-title">
-              <h2>Resultado da simulação</h2>
-              <span id="tax-market-name">aguardando</span>
-            </div>
-            <div class="tax-market-strip">
-              <div class="tax-mini-card"><strong id="tax-currency-label">--</strong><span>Moeda</span></div>
-              <div class="tax-mini-card"><strong id="tax-market-tax-label">--</strong><span>Imposto destino</span></div>
-              <div class="tax-mini-card"><strong id="tax-source-label">--</strong><span>Fonte</span></div>
-            </div>
-            <div class="tax-kpi-grid">
-              <div class="tax-kpi"><span>Total cliente</span><strong id="tax-customer-total">--</strong></div>
-              <div class="tax-kpi"><span>Desembolso vendedor</span><strong id="tax-seller-out">--</strong></div>
-              <div class="tax-kpi"><span>Margem estimada</span><strong id="tax-margin">--</strong></div>
-              <div class="tax-kpi"><span>Preço unitário alvo</span><strong id="tax-suggested">--</strong></div>
-            </div>
-            <div class="tax-section">
-              <div class="tax-section-head"><strong>Linhas tributárias e fees</strong><span>base x alíquota</span></div>
-              <div class="tax-line-list" id="tax-lines">
-                <div class="tax-line-card"><strong>Nenhuma simulação</strong><span>calcule para gerar linhas</span><em class="tax-amount">--</em></div>
-              </div>
-            </div>
-            <div class="tax-section">
-              <div class="tax-section-head"><strong>Cadeia de valor</strong><span>origem ao mercado</span></div>
-              <div class="tax-chain-list" id="tax-value-chain"></div>
-            </div>
-            <div class="tax-section">
-              <div class="tax-section-head"><strong>Documentos e pendências</strong><span>pre-emissão</span></div>
-              <div class="tax-doc-list" id="tax-docs"></div>
-              <div class="tax-warning-list" id="tax-required-data"></div>
-            </div>
-            <div class="tax-section">
-              <div class="tax-section-head"><strong>Alertas</strong><span>compliance</span></div>
-              <div class="tax-warning-list" id="tax-warnings"></div>
-            </div>
-          </aside>
           </section>
 
           <section class="work-grid">
