@@ -3774,6 +3774,7 @@ export function renderDashboard(): string {
         list.innerHTML = normalized.map((registration, index) => {
           const status = registration.status || "draft";
           const canArchive = status !== "archived";
+          const canDelete = ["draft", "archived"].includes(String(status).toLowerCase());
           return (
             '<div class="tax-doc-card" data-fiscal-registration-index="' + index + '">' +
               '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
@@ -3782,7 +3783,9 @@ export function renderDashboard(): string {
                 (registration.secondary_registration ? ' / ' + escapeHtml(registration.secondary_registration_label || "reg. secundário") + ' ' + escapeHtml(registration.secondary_registration) : '') +
               '</span></div>' +
               '<div class="financial-record-actions fiscal-document-actions">' +
+                '<button class="mini-button" type="button" data-fiscal-registration-action="edit">Editar</button>' +
                 (canArchive ? '<button class="mini-button warn" type="button" data-fiscal-registration-action="archive">Arquivar</button>' : '') +
+                (canDelete ? '<button class="mini-button danger" type="button" data-fiscal-registration-action="delete">Excluir</button>' : '') +
               '</div>' +
             '</div>'
           );
@@ -3908,6 +3911,49 @@ export function renderDashboard(): string {
         addFeed(body.event_type || "fiscal_registration.archived", "Cadastro fiscal arquivado");
       }
 
+      async function deleteFiscalRegistration(registration) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken || !registration || !registration.id) {
+          return;
+        }
+
+        const response = await fetch(
+          "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/registrations/" + encodeURIComponent(registration.id),
+          { method: "DELETE", headers: { authorization: "Bearer " + accessToken } }
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao excluir cadastro fiscal.");
+        }
+        renderFiscalRegistrations(body.registrations || []);
+        addFeed(body.event_type || "fiscal_registration.deleted", "Cadastro fiscal excluído");
+      }
+
+      function editFiscalRegistrationDraft(registration) {
+        if (!registration) {
+          return;
+        }
+        const address = registration.fiscal_address || {};
+        setSelectValue("#fiscal-registration-organization", registration.organization_id);
+        setFieldValue("#fiscal-registration-country", registration.country_code);
+        setSelectValue("#fiscal-registration-regime", registration.tax_regime || "standard");
+        setFieldValue("#fiscal-registration-tax-id", registration.tax_id);
+        setFieldValue("#fiscal-registration-secondary", registration.secondary_registration);
+        setFieldValue("#fiscal-registration-tertiary", registration.tertiary_registration);
+        setFieldValue("#fiscal-registration-city", address.city);
+        setFieldValue("#fiscal-registration-state", address.state_code);
+        setFieldValue("#fiscal-registration-postal", address.postal_code);
+        const messageNode = qs("#fiscal-registration-message");
+        if (messageNode) {
+          messageNode.textContent = "Editando cadastro fiscal " + (registration.country_code || "") + " — ajuste os campos e salve para atualizar.";
+        }
+        const form = qs("#fiscal-registration-form");
+        if (form && form.scrollIntoView) {
+          form.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
       async function handleFiscalRegistrationListClick(event) {
         const button = event.target.closest("[data-fiscal-registration-action]");
         const card = event.target.closest("[data-fiscal-registration-index]");
@@ -3920,6 +3966,10 @@ export function renderDashboard(): string {
         try {
           if (action === "archive") {
             await archiveFiscalRegistration(registration);
+          } else if (action === "delete") {
+            await deleteFiscalRegistration(registration);
+          } else if (action === "edit") {
+            editFiscalRegistrationDraft(registration);
           }
         } catch (error) {
           addFeed("fiscal_registration.action.error", error instanceof Error ? error.message : "Falha na ação do cadastro fiscal");

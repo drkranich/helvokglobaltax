@@ -212,6 +212,32 @@ describe("Fiscal registration endpoints", () => {
     );
   });
 
+  it("deletes a fiscal registration through the authenticated tenant RPC", async () => {
+    const fetchSpy = mockUserThen({
+      event_type: "fiscal_registration.deleted",
+      registrations: [],
+    });
+
+    const app = createApp();
+    const response = await app.request(
+      `/v1/tenants/${tenantId}/fiscal/registrations/${registrationId}`,
+      { method: "DELETE", headers: { authorization: "Bearer user-access-token" } },
+      adminEnv,
+    );
+    const body = await response.json<{ event_type: string }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("fiscal_registration.deleted");
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      "https://jlvwudjgfzhhdgttrycj.supabase.co/rest/v1/rpc/helvok_current_delete_fiscal_registration",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ p_tenant_id: tenantId, p_registration_id: registrationId }),
+      }),
+    );
+  });
+
   it("rejects registration endpoints without a bearer token", async () => {
     const app = createApp();
     const response = await app.request(`/v1/tenants/${tenantId}/fiscal/registrations`, {}, env);
