@@ -292,6 +292,7 @@ export function renderDashboard(): string {
         display: none;
         gap: 22px;
         min-height: calc(100vh - 118px);
+        align-content: start;
       }
 
       .app-view.active {
