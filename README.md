@@ -16,6 +16,10 @@ Estado atual:
 - Workbench autenticado de usuários, roles e memberships para owners.
 - Convites de usuários com token hasheado, expiração, aceite, reenvio e revogação.
 - Simulador fiscal operacional com pacote de regras global seed, cadeia de valor, impostos, fees, margem e preço sugerido.
+- Pipeline de documentos fiscais globais com draft, edição, arquivamento e exclusão guardados por status.
+- Motor financeiro com lançamentos, estorno de `posted`/`paid` e planejamento de custos.
+- Scaffold de 40 adaptadores fiscais por país/jurisdição (Brasil, EUA, Canadá, 14 países da Europa, 8 da América Latina, 7 da Ásia-Pacífico, 3 do Oriente Médio), todos em status `planned` e sem transmissão real a nenhuma autoridade.
+- Painéis de homologação por país e de rejeições de documentos fiscais.
 
 ## Principio central
 
@@ -63,6 +67,11 @@ O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IV
 - Aceitar convite autenticado: `POST /v1/invitations/accept`
 - Listar memberships do tenant: `GET /v1/admin/tenants/:tenantId/memberships`
 - Conceder/atualizar membership: `POST /v1/admin/memberships`
+- Catálogo de adaptadores fiscais: `GET /v1/fiscal/adapters`
+- Cobertura de adaptadores: `GET /v1/fiscal/adapters/coverage`
+- Adaptador por chave: `GET /v1/fiscal/adapters/:adapterKey`
+- Rejeições de documentos fiscais (admin): `GET /v1/admin/tenants/:tenantId/fiscal/rejections`
+- Rejeições de documentos fiscais (autenticado): `GET /v1/tenants/:tenantId/fiscal/rejections`
 - Admin API protegida: `GET/POST /v1/admin/*`
 
 ## Documentação
@@ -87,6 +96,7 @@ O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IV
 - [User role membership workbench](docs/ops/07-user-role-membership-workbench.md)
 - [Membership invitations](docs/ops/08-membership-invitations.md)
 - [Tax simulator engine](docs/ops/09-tax-simulator-engine.md)
+- [Scaffold de adaptadores fiscais e paineis de compliance](docs/ops/10-fiscal-adapter-scaffold.md)
 - [Roadmap incremental](docs/roadmap/01-incremental-delivery-plan.md)
 
 ## Guardrails

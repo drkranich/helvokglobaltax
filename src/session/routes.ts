@@ -488,6 +488,36 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/fiscal/rejections", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const rejections = await client.rpc("helvok_current_list_fiscal_rejections", { p_tenant_id: tenantId });
+      return jsonResponse(c, { rejections });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.post("/tenants/:tenantId/fiscal/documents", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

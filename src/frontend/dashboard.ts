@@ -3080,6 +3080,36 @@ export function renderDashboard(): string {
             </div>
           </aside>
           </section>
+
+          <section class="work-grid">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Homologação por país</h2>
+                <span id="fiscal-adapters-summary">carregando adaptadores...</span>
+              </div>
+              <p>Catálogo de adaptadores por país/jurisdição com requisitos de certificado, credenciamento e status real de conexão. Nenhum adaptador aqui está em produção; todos exigem certificado, credenciamento governamental e revisão contábil antes de emitir de verdade.</p>
+              <div id="fiscal-adapters-list">
+                <div class="empty-state">
+                  <strong>Carregando catálogo de adaptadores</strong>
+                  <span>Brasil, EUA, Canadá, Europa, América Latina, Ásia-Pacífico e Oriente Médio.</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Painel de rejeições</h2>
+                <span id="fiscal-rejections-count">0 rejeições</span>
+              </div>
+              <p>Documentos fiscais rejeitados ou com falha, com o último evento de lifecycle registrado para revisão.</p>
+              <div class="tax-doc-list" id="fiscal-rejections-list">
+                <div class="empty-state">
+                  <strong>Nenhuma rejeição carregada</strong>
+                  <span>Entre com uma sessão autorizada do tenant para ver rejeições reais.</span>
+                </div>
+              </div>
+            </article>
+          </section>
         </section>
 
         <section class="app-view" id="mercados" data-view="mercados" aria-label="Mercados">
@@ -4307,6 +4337,130 @@ export function renderDashboard(): string {
         return body.documents || [];
       }
 
+      function renderFiscalAdapterCoverage(adapters, coverage) {
+        const summary = qs("#fiscal-adapters-summary");
+        if (summary && coverage) {
+          summary.textContent =
+            coverage.total_adapters + " adaptadores / " + coverage.countries_covered + " países-jurisdição (todos em status planned)";
+        }
+
+        const list = qs("#fiscal-adapters-list");
+        if (!list) {
+          return;
+        }
+
+        const grouped = (adapters || []).reduce((acc, adapter) => {
+          const key = adapter.region || "outros";
+          acc[key] = acc[key] || [];
+          acc[key].push(adapter);
+          return acc;
+        }, {});
+
+        const regionLabels = {
+          brazil: "Brasil",
+          usa: "Estados Unidos",
+          canada: "Canadá",
+          europe: "Europa",
+          latam: "América Latina",
+          asia_pacific: "Ásia-Pacífico",
+          middle_east: "Oriente Médio"
+        };
+
+        const regions = Object.keys(grouped);
+        if (regions.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhum adaptador registrado</strong><span>Aguardando catálogo de adaptadores.</span></div>';
+          return;
+        }
+
+        list.innerHTML = regions.map((region) => {
+          const items = grouped[region].map((adapter) =>
+            '<div class="tax-line-card">' +
+              '<strong>' + escapeHtml(adapter.authority_name || adapter.adapter_key) + '</strong>' +
+              '<span>' + escapeHtml(adapter.adapter_key) + ' · ' + escapeHtml((adapter.document_families || []).join(", ")) + '</span>' +
+              '<em class="tax-amount">' + escapeHtml(adapter.status || "planned") + '</em>' +
+            '</div>'
+          ).join("");
+
+          return (
+            '<div class="tax-section">' +
+              '<div class="tax-section-head"><strong>' + escapeHtml(regionLabels[region] || region) + '</strong><span>' + grouped[region].length + ' adaptador(es)</span></div>' +
+              '<div class="tax-line-list">' + items + '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadFiscalAdapterCoverage() {
+        try {
+          const response = await fetch("/v1/fiscal/adapters", { cache: "no-store" });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar adaptadores fiscais.");
+          }
+
+          renderFiscalAdapterCoverage(body.adapters || [], body.coverage || null);
+          addFeed("fiscal.adapters.loaded", (body.coverage && body.coverage.total_adapters) + " adaptadores de homologação carregados");
+          return body.adapters || [];
+        } catch (error) {
+          addFeed("fiscal.adapters.error", error instanceof Error ? error.message : "Falha ao carregar adaptadores fiscais");
+          return [];
+        }
+      }
+
+      function renderFiscalRejections(rejections) {
+        const countLabel = qs("#fiscal-rejections-count");
+        if (countLabel) {
+          countLabel.textContent = (rejections || []).length + " rejeições";
+        }
+
+        const list = qs("#fiscal-rejections-list");
+        if (!list) {
+          return;
+        }
+
+        if (!rejections || rejections.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhuma rejeição registrada</strong><span>Documentos rejeitados ou com falha aparecem aqui com o último evento de lifecycle.</span></div>';
+          return;
+        }
+
+        list.innerHTML = rejections.map((doc) => {
+          const lastEvent = doc.last_event || {};
+          return (
+            '<div class="tax-doc-card">' +
+              '<strong>' + escapeHtml(doc.document_type || "Documento") + ' · ' + escapeHtml(doc.country_code || "--") + '</strong>' +
+              '<span>status ' + escapeHtml(doc.status || "--") + ' / evento ' + escapeHtml(lastEvent.event_type || "sem evento") + '</span>' +
+              '<span>' + escapeHtml(doc.id || "--") + '</span>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadFiscalRejections(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          renderFiscalRejections([]);
+          return [];
+        }
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/rejections", {
+            headers: { authorization: "Bearer " + accessToken },
+            cache: "no-store"
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar rejeições fiscais.");
+          }
+
+          renderFiscalRejections(body.rejections || []);
+          addFeed("fiscal.rejections.loaded", (body.rejections || []).length + " rejeições sincronizadas");
+          return body.rejections || [];
+        } catch (error) {
+          addFeed("fiscal.rejections.error", error instanceof Error ? error.message : "Falha ao carregar rejeições fiscais");
+          return [];
+        }
+      }
+
       function exportFiscalDocumentPdf(document) {
         if (!document) {
           return;
@@ -4948,6 +5102,9 @@ export function renderDashboard(): string {
             });
             loadFiscalDocuments(primaryTenant.id).catch((error) => {
               addFeed("fiscal_documents.error", error instanceof Error ? error.message : "Falha ao carregar documentos fiscais");
+            });
+            loadFiscalRejections(primaryTenant.id).catch((error) => {
+              addFeed("fiscal.rejections.error", error instanceof Error ? error.message : "Falha ao carregar rejeições fiscais");
             });
             loadFinancialRecords(primaryTenant.id).catch((error) => {
               setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar financeiro.", "warn");
@@ -6125,6 +6282,7 @@ export function renderDashboard(): string {
               loadTenantAccess(tenantId),
               loadCatalogItems(tenantId),
               loadFiscalDocuments(tenantId),
+              loadFiscalRejections(tenantId),
               loadFinancialRecords(tenantId)
             ]);
           }
@@ -6551,6 +6709,7 @@ export function renderDashboard(): string {
       renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
       loadTaxMarkets();
+      loadFiscalAdapterCoverage();
       loadSession()
         .then(() => {
           if (authState.pendingInviteToken) {
