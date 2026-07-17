@@ -1249,9 +1249,9 @@ export function renderDashboard(): string {
 
       .country-tile {
         position: relative;
-        min-height: 116px;
+        min-height: 148px;
         overflow: hidden;
-        padding: 13px;
+        padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
@@ -1281,14 +1281,18 @@ export function renderDashboard(): string {
         display: block;
         font-family: var(--font-display);
         font-size: 18px;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
       }
 
       .country-tile span {
         display: block;
-        margin-top: 10px;
+        margin-top: 8px;
         color: var(--champagne-64);
         font-family: var(--font-data);
         font-size: 11px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
       }
 
       .country-tile em {
@@ -1297,15 +1301,20 @@ export function renderDashboard(): string {
         color: var(--champagne-80);
         font-family: var(--font-data);
         font-size: 10px;
+        line-height: 1.35;
         font-style: normal;
+        overflow-wrap: anywhere;
       }
 
       .country-tile small {
-        position: absolute;
-        right: 12px;
-        bottom: 12px;
+        display: block;
+        margin-top: 10px;
+        padding-bottom: 6px;
         color: var(--gold-300);
         font-family: var(--font-data);
+        font-size: 12px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
       }
 
       .form-grid {
@@ -2162,7 +2171,7 @@ export function renderDashboard(): string {
             <span>Tenant</span>
             <strong id="breadcrumb-tenant">helvok-tax-foundation</strong>
             <span>/</span>
-            <span>Organizacao</span>
+            <span>Organização</span>
             <strong id="breadcrumb-organization">Helvok Tax</strong>
           </div>
           <div class="top-actions">
@@ -2235,7 +2244,7 @@ export function renderDashboard(): string {
             <small>Bootstrap real criado pela API admin.</small>
           </article>
           <article class="metric">
-            <span>Organizacoes</span>
+            <span>Organizações</span>
             <strong data-count="1">1</strong>
             <small>Helvok Tax registrada no tenant foundation.</small>
           </article>
@@ -3114,7 +3123,7 @@ export function renderDashboard(): string {
     <script>
       const feedSeeds = [
         ["tenant.created", "Tenant foundation confirmado"],
-        ["organization.created", "Organizacao Helvok Tax criada"],
+        ["organization.created", "Organização Helvok Tax criada"],
         ["worker.health", "Cloudflare Worker respondeu"],
         ["api.version", "Contrato público v1 sincronizado"],
         ["outbox.pronto", "Outbox aguardando filas"],
