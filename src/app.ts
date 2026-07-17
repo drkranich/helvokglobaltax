@@ -56,6 +56,7 @@ export function createApp(): Hono<AppEnv> {
         financial_planning: "helvok-cost-engine-preview",
         fiscal_documents: "global-lifecycle-preview",
         fiscal_adapters: "country-adapter-scaffold-preview",
+        fiscal_registrations: "tenant-registration-preview",
         audit: "planned",
       },
     }),

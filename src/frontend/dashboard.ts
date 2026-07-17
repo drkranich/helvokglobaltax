@@ -2499,6 +2499,79 @@ export function renderDashboard(): string {
             </div>
           </aside>
         </section>
+
+        <section class="work-grid">
+          <article class="panel">
+            <div class="panel-title">
+              <h2>Cadastro fiscal do tenant</h2>
+              <span id="fiscal-registrations-count">0 cadastros</span>
+            </div>
+            <p>CNPJ/EIN/VAT id, regime tributário, inscrição estadual/municipal (ou equivalente) e endereço fiscal por país. Sem isso, nenhum adaptador consegue sair de "planned" para "sandbox" real — o Helvok Tax nunca emite com CNPJ próprio, quem emite é o seu cliente (tenant).</p>
+            <div class="tax-doc-list" id="fiscal-registrations-list">
+              <div class="empty-state">
+                <strong>Nenhum cadastro fiscal carregado</strong>
+                <span>Entre com uma sessão autorizada do tenant para ver ou criar cadastros.</span>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel">
+            <div class="panel-title">
+              <h2>Novo cadastro fiscal</h2>
+              <span>organizations.manage</span>
+            </div>
+            <form class="catalog-form" id="fiscal-registration-form">
+              <div class="field-block wide-field">
+                <label for="fiscal-registration-organization">Organização/empresa</label>
+                <select id="fiscal-registration-organization" class="glass-select"></select>
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-country">País</label>
+                <input id="fiscal-registration-country" class="glass-field" placeholder="BR" maxlength="2" required />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-regime">Regime tributário</label>
+                <select id="fiscal-registration-regime" class="glass-select">
+                  <option value="simples_nacional">Simples Nacional</option>
+                  <option value="lucro_presumido">Lucro Presumido</option>
+                  <option value="lucro_real">Lucro Real</option>
+                  <option value="mei">MEI</option>
+                  <option value="standard" selected>Padrão/genérico</option>
+                  <option value="flat_rate">Alíquota fixa</option>
+                  <option value="flow_through">Flow-through</option>
+                  <option value="exempt">Isento</option>
+                  <option value="other">Outro</option>
+                </select>
+              </div>
+              <div class="field-block wide-field">
+                <label for="fiscal-registration-tax-id">Tax ID (CNPJ/EIN/VAT id)</label>
+                <input id="fiscal-registration-tax-id" class="glass-field" placeholder="12.345.678/0001-99" required />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-secondary">Inscrição estadual (ou equivalente)</label>
+                <input id="fiscal-registration-secondary" class="glass-field" placeholder="123.456.789.012" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-tertiary">Inscrição municipal (ou equivalente)</label>
+                <input id="fiscal-registration-tertiary" class="glass-field" placeholder="opcional, para ISS/NFS-e" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-city">Cidade</label>
+                <input id="fiscal-registration-city" class="glass-field" placeholder="São Paulo" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-state">UF/estado/província</label>
+                <input id="fiscal-registration-state" class="glass-field" placeholder="SP" />
+              </div>
+              <div class="field-block">
+                <label for="fiscal-registration-postal">CEP/postal code</label>
+                <input id="fiscal-registration-postal" class="glass-field" placeholder="01310-100" />
+              </div>
+              <button class="glass-button primary" id="fiscal-registration-save-button" type="submit">Salvar cadastro fiscal</button>
+              <div class="financial-message" id="fiscal-registration-message">Cada tenant registra seu próprio CNPJ/EIN/VAT id — o Helvok Tax não emite com CNPJ próprio.</div>
+            </form>
+          </aside>
+        </section>
         </section>
 
         <section class="app-view" id="produtos" data-view="produtos" aria-label="Produtos e serviços">
@@ -3233,6 +3306,12 @@ export function renderDashboard(): string {
         editingDocumentId: ""
       };
 
+      const fiscalRegistrationState = {
+        registrations: [],
+        organizations: [],
+        loadedTenantId: ""
+      };
+
       const financialState = {
         entity: "financial_entries",
         records: [],
@@ -3655,6 +3734,195 @@ export function renderDashboard(): string {
             '</div>'
           );
         }).join("");
+      }
+
+      function renderFiscalRegistrationOrganizations(organizations) {
+        const select = qs("#fiscal-registration-organization");
+        const normalized = Array.isArray(organizations) ? organizations : [];
+        fiscalRegistrationState.organizations = normalized;
+        if (!select) {
+          return;
+        }
+        select.innerHTML = normalized.length === 0
+          ? '<option value="">nenhuma organização encontrada</option>'
+          : normalized.map((org) => (
+              '<option value="' + escapeHtml(org.id) + '">' +
+                escapeHtml(org.legal_name || org.trade_name || "organização") +
+                ' (' + escapeHtml(org.country_of_registration || "--") + ')' +
+              '</option>'
+            )).join("");
+      }
+
+      function renderFiscalRegistrations(registrations) {
+        const list = qs("#fiscal-registrations-list");
+        const normalized = Array.isArray(registrations) ? registrations : [];
+        fiscalRegistrationState.registrations = normalized;
+
+        setText("#fiscal-registrations-count", normalized.length + " cadastros");
+
+        if (!list) {
+          return;
+        }
+
+        if (normalized.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state"><strong>Nenhum cadastro fiscal criado</strong><span>Cadastre o CNPJ/EIN/VAT id do seu cliente (tenant) por país.</span></div>';
+          return;
+        }
+
+        list.innerHTML = normalized.map((registration, index) => {
+          const status = registration.status || "draft";
+          const canArchive = status !== "archived";
+          return (
+            '<div class="tax-doc-card" data-fiscal-registration-index="' + index + '">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(registration.country_code || "--") + ' / ' + escapeHtml(registration.tax_id || "sem tax id") + '</strong>' +
+              '<span>' + escapeHtml(registration.tax_id_label || "tax_id") + ' / regime ' + escapeHtml(registration.tax_regime || "standard") +
+                (registration.secondary_registration ? ' / ' + escapeHtml(registration.secondary_registration_label || "reg. secundário") + ' ' + escapeHtml(registration.secondary_registration) : '') +
+              '</span></div>' +
+              '<div class="financial-record-actions fiscal-document-actions">' +
+                (canArchive ? '<button class="mini-button warn" type="button" data-fiscal-registration-action="archive">Arquivar</button>' : '') +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadOrganizationsForFiscalRegistration(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          renderFiscalRegistrationOrganizations([]);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/organizations", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar organizações.");
+        }
+
+        renderFiscalRegistrationOrganizations(body.organizations || []);
+        return body.organizations || [];
+      }
+
+      async function loadFiscalRegistrations(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          fiscalRegistrationState.loadedTenantId = "";
+          renderFiscalRegistrations([]);
+          return [];
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/registrations", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar cadastros fiscais.");
+        }
+
+        fiscalRegistrationState.loadedTenantId = tenantId;
+        renderFiscalRegistrations(body.registrations || []);
+        addFeed("fiscal_registration.loaded", "Cadastros fiscais sincronizados");
+        return body.registrations || [];
+      }
+
+      async function submitFiscalRegistrationForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#fiscal-registration-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para salvar o cadastro fiscal.";
+          }
+          return;
+        }
+
+        const payload = {
+          organization_id: (qs("#fiscal-registration-organization") || {}).value || "",
+          country_code: ((qs("#fiscal-registration-country") || {}).value || "").toUpperCase(),
+          tax_regime: (qs("#fiscal-registration-regime") || {}).value || "standard",
+          tax_id: (qs("#fiscal-registration-tax-id") || {}).value || "",
+          secondary_registration: (qs("#fiscal-registration-secondary") || {}).value || "",
+          secondary_registration_label: "Inscrição estadual",
+          tertiary_registration: (qs("#fiscal-registration-tertiary") || {}).value || "",
+          tertiary_registration_label: "Inscrição municipal",
+          fiscal_address: {
+            city: (qs("#fiscal-registration-city") || {}).value || "",
+            state_code: (qs("#fiscal-registration-state") || {}).value || "",
+            postal_code: (qs("#fiscal-registration-postal") || {}).value || "",
+            country_code: ((qs("#fiscal-registration-country") || {}).value || "").toUpperCase()
+          }
+        };
+
+        try {
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/registrations", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              authorization: "Bearer " + accessToken
+            },
+            body: JSON.stringify(payload)
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao salvar cadastro fiscal.");
+          }
+
+          renderFiscalRegistrations(body.registrations || []);
+          if (messageNode) {
+            messageNode.textContent = "Cadastro fiscal salvo (" + (payload.country_code || "país") + ").";
+          }
+          addFeed(body.event_type || "fiscal_registration.created", "Cadastro fiscal salvo");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao salvar cadastro fiscal.";
+          }
+          addFeed("fiscal_registration.error", error instanceof Error ? error.message : "Falha no cadastro fiscal");
+        }
+      }
+
+      async function archiveFiscalRegistration(registration) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken || !registration || !registration.id) {
+          return;
+        }
+
+        const response = await fetch(
+          "/v1/tenants/" + encodeURIComponent(tenantId) + "/fiscal/registrations/" + encodeURIComponent(registration.id) + "/archive",
+          { method: "POST", headers: { authorization: "Bearer " + accessToken } }
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao arquivar cadastro fiscal.");
+        }
+        renderFiscalRegistrations(body.registrations || []);
+        addFeed(body.event_type || "fiscal_registration.archived", "Cadastro fiscal arquivado");
+      }
+
+      async function handleFiscalRegistrationListClick(event) {
+        const button = event.target.closest("[data-fiscal-registration-action]");
+        const card = event.target.closest("[data-fiscal-registration-index]");
+        if (!button || !card) {
+          return;
+        }
+
+        const registration = fiscalRegistrationState.registrations[Number(card.getAttribute("data-fiscal-registration-index") || "-1")];
+        const action = button.getAttribute("data-fiscal-registration-action");
+        try {
+          if (action === "archive") {
+            await archiveFiscalRegistration(registration);
+          }
+        } catch (error) {
+          addFeed("fiscal_registration.action.error", error instanceof Error ? error.message : "Falha na ação do cadastro fiscal");
+        }
       }
 
       function setFinancialMessage(message, tone) {
@@ -5108,6 +5376,12 @@ export function renderDashboard(): string {
             loadFiscalRejections(primaryTenant.id).catch((error) => {
               addFeed("fiscal.rejections.error", error instanceof Error ? error.message : "Falha ao carregar rejeições fiscais");
             });
+            loadOrganizationsForFiscalRegistration(primaryTenant.id).catch((error) => {
+              addFeed("fiscal_registration.organizations.error", error instanceof Error ? error.message : "Falha ao carregar organizações");
+            });
+            loadFiscalRegistrations(primaryTenant.id).catch((error) => {
+              addFeed("fiscal_registration.error", error instanceof Error ? error.message : "Falha ao carregar cadastros fiscais");
+            });
             loadFinancialRecords(primaryTenant.id).catch((error) => {
               setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar financeiro.", "warn");
               addFeed("financial.records.error", "Falha ao carregar financeiro");
@@ -6285,6 +6559,8 @@ export function renderDashboard(): string {
               loadCatalogItems(tenantId),
               loadFiscalDocuments(tenantId),
               loadFiscalRejections(tenantId),
+              loadOrganizationsForFiscalRegistration(tenantId),
+              loadFiscalRegistrations(tenantId),
               loadFinancialRecords(tenantId)
             ]);
           }
@@ -6632,6 +6908,16 @@ export function renderDashboard(): string {
       const fiscalDocumentsList = qs("#fiscal-documents-list");
       if (fiscalDocumentsList) {
         fiscalDocumentsList.addEventListener("click", handleFiscalDocumentListClick);
+      }
+
+      const fiscalRegistrationsList = qs("#fiscal-registrations-list");
+      if (fiscalRegistrationsList) {
+        fiscalRegistrationsList.addEventListener("click", handleFiscalRegistrationListClick);
+      }
+
+      const fiscalRegistrationForm = qs("#fiscal-registration-form");
+      if (fiscalRegistrationForm) {
+        fiscalRegistrationForm.addEventListener("submit", submitFiscalRegistrationForm);
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {

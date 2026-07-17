@@ -458,6 +458,36 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/organizations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const organizations = await client.rpc("helvok_current_list_organizations", { p_tenant_id: tenantId });
+      return jsonResponse(c, { organizations });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/documents", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {
@@ -513,6 +543,130 @@ export function createSessionRouter(): Hono<AppEnv> {
       await client.getUser();
       const rejections = await client.rpc("helvok_current_list_fiscal_rejections", { p_tenant_id: tenantId });
       return jsonResponse(c, { rejections });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.get("/tenants/:tenantId/fiscal/registrations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const registrations = await client.rpc("helvok_current_list_fiscal_registrations", { p_tenant_id: tenantId });
+      return jsonResponse(c, { registrations });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/fiscal/registrations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    if (typeof payload.organization_id !== "string" || payload.organization_id.trim() === "") {
+      return jsonResponse(
+        c,
+        { error: { code: "invalid_organization_id", message: "organization_id is required." } },
+        400,
+      );
+    }
+
+    if (typeof payload.country_code !== "string" || payload.country_code.trim() === "") {
+      return jsonResponse(
+        c,
+        { error: { code: "invalid_country_code", message: "country_code is required." } },
+        400,
+      );
+    }
+
+    if (typeof payload.tax_id !== "string" || payload.tax_id.trim() === "") {
+      return jsonResponse(
+        c,
+        { error: { code: "invalid_tax_id", message: "tax_id is required." } },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upsert_fiscal_registration", {
+        p_tenant_id: tenantId,
+        p_payload: payload,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/fiscal/registrations/:registrationId/archive", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const registrationId = c.req.param("registrationId");
+    if (!isUuid(tenantId) || !isUuid(registrationId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_fiscal_registration_archive_target",
+            message: "tenantId and registrationId must be valid UUIDs.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_archive_fiscal_registration", {
+        p_tenant_id: tenantId,
+        p_registration_id: registrationId,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
     } catch (error) {
       return sessionErrorResponse(c, error);
     }
