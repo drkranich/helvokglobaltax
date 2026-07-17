@@ -1152,16 +1152,23 @@ export function renderDashboard(): string {
 
       .financial-record-card {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(118px, auto);
+        grid-template-columns: minmax(0, 1fr) minmax(194px, auto);
+        grid-template-rows: auto 1fr;
         gap: 12px;
         align-items: start;
-        min-height: 104px;
+        min-height: 118px;
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background:
           linear-gradient(135deg, rgba(244, 230, 200, 0.1), rgba(8, 36, 38, 0.22)),
           rgba(244, 230, 200, 0.06);
+      }
+
+      .financial-record-card > div:first-child {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        min-width: 0;
       }
 
       .financial-record-card strong,
@@ -1178,6 +1185,8 @@ export function renderDashboard(): string {
       }
 
       .financial-record-card em {
+        grid-column: 2;
+        grid-row: 1;
         justify-self: end;
         min-width: 106px;
         padding: 8px 10px;
@@ -1192,13 +1201,23 @@ export function renderDashboard(): string {
       }
 
       .financial-record-actions {
-        grid-column: 1 / -1;
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
         justify-content: flex-end;
         max-width: 100%;
         overflow: hidden;
+      }
+
+      .financial-record-card > .financial-record-actions {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: end;
+        justify-self: end;
+      }
+
+      .tax-doc-card .fiscal-document-actions {
+        grid-column: 1 / -1;
       }
 
       .financial-record-actions .mini-button {
@@ -5860,8 +5879,8 @@ export function renderDashboard(): string {
         return simulation && simulation.totals ? simulation : requireCurrentSimulation();
       }
 
-      function exportCurrentSimulationPdf() {
-        const simulation = requireCurrentSimulation();
+      async function exportCurrentSimulationPdf() {
+        const simulation = await ensureCurrentSimulation();
         if (!simulation) {
           return;
         }
@@ -5884,6 +5903,7 @@ export function renderDashboard(): string {
           { label: "Linhas tributárias e fees", value: lines || "--" },
           { label: "Pacote de regras", value: simulation.rule_pack_version || taxState.rulePackVersion || "--" }
         ]);
+        setText("#tax-result-status", "PDF gerado");
         addFeed("tax.simulation.pdf", "PDF operacional da simulação gerado");
       }
 
@@ -6278,7 +6298,19 @@ export function renderDashboard(): string {
 
       const taxSimulationPdfButton = qs("#tax-simulation-pdf-button");
       if (taxSimulationPdfButton) {
-        taxSimulationPdfButton.addEventListener("click", exportCurrentSimulationPdf);
+        taxSimulationPdfButton.addEventListener("click", async () => {
+          taxSimulationPdfButton.disabled = true;
+          taxSimulationPdfButton.textContent = "Gerando PDF...";
+          try {
+            await exportCurrentSimulationPdf();
+          } catch (error) {
+            setText("#tax-result-status", "erro no PDF");
+            addFeed("tax.simulation.pdf.error", error instanceof Error ? error.message : "Falha ao gerar PDF");
+          } finally {
+            taxSimulationPdfButton.disabled = false;
+            taxSimulationPdfButton.textContent = "PDF da simulação";
+          }
+        });
       }
 
       const taxSimulationProvisionButton = qs("#tax-simulation-provision-button");
@@ -6317,17 +6349,53 @@ export function renderDashboard(): string {
 
       const taxSimulationBundleButton = qs("#tax-simulation-bundle-button");
       if (taxSimulationBundleButton) {
-        taxSimulationBundleButton.addEventListener("click", materializeTaxSimulationFinancially);
+        taxSimulationBundleButton.addEventListener("click", async () => {
+          taxSimulationBundleButton.disabled = true;
+          taxSimulationBundleButton.textContent = "Criando pacote...";
+          try {
+            await materializeTaxSimulationFinancially();
+          } catch (error) {
+            setText("#tax-result-status", "erro no pacote");
+            addFeed("tax.simulation.bundle.error", error instanceof Error ? error.message : "Falha ao criar pacote fiscal-financeiro");
+          } finally {
+            taxSimulationBundleButton.disabled = false;
+            taxSimulationBundleButton.textContent = "Draft + financeiro";
+          }
+        });
       }
 
       const taxSimulationArchiveButton = qs("#tax-simulation-archive-button");
       if (taxSimulationArchiveButton) {
-        taxSimulationArchiveButton.addEventListener("click", archiveCurrentSimulation);
+        taxSimulationArchiveButton.addEventListener("click", async () => {
+          taxSimulationArchiveButton.disabled = true;
+          taxSimulationArchiveButton.textContent = "Arquivando...";
+          try {
+            await archiveCurrentSimulation();
+          } catch (error) {
+            setText("#tax-result-status", "erro ao arquivar");
+            addFeed("tax.simulation.archive.error", error instanceof Error ? error.message : "Falha ao arquivar simulação");
+          } finally {
+            taxSimulationArchiveButton.disabled = false;
+            taxSimulationArchiveButton.textContent = "Arquivar simulação";
+          }
+        });
       }
 
       const taxSimulationDeleteButton = qs("#tax-simulation-delete-button");
       if (taxSimulationDeleteButton) {
-        taxSimulationDeleteButton.addEventListener("click", clearCurrentSimulation);
+        taxSimulationDeleteButton.addEventListener("click", () => {
+          taxSimulationDeleteButton.disabled = true;
+          taxSimulationDeleteButton.textContent = "Excluindo...";
+          try {
+            clearCurrentSimulation();
+          } catch (error) {
+            setText("#tax-result-status", "erro ao excluir");
+            addFeed("tax.simulation.delete.error", error instanceof Error ? error.message : "Falha ao excluir simulação");
+          } finally {
+            taxSimulationDeleteButton.disabled = false;
+            taxSimulationDeleteButton.textContent = "Excluir simulação";
+          }
+        });
       }
 
       const createFiscalDocumentButton = qs("#create-fiscal-document-button");
