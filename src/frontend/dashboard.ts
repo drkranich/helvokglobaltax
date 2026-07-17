@@ -523,6 +523,194 @@ export function renderDashboard(): string {
         color: #fff7df;
       }
 
+      .date-native-hidden {
+        position: absolute;
+        width: 1px !important;
+        height: 1px;
+        min-height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .date-shell {
+        position: relative;
+        width: min(260px, 100%);
+      }
+
+      .date-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(115, 184, 178, 0.18)),
+          rgba(8, 36, 38, 0.4);
+        color: var(--champagne);
+        cursor: pointer;
+        text-align: left;
+        font-size: 13px;
+        backdrop-filter: blur(18px) saturate(150%);
+      }
+
+      .date-trigger.placeholder {
+        color: rgba(244, 230, 200, 0.48);
+      }
+
+      .date-trigger::after {
+        width: 0;
+        height: 0;
+        content: "";
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid var(--gold-300);
+      }
+
+      .date-shell.open .date-trigger {
+        border-color: rgba(240, 200, 117, 0.58);
+        box-shadow: 0 0 0 3px rgba(200, 154, 61, 0.12);
+      }
+
+      .date-panel {
+        position: absolute;
+        top: calc(100% + 7px);
+        left: 0;
+        z-index: 90;
+        display: none;
+        width: max(260px, 100%);
+        padding: 14px;
+        border: 1px solid rgba(240, 200, 117, 0.36);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(115, 184, 178, 0.16)),
+          rgba(8, 36, 38, 0.42);
+        color: var(--champagne);
+        box-shadow: 0 24px 70px rgba(2, 4, 12, 0.5);
+        backdrop-filter: blur(26px) saturate(160%);
+      }
+
+      .date-shell.open .date-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .date-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .date-panel-month {
+        font-family: var(--font-data);
+        font-size: 13px;
+        text-transform: capitalize;
+      }
+
+      .date-nav {
+        display: flex;
+        gap: 6px;
+      }
+
+      .date-nav-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid rgba(240, 200, 117, 0.32);
+        border-radius: 8px;
+        background: rgba(244, 230, 200, 0.1);
+        color: var(--gold-300);
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1;
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+      }
+
+      .date-nav-button:hover {
+        border-color: rgba(240, 200, 117, 0.58);
+        background: rgba(200, 154, 61, 0.22);
+        transform: translateY(-1px);
+      }
+
+      .date-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+      }
+
+      .date-weekday {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        color: var(--champagne-64);
+        font-family: var(--font-data);
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+
+      .date-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: rgba(244, 230, 200, 0.04);
+        color: var(--champagne);
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .date-cell:hover {
+        border-color: rgba(240, 200, 117, 0.42);
+        background: rgba(200, 154, 61, 0.24);
+        color: #fff7df;
+      }
+
+      .date-cell.is-adjacent {
+        color: var(--champagne-64);
+        opacity: 0.5;
+      }
+
+      .date-cell.is-today {
+        border-color: rgba(115, 184, 178, 0.58);
+      }
+
+      .date-cell.is-selected {
+        border-color: rgba(240, 200, 117, 0.7);
+        background: linear-gradient(135deg, rgba(200, 154, 61, 0.85), rgba(30, 115, 116, 0.5));
+        color: #fff7df;
+      }
+
+      .date-panel-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(244, 230, 200, 0.14);
+      }
+
+      .date-footer-link {
+        border: none;
+        background: none;
+        padding: 0;
+        color: var(--gold-300);
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .date-footer-link:hover {
+        text-decoration: underline;
+      }
+
       .glass-button {
         display: inline-flex;
         align-items: center;
@@ -795,6 +983,66 @@ export function renderDashboard(): string {
 
       .panel {
         padding: 18px;
+      }
+
+      .fiscal-certificate-panel {
+        padding-bottom: 30px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(115, 184, 178, 0.16));
+      }
+
+      .fiscal-certificate-panel .glass-field {
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .fiscal-certificate-panel #fiscal-certificate-upload-button {
+        margin-bottom: 16px;
+      }
+
+      .file-upload-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .glass-upload-button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        border: 1px solid rgba(240, 200, 117, 0.42);
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(115, 184, 178, 0.2));
+        backdrop-filter: blur(18px) saturate(150%);
+        color: var(--champagne);
+        cursor: pointer;
+        font-size: 13px;
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+      }
+
+      .glass-upload-button:hover {
+        border-color: rgba(240, 200, 117, 0.62);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(115, 184, 178, 0.28));
+        transform: translateY(-1px);
+      }
+
+      .visually-hidden-file {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .file-upload-name {
+        color: var(--champagne-64);
+        font-family: var(--font-data);
+        font-size: 12px;
       }
 
       .access-grid {
@@ -2574,7 +2822,7 @@ export function renderDashboard(): string {
         </section>
 
         <section class="work-grid">
-          <article class="panel">
+          <article class="panel fiscal-certificate-panel">
             <div class="panel-title">
               <h2>Certificado digital (A1)</h2>
               <span id="fiscal-certificate-target-label">nenhum cadastro selecionado</span>
@@ -2583,7 +2831,11 @@ export function renderDashboard(): string {
             <form id="fiscal-certificate-form">
               <div class="field-block">
                 <label for="fiscal-certificate-file">Arquivo .pfx/.p12</label>
-                <input id="fiscal-certificate-file" class="glass-field" type="file" accept=".pfx,.p12" />
+                <div class="file-upload-row">
+                  <label for="fiscal-certificate-file" class="glass-upload-button">Upload</label>
+                  <input id="fiscal-certificate-file" class="visually-hidden-file" type="file" accept=".pfx,.p12" />
+                  <span id="fiscal-certificate-file-name" class="file-upload-name">Nenhum arquivo escolhido</span>
+                </div>
               </div>
               <div class="field-block">
                 <label for="fiscal-certificate-password">Senha do certificado</label>
@@ -5230,6 +5482,232 @@ export function renderDashboard(): string {
         }
       }
 
+      var HELVOK_PT_MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+      var HELVOK_PT_WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+      function pad2(value) {
+        var text = String(value);
+        return text.length < 2 ? "0" + text : text;
+      }
+
+      function formatIsoDate(year, monthIndex, day) {
+        return year + "-" + pad2(monthIndex + 1) + "-" + pad2(day);
+      }
+
+      function formatDateDisplay(isoValue) {
+        if (!isoValue) {
+          return "";
+        }
+        var parts = isoValue.split("-");
+        if (parts.length !== 3) {
+          return "";
+        }
+        return parts[2] + "/" + parts[1] + "/" + parts[0];
+      }
+
+      function closeCustomDatePickers(exceptShell) {
+        document.querySelectorAll(".date-shell.open").forEach((shell) => {
+          if (shell !== exceptShell) {
+            shell.classList.remove("open");
+          }
+        });
+      }
+
+      function renderDatePanel(shell, input) {
+        var panel = shell.querySelector(".date-panel");
+        if (!panel) {
+          return;
+        }
+
+        var viewYear = parseInt(shell.dataset.viewYear, 10);
+        var viewMonth = parseInt(shell.dataset.viewMonth, 10);
+        var today = new Date();
+
+        if (isNaN(viewYear) || isNaN(viewMonth)) {
+          var initial = input.value ? input.value.split("-") : null;
+          viewYear = initial ? parseInt(initial[0], 10) : today.getFullYear();
+          viewMonth = initial ? parseInt(initial[1], 10) - 1 : today.getMonth();
+          shell.dataset.viewYear = String(viewYear);
+          shell.dataset.viewMonth = String(viewMonth);
+        }
+
+        var firstOfMonth = new Date(viewYear, viewMonth, 1);
+        var startWeekday = firstOfMonth.getDay();
+        var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        var daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+        var cells = [];
+        for (var i = 0; i < startWeekday; i += 1) {
+          cells.push({ day: daysInPrevMonth - startWeekday + 1 + i, adjacent: true, iso: null });
+        }
+        for (var day = 1; day <= daysInMonth; day += 1) {
+          cells.push({ day: day, adjacent: false, iso: formatIsoDate(viewYear, viewMonth, day) });
+        }
+        var remainder = cells.length % 7;
+        if (remainder !== 0) {
+          var trailing = 7 - remainder;
+          for (var t = 1; t <= trailing; t += 1) {
+            cells.push({ day: t, adjacent: true, iso: null });
+          }
+        }
+
+        var todayIso = formatIsoDate(today.getFullYear(), today.getMonth(), today.getDate());
+        var selectedIso = input.value || "";
+
+        var gridHtml = HELVOK_PT_WEEKDAYS.map((label) => (
+          '<span class="date-weekday">' + label + '</span>'
+        )).join("");
+
+        gridHtml += cells.map((cell) => {
+          var classNames = "date-cell";
+          if (cell.adjacent) {
+            classNames += " is-adjacent";
+          } else {
+            if (cell.iso === todayIso) {
+              classNames += " is-today";
+            }
+            if (cell.iso === selectedIso) {
+              classNames += " is-selected";
+            }
+          }
+          var dataIso = cell.iso ? ' data-iso="' + cell.iso + '"' : "";
+          var disabledAttr = cell.adjacent ? " disabled" : "";
+          return '<button type="button" class="' + classNames + '"' + dataIso + disabledAttr + '>' + cell.day + '</button>';
+        }).join("");
+
+        panel.innerHTML =
+          '<div class="date-panel-header">' +
+            '<span class="date-panel-month">' + HELVOK_PT_MONTHS[viewMonth] + ' de ' + viewYear + '</span>' +
+            '<div class="date-nav">' +
+              '<button type="button" class="date-nav-button" data-nav="prev">&#8592;</button>' +
+              '<button type="button" class="date-nav-button" data-nav="next">&#8594;</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="date-grid">' + gridHtml + '</div>' +
+          '<div class="date-panel-footer">' +
+            '<button type="button" class="date-footer-link" data-action="clear">Limpar</button>' +
+            '<button type="button" class="date-footer-link" data-action="today">Hoje</button>' +
+          '</div>';
+      }
+
+      function refreshCustomDatePicker(input) {
+        if (!input || !input.dataset || !input.dataset.customDateReady) {
+          return;
+        }
+
+        var shell = input.nextElementSibling;
+        if (!shell || !shell.classList.contains("date-shell")) {
+          return;
+        }
+
+        var trigger = shell.querySelector(".date-trigger");
+        if (trigger) {
+          var display = formatDateDisplay(input.value);
+          trigger.querySelector("span").textContent = display || "dd/mm/aaaa";
+          trigger.classList.toggle("placeholder", !display);
+        }
+
+        if (shell.classList.contains("open")) {
+          delete shell.dataset.viewYear;
+          delete shell.dataset.viewMonth;
+          renderDatePanel(shell, input);
+        }
+      }
+
+      function initializeCustomDatePickers() {
+        document.querySelectorAll('input[type="date"].glass-field').forEach((input) => {
+          if (input.dataset.customDateReady) {
+            refreshCustomDatePicker(input);
+            return;
+          }
+
+          var shell = document.createElement("div");
+          shell.className = "date-shell";
+          var trigger = document.createElement("button");
+          trigger.type = "button";
+          trigger.className = "date-trigger";
+          trigger.innerHTML = "<span></span>";
+          var panel = document.createElement("div");
+          panel.className = "date-panel";
+          shell.appendChild(trigger);
+          shell.appendChild(panel);
+
+          input.classList.add("date-native-hidden");
+          input.dataset.customDateReady = "true";
+          input.insertAdjacentElement("afterend", shell);
+
+          trigger.addEventListener("click", () => {
+            var willOpen = !shell.classList.contains("open");
+            closeCustomDatePickers(shell);
+            if (willOpen) {
+              delete shell.dataset.viewYear;
+              delete shell.dataset.viewMonth;
+              renderDatePanel(shell, input);
+            }
+            shell.classList.toggle("open", willOpen);
+          });
+
+          panel.addEventListener("click", (event) => {
+            var navButton = event.target && event.target.closest ? event.target.closest(".date-nav-button") : null;
+            if (navButton) {
+              var direction = navButton.getAttribute("data-nav") === "prev" ? -1 : 1;
+              var nextMonth = parseInt(shell.dataset.viewMonth, 10) + direction;
+              var nextYear = parseInt(shell.dataset.viewYear, 10);
+              var next = new Date(nextYear, nextMonth, 1);
+              shell.dataset.viewYear = String(next.getFullYear());
+              shell.dataset.viewMonth = String(next.getMonth());
+              renderDatePanel(shell, input);
+              return;
+            }
+
+            var footerButton = event.target && event.target.closest ? event.target.closest(".date-footer-link") : null;
+            if (footerButton) {
+              var action = footerButton.getAttribute("data-action");
+              if (action === "clear") {
+                input.value = "";
+              } else if (action === "today") {
+                var today = new Date();
+                input.value = formatIsoDate(today.getFullYear(), today.getMonth(), today.getDate());
+              }
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+              refreshCustomDatePicker(input);
+              closeCustomDatePickers();
+              return;
+            }
+
+            var dayButton = event.target && event.target.closest ? event.target.closest(".date-cell") : null;
+            if (!dayButton || dayButton.hasAttribute("disabled")) {
+              return;
+            }
+            var iso = dayButton.getAttribute("data-iso");
+            if (!iso) {
+              return;
+            }
+            input.value = iso;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+            refreshCustomDatePicker(input);
+            closeCustomDatePickers();
+          });
+
+          refreshCustomDatePicker(input);
+        });
+
+        if (!window.__helvokCustomDatePickerListeners) {
+          window.__helvokCustomDatePickerListeners = true;
+          document.addEventListener("click", (event) => {
+            if (!event.target.closest(".date-shell")) {
+              closeCustomDatePickers();
+            }
+          });
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              closeCustomDatePickers();
+            }
+          });
+        }
+      }
+
       function populateCatalogForm(item) {
         if (!item) {
           return;
@@ -6881,6 +7359,7 @@ export function renderDashboard(): string {
       });
 
       initializeCustomSelects();
+      initializeCustomDatePickers();
 
       window.addEventListener("hashchange", () => {
         activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
@@ -7177,6 +7656,18 @@ export function renderDashboard(): string {
       const fiscalCertificateForm = qs("#fiscal-certificate-form");
       if (fiscalCertificateForm) {
         fiscalCertificateForm.addEventListener("submit", submitFiscalCertificateForm);
+      }
+
+      const fiscalCertificateFileInput = qs("#fiscal-certificate-file");
+      if (fiscalCertificateFileInput) {
+        fiscalCertificateFileInput.addEventListener("change", () => {
+          const fileNameNode = qs("#fiscal-certificate-file-name");
+          if (!fileNameNode) {
+            return;
+          }
+          const file = fiscalCertificateFileInput.files && fiscalCertificateFileInput.files[0];
+          fileNameNode.textContent = file ? file.name : "Nenhum arquivo escolhido";
+        });
       }
 
       ["#tax-destination", "#tax-origin", "#tax-incoterm", "#tax-operation-type", "#tax-customer-type", "#tax-channel", "#tax-item-category"].forEach((selector) => {
