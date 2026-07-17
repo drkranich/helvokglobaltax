@@ -91,7 +91,12 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain('data-catalog-action="delete"');
     expect(body).toContain('data-catalog-action="pdf"');
     expect(body).toContain('id="tax-simulator-form" novalidate');
-    expect(body).toContain('id="tax-simulate-button" type="button"');
+    expect(body).toContain('id="tax-simulate-button" type="submit" data-tax-action="simulate"');
+    expect(body).toContain('data-financial-toolbar-action="refresh"');
+    expect(body).toContain('data-financial-toolbar-action="csv"');
+    expect(body).toContain('data-financial-toolbar-action="xlsx"');
+    expect(body).toContain('data-financial-toolbar-action="pdf"');
+    expect(body).toContain("function runFinancialToolbarAction");
     expect(body).toContain("function initializeCustomSelects");
     expect(body).toContain(".select-panel");
     expect(body).toContain("initializeCustomSelects();");

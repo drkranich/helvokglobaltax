@@ -1128,6 +1128,16 @@ export function renderDashboard(): string {
         flex-wrap: wrap;
         gap: 10px;
         justify-content: flex-end;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+      }
+
+      .financial-action-row .mini-button {
+        position: relative;
+        z-index: 3;
+        pointer-events: auto;
       }
 
       .financial-record-form {
@@ -2840,7 +2850,7 @@ export function renderDashboard(): string {
                 </div>
               </div>
 
-              <button class="glass-button primary" id="tax-simulate-button" type="button">Calcular impostos e preço real</button>
+              <button class="glass-button primary" id="tax-simulate-button" type="submit" data-tax-action="simulate">Calcular impostos e preço real</button>
               <div class="simulation-actions" aria-label="Ações da simulação">
                 <button class="mini-button" id="tax-simulation-pdf-button" type="button">PDF da simulação</button>
                 <button class="mini-button" id="tax-simulation-provision-button" type="button">Provisionar custos</button>
@@ -2957,10 +2967,10 @@ export function renderDashboard(): string {
                 </select>
               </div>
               <div class="financial-action-row">
-                <button class="mini-button" id="financial-refresh-button" type="button">Atualizar</button>
-                <button class="mini-button" id="financial-export-csv-button" type="button">Gerar CSV</button>
-                <button class="mini-button" id="financial-export-xlsx-button" type="button">Gerar XLSX</button>
-                <button class="mini-button" id="financial-report-pdf-button" type="button">PDF do módulo</button>
+                <button class="mini-button" id="financial-refresh-button" type="button" data-financial-toolbar-action="refresh">Atualizar</button>
+                <button class="mini-button" id="financial-export-csv-button" type="button" data-financial-toolbar-action="csv">Gerar CSV</button>
+                <button class="mini-button" id="financial-export-xlsx-button" type="button" data-financial-toolbar-action="xlsx">Gerar XLSX</button>
+                <button class="mini-button" id="financial-report-pdf-button" type="button" data-financial-toolbar-action="pdf">PDF do módulo</button>
               </div>
             </div>
             <form class="financial-record-form" id="financial-record-form" novalidate>
@@ -4209,6 +4219,43 @@ export function renderDashboard(): string {
         setFinancialMessage("Exportação " + exportType.toUpperCase() + " enfileirada com dados reais do tenant.", "good");
         addFeed(body.event_type || "financial.export.queued", "Exportação " + exportType.toUpperCase() + " enfileirada");
         return body;
+      }
+
+      async function runFinancialToolbarAction(action, button) {
+        const labels = {
+          refresh: ["Atualizar", "Atualizando..."],
+          csv: ["Gerar CSV", "Gerando CSV..."],
+          xlsx: ["Gerar XLSX", "Gerando XLSX..."],
+          pdf: ["PDF do módulo", "Gerando PDF..."]
+        };
+        const label = labels[action] || ["Executar", "Executando..."];
+
+        if (button) {
+          button.disabled = true;
+          button.textContent = label[1];
+        }
+
+        try {
+          if (action === "refresh") {
+            await loadFinancialRecords(getActiveTenantId());
+            setFinancialMessage("Registros financeiros atualizados.", "good");
+          } else if (action === "csv") {
+            await queueFinancialExport("csv");
+          } else if (action === "xlsx") {
+            await queueFinancialExport("xlsx");
+          } else if (action === "pdf") {
+            exportFinancialModulePdf();
+            setFinancialMessage("PDF financeiro gerado com os registros carregados.", "good");
+          }
+        } catch (error) {
+          setFinancialMessage(error instanceof Error ? error.message : "Ação financeira falhou.", "warn");
+          addFeed("financial.toolbar.error", "Falha na ação do módulo financeiro");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = label[0];
+          }
+        }
       }
 
       async function handleFinancialListClick(event) {
@@ -6192,6 +6239,11 @@ export function renderDashboard(): string {
 
       const taxSimulateButton = qs("#tax-simulate-button");
       if (taxSimulateButton) {
+        taxSimulateButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          runTaxSimulation(event);
+        }, true);
         taxSimulateButton.addEventListener("click", runTaxSimulation);
       }
 
@@ -6225,6 +6277,20 @@ export function renderDashboard(): string {
             setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar o módulo financeiro.", "warn");
           });
         });
+      }
+
+      const financialActionRow = qs(".financial-action-row");
+      if (financialActionRow) {
+        financialActionRow.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-financial-toolbar-action]");
+          if (!button) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          runFinancialToolbarAction(button.getAttribute("data-financial-toolbar-action") || "", button);
+        }, true);
       }
 
       const financialRefreshButton = qs("#financial-refresh-button");
