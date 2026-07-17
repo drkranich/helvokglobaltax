@@ -986,16 +986,61 @@ export function renderDashboard(): string {
       }
 
       .fiscal-certificate-panel {
-        padding-bottom: 30px;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(115, 184, 178, 0.16));
+        padding-bottom: 34px;
+        border-color: rgba(244, 230, 200, 0.42);
+        background: linear-gradient(145deg, rgba(244, 230, 200, 0.46), rgba(115, 184, 178, 0.3));
       }
 
       .fiscal-certificate-panel .glass-field {
-        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(244, 230, 200, 0.36);
+        background: rgba(255, 255, 255, 0.3);
+        color: var(--petroleum-950);
+      }
+
+      .fiscal-certificate-panel .glass-field::placeholder {
+        color: rgba(14, 63, 66, 0.55);
+      }
+
+      .fiscal-certificate-panel .file-upload-name {
+        color: rgba(14, 63, 66, 0.72);
+      }
+
+      .fiscal-certificate-panel .glass-upload-button,
+      .fiscal-certificate-panel .date-trigger {
+        border-color: rgba(244, 230, 200, 0.4);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(115, 184, 178, 0.24));
+        color: var(--petroleum-950);
+      }
+
+      .fiscal-certificate-panel .date-trigger.placeholder {
+        color: rgba(14, 63, 66, 0.55);
+      }
+
+      .fiscal-certificate-panel .date-panel {
+        border-color: rgba(244, 230, 200, 0.42);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.62), rgba(115, 184, 178, 0.24));
+        color: var(--petroleum-950);
+      }
+
+      .fiscal-certificate-panel .date-panel-month {
+        color: var(--petroleum-950);
+      }
+
+      .fiscal-certificate-panel .date-weekday {
+        color: rgba(14, 63, 66, 0.6);
+      }
+
+      .fiscal-certificate-panel .date-cell {
+        color: var(--petroleum-950);
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      .fiscal-certificate-panel .date-cell.is-adjacent {
+        color: rgba(14, 63, 66, 0.4);
       }
 
       .fiscal-certificate-panel #fiscal-certificate-upload-button {
-        margin-bottom: 16px;
+        margin-bottom: 22px;
       }
 
       .file-upload-row {
@@ -2838,12 +2883,10 @@ export function renderDashboard(): string {
                 </div>
               </div>
               <div class="field-block">
-                <label for="fiscal-certificate-password">Senha do certificado</label>
-                <input id="fiscal-certificate-password" class="glass-field" type="password" placeholder="senha do .pfx" />
+                <input id="fiscal-certificate-password" class="glass-field" type="password" placeholder="senha do .pfx" aria-label="Senha do certificado" />
               </div>
               <div class="field-block">
-                <label for="fiscal-certificate-valid-until">Válido até</label>
-                <input id="fiscal-certificate-valid-until" class="glass-field" type="date" />
+                <input id="fiscal-certificate-valid-until" class="glass-field" type="date" aria-label="Válido até" />
               </div>
               <button class="glass-button primary" id="fiscal-certificate-upload-button" type="submit">Enviar certificado</button>
               <div class="financial-message" id="fiscal-certificate-message">Nenhum certificado enviado nesta sessão.</div>
