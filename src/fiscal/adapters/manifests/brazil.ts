@@ -1,6 +1,13 @@
 import { BRAZIL_STATE_TAX_PROFILES } from "../../../tax/rule-pack";
 import { defineAdapterManifest } from "../types";
 import type { AdapterManifest, AdapterRequirement } from "../types";
+import { BRAZIL_TAX_TABLES_SUMMARY } from "../brazil/tax-tables";
+
+const TAX_TABLES_NOTE =
+  `Tabelas de classificação real disponíveis em GET /v1/fiscal/adapters/brazil/tax-tables: ` +
+  `${BRAZIL_TAX_TABLES_SUMMARY.cfop.count} CFOP, ${BRAZIL_TAX_TABLES_SUMMARY.cst_icms.count} CST-ICMS, ` +
+  `${BRAZIL_TAX_TABLES_SUMMARY.csosn.count} CSOSN, ${BRAZIL_TAX_TABLES_SUMMARY.ncm_cest_sample.count} NCM/CEST de amostra. ` +
+  "Não são tabelas completas (NCM oficial tem ~10.000 códigos, CEST ~1.300) — ver `coverage` de cada tabela para o que falta.";
 
 const BRAZIL_JURISDICTIONS = BRAZIL_STATE_TAX_PROFILES.map((profile) => ({
   code: profile.code,
@@ -61,7 +68,7 @@ function nfe(): AdapterManifest {
     production_support: false,
     status: "planned",
     official_sources: ["https://www.nfe.fazenda.gov.br/"],
-    notes: HOMOLOGACAO_NOTE,
+    notes: `${HOMOLOGACAO_NOTE} ${TAX_TABLES_NOTE}`,
   });
 }
 
@@ -81,7 +88,7 @@ function nfce(): AdapterManifest {
     production_support: false,
     status: "planned",
     official_sources: ["https://www.nfe.fazenda.gov.br/"],
-    notes: HOMOLOGACAO_NOTE,
+    notes: `${HOMOLOGACAO_NOTE} ${TAX_TABLES_NOTE}`,
   });
 }
 

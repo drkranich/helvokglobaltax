@@ -125,6 +125,27 @@ describe("Fiscal adapter HTTP endpoints", () => {
     expect(body.error.code).toBe("adapter_not_found");
   });
 
+  it("returns Brazil's real CFOP/CST/CSOSN/NCM-CEST tax tables seed", async () => {
+    const app = createApp();
+    const response = await app.request("/v1/fiscal/adapters/brazil/tax-tables", {}, env);
+    const body = await response.json<{
+      event_type: string;
+      cfop: Array<{ code: string }>;
+      cst_icms: Array<{ code: string }>;
+      csosn: Array<{ code: string }>;
+      ncm_cest_sample: Array<{ ncm: string }>;
+    }>();
+
+    expect(response.status).toBe(200);
+    expect(body.event_type).toBe("fiscal.brazil.tax_tables_loaded");
+    expect(body.cfop.map((entry) => entry.code)).toEqual(
+      expect.arrayContaining(["5101", "5102", "6102", "6108"]),
+    );
+    expect(body.cst_icms).toHaveLength(11);
+    expect(body.csosn).toHaveLength(10);
+    expect(body.ncm_cest_sample.length).toBeGreaterThan(0);
+  });
+
   it("advertises the fiscal_adapters module in the API manifest", async () => {
     const app = createApp();
     const response = await app.request("/v1", {}, env);
