@@ -1039,8 +1039,9 @@ export function renderDashboard(): string {
         color: rgba(14, 63, 66, 0.4);
       }
 
-      .fiscal-certificate-panel #fiscal-certificate-upload-button {
-        margin-bottom: 22px;
+      .stacked-form {
+        display: grid;
+        gap: 16px;
       }
 
       .file-upload-row {
@@ -2873,7 +2874,7 @@ export function renderDashboard(): string {
               <span id="fiscal-certificate-target-label">nenhum cadastro selecionado</span>
             </div>
             <p>O certificado é criptografado (AES-256-GCM) antes de sair do navegador do servidor — a senha nunca é gravada em texto puro. Clique em "Certificado" em um cadastro fiscal ao lado para selecionar o alvo do upload.</p>
-            <form id="fiscal-certificate-form">
+            <form class="stacked-form" id="fiscal-certificate-form">
               <div class="field-block">
                 <label for="fiscal-certificate-file">Arquivo .pfx/.p12</label>
                 <div class="file-upload-row">
