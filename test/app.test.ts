@@ -52,6 +52,9 @@ describe("Helvok Tax Worker API", () => {
     expect(body).toContain("function ensureCurrentSimulation");
     expect(body).toContain("function requireTenantWriteSession");
     expect(body).toContain("function queueFinancialExport");
+    expect(body).toContain("function createMembershipInvitation");
+    expect(body).toContain("function runOperationalScan");
+    expect(body).toContain("Usuário ainda não existe no Auth. Convite criado");
     expect(body).toContain("Fontes e cobertura");
     expect(body).toContain('id="markets-source-label"');
     expect(body).toContain('id="markets-validation-label"');

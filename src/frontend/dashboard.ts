@@ -3324,6 +3324,55 @@ export function renderDashboard(): string {
         }
       }
 
+      function isUnknownUserMembershipError(error) {
+        if (!(error instanceof Error)) {
+          return false;
+        }
+
+        const message = error.message.toLowerCase();
+        return message.includes("user not found") || message.includes("usuário não encontrado") || message.includes("usuario nao encontrado");
+      }
+
+      async function createMembershipInvitation(email, roleKey, expiresInDays) {
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+
+        if (!tenantId) {
+          throw new Error("Sessão sem tenant ativo para convite.");
+        }
+
+        if (!accessToken) {
+          showAuthGate(true);
+          throw new Error("Entre novamente para gerar convites.");
+        }
+
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/invitations", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email,
+            role_key: roleKey,
+            expires_in_days: expiresInDays
+          })
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Invitation creation failed");
+        }
+
+        if (body.access) {
+          renderTenantAccess(body.access);
+        } else {
+          await loadTenantAccess(tenantId);
+        }
+
+        showInvitationLink(body.invitation_url || "");
+        return body;
+      }
+
       function renderInviteAcceptState() {
         const card = qs("#invite-accept-card");
         if (!card) {
@@ -4759,6 +4808,24 @@ export function renderDashboard(): string {
           addFeed(body.event_type || "membership.updated", email + " / " + roleKey);
           qs("#member-email").value = "";
         } catch (error) {
+          if (isUnknownUserMembershipError(error)) {
+            try {
+              setMemberMessage("Usuário ainda não entrou no Helvok. Gerando convite de acesso...", null);
+              const inviteBody = await createMembershipInvitation(email, roleKey, 7);
+              setMemberMessage("Usuário ainda não existe no Auth. Convite criado; copie o link abaixo e envie ao convidado.", "good");
+              setInvitationMessage("Convite criado a partir do membership. Copie o link e envie ao usuário.", "good");
+              addFeed(inviteBody.event_type || "invitation.created", email + " / " + roleKey);
+              qs("#member-email").value = "";
+              qs("#invite-email").value = email;
+              setSelectValue("#invite-role", roleKey);
+              return;
+            } catch (invitationError) {
+              setMemberMessage(invitationError instanceof Error ? invitationError.message : "Não foi possível criar convite para o usuário.", "warn");
+              addFeed("invitation.error", "Falha ao converter membership em convite");
+              return;
+            }
+          }
+
           setMemberMessage(error instanceof Error ? error.message : "Não foi possível salvar membership.", "warn");
           addFeed("members.error", "Falha ao salvar membership");
         }
@@ -5440,7 +5507,9 @@ export function renderDashboard(): string {
         setText("#tax-compare-status", "comparando mercados");
 
         const payload = collectTaxPayload();
-        const destinations = ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU", "AG", "BB", "DO", "JM", "LC", "KN", "VC", "TT"];
+        const destinations = taxState.markets.length > 0
+          ? taxState.markets.map((market) => market.code).filter((code) => code && code !== payload.origin_country).slice(0, 40)
+          : ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU", "AG", "BB", "DO", "JM", "LC", "KN", "VC", "TT"];
 
         try {
           const response = await fetch("/v1/tax/compare", {
@@ -5824,6 +5893,40 @@ export function renderDashboard(): string {
         }
       }
 
+      async function runOperationalScan(button) {
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Varrendo...";
+        }
+
+        try {
+          await refreshStatus();
+          await loadTaxMarkets();
+          await runTaxComparison(false);
+          await runFinancialPlan();
+
+          const tenantId = getActiveTenantId();
+          if (tenantId && getStoredAccessToken()) {
+            await Promise.allSettled([
+              loadTenantAccess(tenantId),
+              loadCatalogItems(tenantId),
+              loadFiscalDocuments(tenantId),
+              loadFinancialRecords(tenantId)
+            ]);
+          }
+
+          setText("#last-sync", formatTime(new Date()));
+          addFeed("manual.scan.completed", "Varredura operacional executada nas abas principais");
+        } catch (error) {
+          addFeed("manual.scan.error", error instanceof Error ? error.message : "Falha na varredura operacional");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Executar varredura";
+          }
+        }
+      }
+
       function pulseMetrics() {
         document.querySelectorAll("[data-count]").forEach((node) => {
           const base = Number(node.getAttribute("data-count") || "0");
@@ -5881,8 +5984,7 @@ export function renderDashboard(): string {
 
       document.querySelectorAll("[data-action='pulse']").forEach((button) => {
         button.addEventListener("click", () => {
-          refreshStatus();
-          addFeed("manual.scan", "Varredura solicitada no painel");
+          runOperationalScan(button);
         });
       });
 
