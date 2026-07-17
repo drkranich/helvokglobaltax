@@ -4057,7 +4057,7 @@ export function renderDashboard(): string {
         }
         if (!registrationId) {
           if (messageNode) {
-            messageNode.textContent = "Selecione um cadastro fiscal clicando em \"Certificado\" antes de enviar o arquivo.";
+            messageNode.textContent = "Selecione um cadastro fiscal clicando em 'Certificado' antes de enviar o arquivo.";
           }
           return;
         }
