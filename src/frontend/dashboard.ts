@@ -3751,6 +3751,7 @@ export function renderDashboard(): string {
                 ' (' + escapeHtml(org.country_of_registration || "--") + ')' +
               '</option>'
             )).join("");
+        refreshCustomSelect(select);
       }
 
       function renderFiscalRegistrations(registrations) {
