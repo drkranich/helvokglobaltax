@@ -4775,7 +4775,7 @@ export function renderDashboard(): string {
             payload = JSON.parse(payloadText);
           } catch (parseError) {
             if (messageNode) {
-              messageNode.textContent = "Payload inválido: use um JSON válido (ex: {\"standard_rate\": 0.18}).";
+              messageNode.textContent = "Payload inválido: use um JSON válido (ex: {'standard_rate': 0.18} com aspas duplas).";
             }
             return;
           }
