@@ -2475,6 +2475,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#usuarios"><span>Usuários</span><span class="nav-code">USR</span></a>
           <a class="nav-button" href="#empresas"><span>Empresas</span><span class="nav-code">TEN</span></a>
           <a class="nav-button" href="#produtos"><span>Produtos</span><span class="nav-code">CAT</span></a>
+          <a class="nav-button" href="#clientes"><span>Clientes e pedidos</span><span class="nav-code">CRM</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
           <a class="nav-button" href="#financeiro"><span>Planejamento financeiro</span><span class="nav-code">FIN</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
@@ -3019,6 +3020,115 @@ export function renderDashboard(): string {
                 </div>
                 <button class="glass-button primary" id="catalog-save-button" type="submit">Salvar produto ou serviço</button>
                 <div class="auth-message catalog-message" id="catalog-message">O catálogo usa products.manage e fica isolado por tenant.</div>
+              </form>
+            </aside>
+          </section>
+        </section>
+
+        <section class="app-view" id="clientes" data-view="clientes" aria-label="Clientes e pedidos">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">CRM comercial</span>
+              <h1>Clientes e pedidos</h1>
+              <p>Cadastre clientes/fornecedores e registre pedidos (operações comerciais) que depois viram documentos fiscais.</p>
+            </div>
+            <span class="view-status" id="commerce-view-status">operations.create/read</span>
+          </div>
+
+          <section class="work-grid">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Clientes</h2>
+                <span id="parties-count">0 registrados</span>
+              </div>
+              <div class="catalog-list" id="parties-list"></div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Novo cliente</h2>
+              </div>
+              <form class="stacked-form" id="party-form">
+                <div class="field-block">
+                  <label for="party-name">Nome / razão social</label>
+                  <input id="party-name" class="glass-field" placeholder="Acme Comércio Ltda" />
+                </div>
+                <div class="field-block">
+                  <label for="party-type">Tipo</label>
+                  <select id="party-type" class="glass-select">
+                    <option value="customer">Cliente</option>
+                    <option value="supplier">Fornecedor</option>
+                    <option value="marketplace">Marketplace</option>
+                    <option value="intermediary">Intermediador</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="party-country">País</label>
+                  <input id="party-country" class="glass-field" placeholder="BR" maxlength="2" />
+                </div>
+                <div class="field-block">
+                  <label for="party-tax-id">Tax id (CNPJ/CPF/VAT)</label>
+                  <input id="party-tax-id" class="glass-field" placeholder="00.000.000/0000-00" />
+                </div>
+                <div class="field-block">
+                  <label for="party-email">E-mail</label>
+                  <input id="party-email" class="glass-field" type="email" placeholder="contato@cliente.com" />
+                </div>
+                <button class="glass-button primary" id="party-save-button" type="submit">Salvar cliente</button>
+                <div class="financial-message" id="party-message">Clientes ficam isolados por tenant.</div>
+              </form>
+            </aside>
+          </section>
+
+          <section class="work-grid">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Pedidos</h2>
+                <span id="operations-count">0 registrados</span>
+              </div>
+              <div class="catalog-list" id="operations-list"></div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Novo pedido</h2>
+              </div>
+              <form class="stacked-form" id="operation-form">
+                <div class="field-block">
+                  <label for="operation-organization">Organização emissora</label>
+                  <select id="operation-organization" class="glass-select"></select>
+                </div>
+                <div class="field-block">
+                  <label for="operation-party">Cliente</label>
+                  <select id="operation-party" class="glass-select"></select>
+                </div>
+                <div class="field-block">
+                  <label for="operation-type">Tipo de operação</label>
+                  <select id="operation-type" class="glass-select">
+                    <option value="sale">Venda</option>
+                    <option value="purchase">Compra</option>
+                    <option value="transfer">Transferência</option>
+                    <option value="return">Devolução</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="operation-currency">Moeda</label>
+                  <input id="operation-currency" class="glass-field" value="BRL" maxlength="3" />
+                </div>
+                <div class="field-block">
+                  <label for="operation-item-description">Descrição do item</label>
+                  <input id="operation-item-description" class="glass-field" placeholder="Ex: 10 camisetas modelo X" />
+                </div>
+                <div class="field-block">
+                  <label for="operation-item-quantity">Quantidade</label>
+                  <input id="operation-item-quantity" class="glass-field" type="number" min="0" step="0.01" value="1" />
+                </div>
+                <div class="field-block">
+                  <label for="operation-item-unit-amount">Valor unitário</label>
+                  <input id="operation-item-unit-amount" class="glass-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <button class="glass-button primary" id="operation-save-button" type="submit">Registrar pedido</button>
+                <div class="financial-message" id="operation-message">Pedido nasce em draft; confirme ou cancele depois.</div>
               </form>
             </aside>
           </section>
