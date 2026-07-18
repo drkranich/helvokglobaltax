@@ -61,6 +61,7 @@ export function createApp(): Hono<AppEnv> {
         commerce_parties: "authenticated-crud-preview",
         commerce_operations: "authenticated-crud-preview",
         rules_workflow: "authenticated-review-workflow-preview",
+        compliance_obligations: "authenticated-crud-preview",
         audit: "planned",
       },
     }),

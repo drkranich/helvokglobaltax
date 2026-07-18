@@ -1072,6 +1072,127 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/compliance/obligations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const obligations = await client.rpc("helvok_current_list_obligations", { p_tenant_id: tenantId });
+      return jsonResponse(c, { obligations });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/compliance/obligations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    if (typeof payload.title !== "string" || payload.title.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_title", message: "title is required." } }, 400);
+    }
+    if (typeof payload.market_code !== "string" || payload.market_code.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_market_code", message: "market_code is required." } }, 400);
+    }
+    if (typeof payload.due_date !== "string" || payload.due_date.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_due_date", message: "due_date is required." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upsert_obligation", { p_tenant_id: tenantId, p_payload: payload });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/compliance/obligations/:obligationId/complete", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const obligationId = c.req.param("obligationId");
+    if (!isUuid(tenantId) || !isUuid(obligationId)) {
+      return jsonResponse(c, { error: { code: "invalid_obligation_complete_target", message: "tenantId and obligationId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_complete_obligation", { p_tenant_id: tenantId, p_obligation_id: obligationId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/compliance/obligations/:obligationId/cancel", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const obligationId = c.req.param("obligationId");
+    if (!isUuid(tenantId) || !isUuid(obligationId)) {
+      return jsonResponse(c, { error: { code: "invalid_obligation_cancel_target", message: "tenantId and obligationId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_cancel_obligation", { p_tenant_id: tenantId, p_obligation_id: obligationId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/compliance/obligations/:obligationId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const obligationId = c.req.param("obligationId");
+    if (!isUuid(tenantId) || !isUuid(obligationId)) {
+      return jsonResponse(c, { error: { code: "invalid_obligation_delete_target", message: "tenantId and obligationId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_obligation", { p_tenant_id: tenantId, p_obligation_id: obligationId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

@@ -2503,6 +2503,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#clientes"><span>Clientes e pedidos</span><span class="nav-code">CRM</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
           <a class="nav-button" href="#regras"><span>Regras</span><span class="nav-code">RGR</span></a>
+          <a class="nav-button" href="#obrigacoes"><span>Obrigações</span><span class="nav-code">OBG</span></a>
           <a class="nav-button" href="#financeiro"><span>Planejamento financeiro</span><span class="nav-code">FIN</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
@@ -3482,6 +3483,73 @@ export function renderDashboard(): string {
           </section>
         </section>
 
+        <section class="app-view" id="obrigacoes" data-view="obrigacoes" aria-label="Obrigações acessórias">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Calendário fiscal</span>
+              <h1>Obrigações acessórias</h1>
+              <p>Acompanhe prazos de entrega, pagamentos e renovações de cadastro por país e organização.</p>
+            </div>
+            <span class="view-status" id="obligations-view-status">calendário ativo</span>
+          </div>
+
+          <section class="work-grid" aria-label="Obrigações acessórias e novo prazo">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Prazos cadastrados</h2>
+                <span id="obligations-count">0 registrados</span>
+              </div>
+              <div class="catalog-list" id="obligations-list"></div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Novo prazo</h2>
+                <span>organizations.manage</span>
+              </div>
+              <form class="stacked-form" id="obligation-form">
+                <div class="field-block">
+                  <label for="obligation-organization">Organização (opcional)</label>
+                  <select id="obligation-organization" class="glass-select"></select>
+                </div>
+                <div class="field-block">
+                  <label for="obligation-market-code">País / mercado (código)</label>
+                  <input id="obligation-market-code" class="glass-field" type="text" placeholder="BR, PT, DE..." maxlength="8" />
+                </div>
+                <div class="field-block">
+                  <label for="obligation-title">Título</label>
+                  <input id="obligation-title" class="glass-field" type="text" placeholder="Ex: DAS mensal Simples Nacional" />
+                </div>
+                <div class="field-block">
+                  <label for="obligation-type">Tipo</label>
+                  <select id="obligation-type" class="glass-select">
+                    <option value="tax_return">Declaração fiscal</option>
+                    <option value="payment">Pagamento</option>
+                    <option value="registration_renewal">Renovação de cadastro</option>
+                    <option value="reporting">Relatório/obrigação acessória</option>
+                    <option value="other">Outro</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="obligation-frequency">Frequência</label>
+                  <select id="obligation-frequency" class="glass-select">
+                    <option value="monthly">Mensal</option>
+                    <option value="quarterly">Trimestral</option>
+                    <option value="annual">Anual</option>
+                    <option value="one_time">Única</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="obligation-due-date">Vencimento</label>
+                  <input id="obligation-due-date" class="glass-field" type="date" />
+                </div>
+                <button class="glass-button primary" id="obligation-save-button" type="submit">Criar prazo</button>
+                <div class="financial-message" id="obligation-message">Prazos ficam isolados por tenant.</div>
+              </form>
+            </aside>
+          </section>
+        </section>
+
         <section class="app-view" id="financeiro" data-view="financeiro" aria-label="Planejamento financeiro">
           <div class="view-head">
             <div>
@@ -3835,6 +3903,11 @@ export function renderDashboard(): string {
 
       const rulesState = {
         versions: [],
+        loadedTenantId: ""
+      };
+
+      const obligationsState = {
+        items: [],
         loadedTenantId: ""
       };
 
@@ -4345,17 +4418,26 @@ export function renderDashboard(): string {
         const normalized = Array.isArray(organizations) ? organizations : [];
         commerceState.organizations = normalized;
         const select = qs("#operation-organization");
-        if (!select) {
-          return;
+        if (select) {
+          select.innerHTML = normalized.length === 0
+            ? '<option value="">nenhuma organização encontrada</option>'
+            : normalized.map((org) => (
+                '<option value="' + escapeHtml(org.id) + '">' +
+                  escapeHtml(org.legal_name || org.trade_name || "organização") +
+                '</option>'
+              )).join("");
+          refreshCustomSelect(select);
         }
-        select.innerHTML = normalized.length === 0
-          ? '<option value="">nenhuma organização encontrada</option>'
-          : normalized.map((org) => (
-              '<option value="' + escapeHtml(org.id) + '">' +
-                escapeHtml(org.legal_name || org.trade_name || "organização") +
-              '</option>'
-            )).join("");
-        refreshCustomSelect(select);
+
+        const obligationSelect = qs("#obligation-organization");
+        if (obligationSelect) {
+          obligationSelect.innerHTML = '<option value="">sem organização vinculada</option>' + normalized.map((org) => (
+            '<option value="' + escapeHtml(org.id) + '">' +
+              escapeHtml(org.legal_name || org.trade_name || "organização") +
+            '</option>'
+          )).join("");
+          refreshCustomSelect(obligationSelect);
+        }
       }
 
       function renderParties(parties) {
@@ -4862,6 +4944,164 @@ export function renderDashboard(): string {
           addFeed(body.event_type || "rule_version.updated", "Regra atualizada");
         } catch (error) {
           setText("#rule-version-message", error instanceof Error ? error.message : "Falha ao atualizar regra.");
+        }
+      }
+
+      function renderObligations(obligations) {
+        const normalized = Array.isArray(obligations) ? obligations : [];
+        obligationsState.items = normalized;
+        setText("#obligations-count", normalized.length + " registrados");
+
+        const list = qs("#obligations-list");
+        if (!list) {
+          return;
+        }
+        if (normalized.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhum prazo cadastrado</strong><span>Crie o primeiro prazo ao lado.</span></div>';
+          return;
+        }
+        list.innerHTML = normalized.map((obligation, index) => {
+          const status = obligation.effective_status || obligation.status || "pending";
+          const org = commerceState.organizations.find((candidate) => candidate.id === obligation.organization_id);
+          const actions = [];
+          if (status === "pending" || status === "overdue") {
+            actions.push('<button class="mini-button" type="button" data-obligation-action="complete">Concluir</button>');
+            actions.push('<button class="mini-button warn" type="button" data-obligation-action="cancel">Cancelar</button>');
+          }
+          actions.push('<button class="mini-button danger" type="button" data-obligation-action="delete">Excluir</button>');
+          return (
+            '<div class="tax-doc-card" data-obligation-index="' + index + '">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(obligation.market_code || "GLOBAL") + ' — ' + escapeHtml(obligation.title || "sem título") + '</strong>' +
+              '<span>' + escapeHtml(obligation.due_date || "sem data") + (org ? ' · ' + escapeHtml(org.legal_name || org.trade_name || "organização") : '') + '</span></div>' +
+              '<div class="financial-record-actions">' + actions.join("") + '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadObligations(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          obligationsState.loadedTenantId = "";
+          renderObligations([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/compliance/obligations", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar obrigações.");
+        }
+        obligationsState.loadedTenantId = tenantId;
+        renderObligations(body.obligations || []);
+        addFeed("obligation.loaded", "Obrigações sincronizadas");
+        return body.obligations || [];
+      }
+
+      async function submitObligationForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#obligation-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para criar prazos.";
+          }
+          return;
+        }
+
+        const title = textValue("#obligation-title");
+        const marketCode = textValue("#obligation-market-code");
+        const dueDate = textValue("#obligation-due-date");
+        if (!title || !marketCode || !dueDate) {
+          if (messageNode) {
+            messageNode.textContent = "Informe o mercado, o título e o vencimento do prazo.";
+          }
+          return;
+        }
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Salvando prazo...";
+          }
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/compliance/obligations", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+            body: JSON.stringify({
+              title: title,
+              market_code: marketCode,
+              due_date: dueDate,
+              obligation_type: textValue("#obligation-type") || "tax_return",
+              frequency: textValue("#obligation-frequency") || "monthly",
+              organization_id: textValue("#obligation-organization") || undefined
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao salvar prazo.");
+          }
+          renderObligations(body.obligations || []);
+          if (messageNode) {
+            messageNode.textContent = "Prazo salvo (" + marketCode + " — " + title + ").";
+          }
+          const form = qs("#obligation-form");
+          if (form) {
+            form.reset();
+            refreshCustomDatePicker(qs("#obligation-due-date"));
+          }
+          addFeed(body.event_type || "obligation.created", "Prazo de obrigação criado");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao salvar prazo.";
+          }
+        }
+      }
+
+      async function handleObligationsListClick(event) {
+        const card = event.target && event.target.closest ? event.target.closest("[data-obligation-index]") : null;
+        if (!card) {
+          return;
+        }
+        const actionButton = event.target.closest("[data-obligation-action]");
+        if (!actionButton) {
+          return;
+        }
+        const index = parseInt(card.getAttribute("data-obligation-index"), 10);
+        const obligation = obligationsState.items[index];
+        if (!obligation) {
+          return;
+        }
+        const action = actionButton.getAttribute("data-obligation-action");
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          return;
+        }
+
+        try {
+          const base = "/v1/tenants/" + encodeURIComponent(tenantId) + "/compliance/obligations/" + encodeURIComponent(obligation.id);
+          let response;
+          if (action === "delete") {
+            response = await fetch(base, { method: "DELETE", headers: { authorization: "Bearer " + accessToken } });
+          } else if (action === "complete") {
+            response = await fetch(base + "/complete", { method: "POST", headers: { authorization: "Bearer " + accessToken } });
+          } else if (action === "cancel") {
+            response = await fetch(base + "/cancel", { method: "POST", headers: { authorization: "Bearer " + accessToken } });
+          } else {
+            return;
+          }
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao atualizar prazo.");
+          }
+          renderObligations(body.obligations || []);
+          addFeed(body.event_type || "obligation.updated", "Prazo atualizado");
+        } catch (error) {
+          setText("#obligation-message", error instanceof Error ? error.message : "Falha ao atualizar prazo.");
         }
       }
 
@@ -6891,6 +7131,9 @@ export function renderDashboard(): string {
             loadRuleVersions(primaryTenant.id).catch((error) => {
               addFeed("rules.error", error instanceof Error ? error.message : "Falha ao carregar regras");
             });
+            loadObligations(primaryTenant.id).catch((error) => {
+              addFeed("obligations.error", error instanceof Error ? error.message : "Falha ao carregar obrigações");
+            });
           }
         }
       }
@@ -8096,7 +8339,8 @@ export function renderDashboard(): string {
               loadFinancialRecords(tenantId),
               loadCommerceOrganizations(tenantId),
               loadParties(tenantId).then(() => loadOperations(tenantId)),
-              loadRuleVersions(tenantId)
+              loadRuleVersions(tenantId),
+              loadObligations(tenantId)
             ]);
           }
 
@@ -8479,6 +8723,16 @@ export function renderDashboard(): string {
       const rulesList = qs("#rules-list");
       if (rulesList) {
         rulesList.addEventListener("click", handleRulesListClick);
+      }
+
+      const obligationForm = qs("#obligation-form");
+      if (obligationForm) {
+        obligationForm.addEventListener("submit", submitObligationForm);
+      }
+
+      const obligationsList = qs("#obligations-list");
+      if (obligationsList) {
+        obligationsList.addEventListener("click", handleObligationsListClick);
       }
 
       const fiscalRegistrationForm = qs("#fiscal-registration-form");
