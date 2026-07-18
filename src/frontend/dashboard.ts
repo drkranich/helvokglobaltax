@@ -1190,6 +1190,7 @@ export function renderDashboard(): string {
 
       .members-panel {
         display: grid;
+        align-content: start;
         gap: 14px;
       }
 
