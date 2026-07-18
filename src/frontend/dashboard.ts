@@ -409,6 +409,16 @@ export function renderDashboard(): string {
         color: rgba(244, 230, 200, 0.48);
       }
 
+      textarea.rule-payload-field {
+        width: 100%;
+        min-height: 110px;
+        padding: 10px 12px;
+        resize: vertical;
+        font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+
       .glass-select {
         padding: 0 36px 0 12px;
         color: var(--champagne);
@@ -1698,6 +1708,19 @@ export function renderDashboard(): string {
         gap: 14px;
       }
 
+      .tax-result-panel.result-panel-highlight {
+        animation: result-panel-flash 1.4s ease-out;
+      }
+
+      @keyframes result-panel-flash {
+        0% {
+          box-shadow: 0 0 0 2px rgba(244, 200, 120, 0.85), var(--shadow);
+        }
+        100% {
+          box-shadow: var(--shadow);
+        }
+      }
+
       .tax-simulator-grid {
         display: grid;
         gap: 12px;
@@ -2479,6 +2502,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#produtos"><span>Produtos</span><span class="nav-code">CAT</span></a>
           <a class="nav-button" href="#clientes"><span>Clientes e pedidos</span><span class="nav-code">CRM</span></a>
           <a class="nav-button" href="#motor"><span>Motor tributário</span><span class="nav-code">RUL</span></a>
+          <a class="nav-button" href="#regras"><span>Regras</span><span class="nav-code">RGR</span></a>
           <a class="nav-button" href="#financeiro"><span>Planejamento financeiro</span><span class="nav-code">FIN</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
@@ -3410,6 +3434,54 @@ export function renderDashboard(): string {
         </section>
         </section>
 
+        <section class="app-view" id="regras" data-view="regras" aria-label="Regras fiscais">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Governança tributária</span>
+              <h1>Regras: versionar e publicar</h1>
+              <p>Proponha versões de regras fiscais por mercado, envie para revisão e publique com trilha de auditoria completa.</p>
+            </div>
+            <span class="view-status" id="rules-view-status">workflow ativo</span>
+          </div>
+
+          <section class="work-grid" aria-label="Regras fiscais e workflow de revisão">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Versões de regras</h2>
+                <span id="rules-count">0 registradas</span>
+              </div>
+              <div class="catalog-list" id="rules-list"></div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Nova versão (rascunho)</h2>
+                <span>rules.create</span>
+              </div>
+              <form class="stacked-form" id="rule-version-form">
+                <div class="field-block">
+                  <label for="rule-market-code">País / mercado (código)</label>
+                  <input id="rule-market-code" class="glass-field" type="text" placeholder="BR, PT, DE..." maxlength="8" />
+                </div>
+                <div class="field-block">
+                  <label for="rule-title">Título</label>
+                  <input id="rule-title" class="glass-field" type="text" placeholder="Ex: Ajuste de alíquota ICMS-ST" />
+                </div>
+                <div class="field-block">
+                  <label for="rule-description">Descrição</label>
+                  <input id="rule-description" class="glass-field" type="text" placeholder="Contexto da mudança (opcional)" />
+                </div>
+                <div class="field-block">
+                  <label for="rule-payload">Payload da regra (JSON)</label>
+                  <textarea id="rule-payload" class="glass-field rule-payload-field" rows="5" placeholder='{"standard_rate": 0.18}'></textarea>
+                </div>
+                <button class="glass-button primary" id="rule-version-save-button" type="submit">Criar rascunho</button>
+                <div class="financial-message" id="rule-version-message">Regras ficam isoladas por tenant.</div>
+              </form>
+            </aside>
+          </section>
+        </section>
+
         <section class="app-view" id="financeiro" data-view="financeiro" aria-label="Planejamento financeiro">
           <div class="view-head">
             <div>
@@ -3758,6 +3830,11 @@ export function renderDashboard(): string {
         parties: [],
         operations: [],
         organizations: [],
+        loadedTenantId: ""
+      };
+
+      const rulesState = {
+        versions: [],
         loadedTenantId: ""
       };
 
@@ -4605,6 +4682,186 @@ export function renderDashboard(): string {
           addFeed(body.event_type || "commercial_operation.updated", "Pedido atualizado");
         } catch (error) {
           setText("#operation-message", error instanceof Error ? error.message : "Falha ao atualizar pedido.");
+        }
+      }
+
+      function renderRuleVersions(ruleVersions) {
+        const normalized = Array.isArray(ruleVersions) ? ruleVersions : [];
+        rulesState.versions = normalized;
+        setText("#rules-count", normalized.length + " registradas");
+
+        const list = qs("#rules-list");
+        if (!list) {
+          return;
+        }
+        if (normalized.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhuma versão de regra</strong><span>Crie o primeiro rascunho ao lado.</span></div>';
+          return;
+        }
+        list.innerHTML = normalized.map((rule, index) => {
+          const status = rule.status || "draft";
+          const actions = [];
+          if (status === "draft" || status === "rejected") {
+            actions.push('<button class="mini-button" type="button" data-rule-action="submit">Enviar p/ revisão</button>');
+          }
+          if (status === "in_review") {
+            actions.push('<button class="mini-button" type="button" data-rule-action="approve">Aprovar</button>');
+            actions.push('<button class="mini-button warn" type="button" data-rule-action="reject">Rejeitar</button>');
+          }
+          if (status === "approved") {
+            actions.push('<button class="mini-button" type="button" data-rule-action="publish">Publicar</button>');
+          }
+          if (status !== "published") {
+            actions.push('<button class="mini-button danger" type="button" data-rule-action="delete">Excluir</button>');
+          }
+          return (
+            '<div class="tax-doc-card" data-rule-index="' + index + '">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(rule.market_code || "GLOBAL") + ' v' + escapeHtml(String(rule.version || 1)) + ' — ' + escapeHtml(rule.title || "sem título") + '</strong>' +
+              '<span>' + escapeHtml(rule.description || "sem descrição") + (rule.review_notes ? ' · ' + escapeHtml(rule.review_notes) : '') + '</span></div>' +
+              '<div class="financial-record-actions">' + actions.join("") + '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadRuleVersions(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          rulesState.loadedTenantId = "";
+          renderRuleVersions([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/rules/versions", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar regras.");
+        }
+        rulesState.loadedTenantId = tenantId;
+        renderRuleVersions(body.rule_versions || []);
+        addFeed("rule_version.loaded", "Regras sincronizadas");
+        return body.rule_versions || [];
+      }
+
+      async function submitRuleVersionForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#rule-version-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para propor regras.";
+          }
+          return;
+        }
+
+        const title = textValue("#rule-title");
+        const marketCode = textValue("#rule-market-code");
+        if (!title || !marketCode) {
+          if (messageNode) {
+            messageNode.textContent = "Informe o mercado e o título da regra.";
+          }
+          return;
+        }
+
+        const payloadText = textValue("#rule-payload");
+        let payload = {};
+        if (payloadText) {
+          try {
+            payload = JSON.parse(payloadText);
+          } catch (parseError) {
+            if (messageNode) {
+              messageNode.textContent = "Payload inválido: use um JSON válido (ex: {\"standard_rate\": 0.18}).";
+            }
+            return;
+          }
+        }
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Salvando rascunho...";
+          }
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/rules/versions", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+            body: JSON.stringify({
+              title: title,
+              market_code: marketCode,
+              description: textValue("#rule-description"),
+              payload: payload
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao salvar rascunho de regra.");
+          }
+          renderRuleVersions(body.rule_versions || []);
+          if (messageNode) {
+            messageNode.textContent = "Rascunho salvo (" + marketCode + " — " + title + ").";
+          }
+          const form = qs("#rule-version-form");
+          if (form) {
+            form.reset();
+          }
+          addFeed(body.event_type || "rule_version.created", "Rascunho de regra criado");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao salvar rascunho de regra.";
+          }
+        }
+      }
+
+      async function handleRulesListClick(event) {
+        const card = event.target && event.target.closest ? event.target.closest("[data-rule-index]") : null;
+        if (!card) {
+          return;
+        }
+        const actionButton = event.target.closest("[data-rule-action]");
+        if (!actionButton) {
+          return;
+        }
+        const index = parseInt(card.getAttribute("data-rule-index"), 10);
+        const rule = rulesState.versions[index];
+        if (!rule) {
+          return;
+        }
+        const action = actionButton.getAttribute("data-rule-action");
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          return;
+        }
+
+        try {
+          const base = "/v1/tenants/" + encodeURIComponent(tenantId) + "/rules/versions/" + encodeURIComponent(rule.id);
+          let response;
+          if (action === "delete") {
+            response = await fetch(base, { method: "DELETE", headers: { authorization: "Bearer " + accessToken } });
+          } else if (action === "submit") {
+            response = await fetch(base + "/submit", { method: "POST", headers: { authorization: "Bearer " + accessToken } });
+          } else if (action === "publish") {
+            response = await fetch(base + "/publish", { method: "POST", headers: { authorization: "Bearer " + accessToken } });
+          } else if (action === "approve" || action === "reject") {
+            response = await fetch(base + "/review", {
+              method: "POST",
+              headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+              body: JSON.stringify({ decision: action === "approve" ? "approved" : "rejected" })
+            });
+          } else {
+            return;
+          }
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao atualizar regra.");
+          }
+          renderRuleVersions(body.rule_versions || []);
+          addFeed(body.event_type || "rule_version.updated", "Regra atualizada");
+        } catch (error) {
+          setText("#rule-version-message", error instanceof Error ? error.message : "Falha ao atualizar regra.");
         }
       }
 
@@ -6631,6 +6888,9 @@ export function renderDashboard(): string {
             loadParties(primaryTenant.id).then(() => loadOperations(primaryTenant.id)).catch((error) => {
               addFeed("commerce.error", error instanceof Error ? error.message : "Falha ao carregar clientes/pedidos");
             });
+            loadRuleVersions(primaryTenant.id).catch((error) => {
+              addFeed("rules.error", error instanceof Error ? error.message : "Falha ao carregar regras");
+            });
           }
         }
       }
@@ -7284,6 +7544,7 @@ export function renderDashboard(): string {
           }
           renderFinancialPlan(body.plan);
           addFeed(body.event_type || "financial.plan.calculated", "Plano financeiro recalculado");
+          scrollResultIntoViewIfStacked(button);
         } catch (error) {
           setText("#financial-result-status", "erro");
           const warnings = qs("#financial-warnings");
@@ -7341,6 +7602,31 @@ export function renderDashboard(): string {
         }
       }
 
+      function scrollResultIntoViewIfStacked(triggerElement) {
+        if (!triggerElement || typeof triggerElement.closest !== "function") {
+          return;
+        }
+        const view = triggerElement.closest(".app-view");
+        if (!view) {
+          return;
+        }
+        const resultPanel = view.querySelector(".tax-result-panel");
+        if (!resultPanel) {
+          return;
+        }
+        const isStacked = typeof window.matchMedia === "function"
+          ? window.matchMedia("(max-width: 1180px)").matches
+          : window.innerWidth <= 1180;
+        if (!isStacked) {
+          return;
+        }
+        resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        resultPanel.classList.add("result-panel-highlight");
+        setTimeout(function () {
+          resultPanel.classList.remove("result-panel-highlight");
+        }, 1400);
+      }
+
       async function runTaxSimulation(event) {
         if (event) {
           event.preventDefault();
@@ -7372,6 +7658,7 @@ export function renderDashboard(): string {
           runTaxComparison(false);
           setText("#tax-result-status", "calculado " + formatCurrency(body.simulation.totals.customer_total || 0, body.simulation.input_snapshot && body.simulation.input_snapshot.currency ? body.simulation.input_snapshot.currency : taxState.currency));
           addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
+          scrollResultIntoViewIfStacked(button);
           return body.simulation;
         } catch (error) {
           setText("#tax-result-status", "erro");
@@ -7808,7 +8095,8 @@ export function renderDashboard(): string {
               loadFiscalRegistrations(tenantId).then(() => loadFiscalCertificates(tenantId)),
               loadFinancialRecords(tenantId),
               loadCommerceOrganizations(tenantId),
-              loadParties(tenantId).then(() => loadOperations(tenantId))
+              loadParties(tenantId).then(() => loadOperations(tenantId)),
+              loadRuleVersions(tenantId)
             ]);
           }
 
@@ -8181,6 +8469,16 @@ export function renderDashboard(): string {
       const operationsList = qs("#operations-list");
       if (operationsList) {
         operationsList.addEventListener("click", handleOperationsListClick);
+      }
+
+      const ruleVersionForm = qs("#rule-version-form");
+      if (ruleVersionForm) {
+        ruleVersionForm.addEventListener("submit", submitRuleVersionForm);
+      }
+
+      const rulesList = qs("#rules-list");
+      if (rulesList) {
+        rulesList.addEventListener("click", handleRulesListClick);
       }
 
       const fiscalRegistrationForm = qs("#fiscal-registration-form");

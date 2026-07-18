@@ -60,6 +60,7 @@ export function createApp(): Hono<AppEnv> {
         fiscal_certificates: "encrypted-storage-preview",
         commerce_parties: "authenticated-crud-preview",
         commerce_operations: "authenticated-crud-preview",
+        rules_workflow: "authenticated-review-workflow-preview",
         audit: "planned",
       },
     }),

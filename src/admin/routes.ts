@@ -403,6 +403,31 @@ export function createAdminRouter(): Hono<AppEnv> {
     }
   });
 
+  admin.get("/tenants/:tenantId/rules/versions", async (c) => {
+    const tenantId = c.req.param("tenantId");
+
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const ruleVersions = await client.rpc("helvok_admin_list_rule_versions", { p_tenant_id: tenantId });
+      return jsonResponse(c, { rule_versions: ruleVersions });
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
   admin.post("/fiscal/documents", async (c) => {
     const validation = validateFiscalDocumentPayload(await readJsonBody(c));
 

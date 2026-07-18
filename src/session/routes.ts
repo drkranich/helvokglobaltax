@@ -921,6 +921,157 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/rules/versions", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const ruleVersions = await client.rpc("helvok_current_list_rule_versions", { p_tenant_id: tenantId });
+      return jsonResponse(c, { rule_versions: ruleVersions });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/rules/versions", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    if (typeof payload.title !== "string" || payload.title.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_title", message: "title is required." } }, 400);
+    }
+    if (typeof payload.market_code !== "string" || payload.market_code.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_market_code", message: "market_code is required." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_create_rule_version", { p_tenant_id: tenantId, p_payload: payload });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/rules/versions/:ruleId/submit", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const ruleId = c.req.param("ruleId");
+    if (!isUuid(tenantId) || !isUuid(ruleId)) {
+      return jsonResponse(c, { error: { code: "invalid_rule_submit_target", message: "tenantId and ruleId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_submit_rule_version", { p_tenant_id: tenantId, p_rule_id: ruleId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/rules/versions/:ruleId/review", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const ruleId = c.req.param("ruleId");
+    if (!isUuid(tenantId) || !isUuid(ruleId)) {
+      return jsonResponse(c, { error: { code: "invalid_rule_review_target", message: "tenantId and ruleId must be valid UUIDs." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+    if (typeof payload.decision !== "string" || (payload.decision !== "approved" && payload.decision !== "rejected")) {
+      return jsonResponse(c, { error: { code: "invalid_decision", message: "decision must be 'approved' or 'rejected'." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_review_rule_version", {
+        p_tenant_id: tenantId,
+        p_rule_id: ruleId,
+        p_decision: payload.decision,
+        p_notes: typeof payload.notes === "string" ? payload.notes : null,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/rules/versions/:ruleId/publish", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const ruleId = c.req.param("ruleId");
+    if (!isUuid(tenantId) || !isUuid(ruleId)) {
+      return jsonResponse(c, { error: { code: "invalid_rule_publish_target", message: "tenantId and ruleId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_publish_rule_version", { p_tenant_id: tenantId, p_rule_id: ruleId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/rules/versions/:ruleId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const ruleId = c.req.param("ruleId");
+    if (!isUuid(tenantId) || !isUuid(ruleId)) {
+      return jsonResponse(c, { error: { code: "invalid_rule_delete_target", message: "tenantId and ruleId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_rule_version", { p_tenant_id: tenantId, p_rule_id: ruleId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {
