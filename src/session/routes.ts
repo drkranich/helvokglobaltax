@@ -1193,6 +1193,51 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/settings", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_get_tenant_settings", { p_tenant_id: tenantId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/settings", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_update_tenant_settings", { p_tenant_id: tenantId, p_payload: payload });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/audit/events", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {
