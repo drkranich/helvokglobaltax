@@ -3752,6 +3752,13 @@ export function renderDashboard(): string {
         loadedTenantId: ""
       };
 
+      const commerceState = {
+        parties: [],
+        operations: [],
+        organizations: [],
+        loadedTenantId: ""
+      };
+
       let feedCounter = 0;
 
       function qs(selector) {
@@ -4253,6 +4260,350 @@ export function renderDashboard(): string {
 
         renderFiscalRegistrationOrganizations(body.organizations || []);
         return body.organizations || [];
+      }
+
+      function renderCommerceOrganizations(organizations) {
+        const normalized = Array.isArray(organizations) ? organizations : [];
+        commerceState.organizations = normalized;
+        const select = qs("#operation-organization");
+        if (!select) {
+          return;
+        }
+        select.innerHTML = normalized.length === 0
+          ? '<option value="">nenhuma organização encontrada</option>'
+          : normalized.map((org) => (
+              '<option value="' + escapeHtml(org.id) + '">' +
+                escapeHtml(org.legal_name || org.trade_name || "organização") +
+              '</option>'
+            )).join("");
+        refreshCustomSelect(select);
+      }
+
+      function renderParties(parties) {
+        const normalized = Array.isArray(parties) ? parties : [];
+        commerceState.parties = normalized;
+        setText("#parties-count", normalized.length + " registrados");
+
+        const select = qs("#operation-party");
+        if (select) {
+          const active = normalized.filter((party) => party.status !== "archived");
+          select.innerHTML = active.length === 0
+            ? '<option value="">sem cliente vinculado</option>'
+            : '<option value="">sem cliente vinculado</option>' + active.map((party) => (
+                '<option value="' + escapeHtml(party.id) + '">' + escapeHtml(party.name) + '</option>'
+              )).join("");
+          refreshCustomSelect(select);
+        }
+
+        const list = qs("#parties-list");
+        if (!list) {
+          return;
+        }
+        if (normalized.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhum cliente cadastrado</strong><span>Cadastre o primeiro cliente ao lado.</span></div>';
+          return;
+        }
+        list.innerHTML = normalized.map((party, index) => {
+          const status = party.status || "active";
+          return (
+            '<div class="tax-doc-card" data-party-index="' + index + '">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(party.name) + '</strong>' +
+              '<span>' + escapeHtml(party.party_type || "customer") + (party.country_code ? ' / ' + escapeHtml(party.country_code) : '') + (party.tax_id ? ' / ' + escapeHtml(party.tax_id) : '') + '</span></div>' +
+              '<div class="financial-record-actions">' +
+                (status === "active" ? '<button class="mini-button warn" type="button" data-party-action="archive">Arquivar</button>' : '') +
+                '<button class="mini-button danger" type="button" data-party-action="delete">Excluir</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      function renderOperations(operations) {
+        const normalized = Array.isArray(operations) ? operations : [];
+        commerceState.operations = normalized;
+        setText("#operations-count", normalized.length + " registrados");
+
+        const list = qs("#operations-list");
+        if (!list) {
+          return;
+        }
+        if (normalized.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhum pedido registrado</strong><span>Registre o primeiro pedido ao lado.</span></div>';
+          return;
+        }
+        list.innerHTML = normalized.map((operation, index) => {
+          const status = operation.status || "draft";
+          const party = commerceState.parties.find((candidate) => candidate.id === operation.party_id);
+          const amount = formatCurrency(operation.total_amount || 0, operation.currency_code || "BRL");
+          return (
+            '<div class="tax-doc-card" data-operation-index="' + index + '">' +
+              '<span class="tax-status-pill">' + escapeHtml(status) + '</span>' +
+              '<div><strong>' + escapeHtml(operation.operation_type || "sale") + ' / ' + escapeHtml(amount) + '</strong>' +
+              '<span>' + escapeHtml(party ? party.name : "sem cliente") + '</span></div>' +
+              '<div class="financial-record-actions">' +
+                (status === "draft" ? '<button class="mini-button" type="button" data-operation-action="confirm">Confirmar</button>' : '') +
+                (status !== "cancelled" ? '<button class="mini-button warn" type="button" data-operation-action="cancel">Cancelar</button>' : '') +
+                (status !== "confirmed" ? '<button class="mini-button danger" type="button" data-operation-action="delete">Excluir</button>' : '') +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadCommerceOrganizations(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          renderCommerceOrganizations([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/organizations", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar organizações.");
+        }
+        renderCommerceOrganizations(body.organizations || []);
+        return body.organizations || [];
+      }
+
+      async function loadParties(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          renderParties([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/parties", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar clientes.");
+        }
+        renderParties(body.parties || []);
+        return body.parties || [];
+      }
+
+      async function loadOperations(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          commerceState.loadedTenantId = "";
+          renderOperations([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/operations", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar pedidos.");
+        }
+        commerceState.loadedTenantId = tenantId;
+        renderOperations(body.operations || []);
+        addFeed("commercial_operation.loaded", "Pedidos sincronizados");
+        return body.operations || [];
+      }
+
+      async function submitPartyForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#party-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para cadastrar clientes.";
+          }
+          return;
+        }
+
+        const name = textValue("#party-name");
+        if (!name) {
+          if (messageNode) {
+            messageNode.textContent = "Informe o nome ou razão social do cliente.";
+          }
+          return;
+        }
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Salvando cliente...";
+          }
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/parties", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+            body: JSON.stringify({
+              name: name,
+              party_type: textValue("#party-type") || "customer",
+              country_code: textValue("#party-country"),
+              tax_id: textValue("#party-tax-id"),
+              email: textValue("#party-email")
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao salvar cliente.");
+          }
+          renderParties(body.parties || []);
+          if (messageNode) {
+            messageNode.textContent = "Cliente salvo (" + name + ").";
+          }
+          const form = qs("#party-form");
+          if (form) {
+            form.reset();
+          }
+          addFeed(body.event_type || "party.saved", "Cliente salvo");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao salvar cliente.";
+          }
+        }
+      }
+
+      async function handlePartiesListClick(event) {
+        const card = event.target && event.target.closest ? event.target.closest("[data-party-index]") : null;
+        if (!card) {
+          return;
+        }
+        const actionButton = event.target.closest("[data-party-action]");
+        if (!actionButton) {
+          return;
+        }
+        const index = parseInt(card.getAttribute("data-party-index"), 10);
+        const party = commerceState.parties[index];
+        if (!party) {
+          return;
+        }
+        const action = actionButton.getAttribute("data-party-action");
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          return;
+        }
+
+        try {
+          const url = "/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/parties/" + encodeURIComponent(party.id) + (action === "archive" ? "/archive" : "");
+          const response = await fetch(url, {
+            method: action === "archive" ? "POST" : "DELETE",
+            headers: { authorization: "Bearer " + accessToken }
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao atualizar cliente.");
+          }
+          renderParties(body.parties || []);
+          addFeed(body.event_type || "party.updated", "Cliente atualizado");
+        } catch (error) {
+          setText("#party-message", error instanceof Error ? error.message : "Falha ao atualizar cliente.");
+        }
+      }
+
+      async function submitOperationForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#operation-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para registrar pedidos.";
+          }
+          return;
+        }
+
+        const organizationId = textValue("#operation-organization");
+        if (!organizationId) {
+          if (messageNode) {
+            messageNode.textContent = "Selecione a organização emissora do pedido.";
+          }
+          return;
+        }
+
+        const description = textValue("#operation-item-description") || "Item do pedido";
+        const quantity = numberValue("#operation-item-quantity") || 1;
+        const unitAmount = numberValue("#operation-item-unit-amount") || 0;
+        const partyId = textValue("#operation-party");
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Registrando pedido...";
+          }
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/operations", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+            body: JSON.stringify({
+              organization_id: organizationId,
+              party_id: partyId || undefined,
+              operation_type: textValue("#operation-type") || "sale",
+              currency_code: textValue("#operation-currency") || "BRL",
+              items: [{ description: description, quantity: quantity, unit_amount: unitAmount }]
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao registrar pedido.");
+          }
+          renderOperations(body.operations || []);
+          if (messageNode) {
+            messageNode.textContent = "Pedido registrado em draft.";
+          }
+          addFeed(body.event_type || "commercial_operation.created", "Pedido registrado");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao registrar pedido.";
+          }
+        }
+      }
+
+      async function handleOperationsListClick(event) {
+        const card = event.target && event.target.closest ? event.target.closest("[data-operation-index]") : null;
+        if (!card) {
+          return;
+        }
+        const actionButton = event.target.closest("[data-operation-action]");
+        if (!actionButton) {
+          return;
+        }
+        const index = parseInt(card.getAttribute("data-operation-index"), 10);
+        const operation = commerceState.operations[index];
+        if (!operation) {
+          return;
+        }
+        const action = actionButton.getAttribute("data-operation-action");
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        if (!tenantId || !accessToken) {
+          return;
+        }
+
+        try {
+          let response;
+          if (action === "delete") {
+            response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/operations/" + encodeURIComponent(operation.id), {
+              method: "DELETE",
+              headers: { authorization: "Bearer " + accessToken }
+            });
+          } else {
+            const status = action === "confirm" ? "confirmed" : "cancelled";
+            response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/commerce/operations/" + encodeURIComponent(operation.id) + "/status", {
+              method: "POST",
+              headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+              body: JSON.stringify({ status: status })
+            });
+          }
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao atualizar pedido.");
+          }
+          renderOperations(body.operations || []);
+          addFeed(body.event_type || "commercial_operation.updated", "Pedido atualizado");
+        } catch (error) {
+          setText("#operation-message", error instanceof Error ? error.message : "Falha ao atualizar pedido.");
+        }
       }
 
       async function loadFiscalRegistrations(tenantId) {
@@ -6272,6 +6623,12 @@ export function renderDashboard(): string {
               setFinancialMessage(error instanceof Error ? error.message : "Não foi possível carregar financeiro.", "warn");
               addFeed("financial.records.error", "Falha ao carregar financeiro");
             });
+            loadCommerceOrganizations(primaryTenant.id).catch((error) => {
+              addFeed("commerce.organizations.error", error instanceof Error ? error.message : "Falha ao carregar organizações");
+            });
+            loadParties(primaryTenant.id).then(() => loadOperations(primaryTenant.id)).catch((error) => {
+              addFeed("commerce.error", error instanceof Error ? error.message : "Falha ao carregar clientes/pedidos");
+            });
           }
         }
       }
@@ -7447,7 +7804,9 @@ export function renderDashboard(): string {
               loadFiscalRejections(tenantId),
               loadOrganizationsForFiscalRegistration(tenantId),
               loadFiscalRegistrations(tenantId).then(() => loadFiscalCertificates(tenantId)),
-              loadFinancialRecords(tenantId)
+              loadFinancialRecords(tenantId),
+              loadCommerceOrganizations(tenantId),
+              loadParties(tenantId).then(() => loadOperations(tenantId))
             ]);
           }
 
@@ -7800,6 +8159,26 @@ export function renderDashboard(): string {
       const fiscalRegistrationsList = qs("#fiscal-registrations-list");
       if (fiscalRegistrationsList) {
         fiscalRegistrationsList.addEventListener("click", handleFiscalRegistrationListClick);
+      }
+
+      const partyForm = qs("#party-form");
+      if (partyForm) {
+        partyForm.addEventListener("submit", submitPartyForm);
+      }
+
+      const partiesList = qs("#parties-list");
+      if (partiesList) {
+        partiesList.addEventListener("click", handlePartiesListClick);
+      }
+
+      const operationForm = qs("#operation-form");
+      if (operationForm) {
+        operationForm.addEventListener("submit", submitOperationForm);
+      }
+
+      const operationsList = qs("#operations-list");
+      if (operationsList) {
+        operationsList.addEventListener("click", handleOperationsListClick);
       }
 
       const fiscalRegistrationForm = qs("#fiscal-registration-form");
