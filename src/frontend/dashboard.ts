@@ -5276,8 +5276,9 @@ export function renderDashboard(): string {
           throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar configurações.");
         }
         tenantSettingsState.loadedTenantId = tenantId;
-        renderTenantSettings(body.settings);
-        return body.settings;
+        var settings = body && body.settings ? body.settings : body;
+        renderTenantSettings(settings);
+        return settings;
       }
 
       async function submitTenantSettingsForm(event) {
