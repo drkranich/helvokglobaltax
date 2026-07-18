@@ -3165,20 +3165,30 @@ export function renderDashboard(): string {
           <div class="view-head">
             <div>
               <span class="view-kicker">Eventos e rastreabilidade</span>
-              <h1>Auditoria viva</h1>
-              <p>Acompanhe eventos do Worker, sessões, simulações e alterações de acesso em uma tela própria de operação.</p>
+              <h1>Auditoria</h1>
+              <p>Acompanhe eventos do Worker nesta sessão e o log de auditoria persistente gravado no banco (audit.audit_events) para cada ação sensível.</p>
             </div>
             <span class="view-status" id="audit-view-status">stream local</span>
           </div>
-          <aside class="feed">
-            <div class="feed-head">
-              <div class="panel-title">
-                <h3>Auditoria viva</h3>
-                <span id="feed-sequence">seq 000</span>
+          <section class="work-grid" aria-label="Auditoria viva e logs persistentes">
+            <aside class="feed">
+              <div class="feed-head">
+                <div class="panel-title">
+                  <h3>Auditoria viva (sessão)</h3>
+                  <span id="feed-sequence">seq 000</span>
+                </div>
               </div>
-            </div>
-            <div class="feed-list" id="feed-list" aria-live="polite"></div>
-          </aside>
+              <div class="feed-list" id="feed-list" aria-live="polite"></div>
+            </aside>
+
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Logs de auditoria (banco)</h2>
+                <span id="audit-log-count">0 eventos</span>
+              </div>
+              <div class="catalog-list" id="audit-log-list"></div>
+            </article>
+          </section>
         </section>
 
         <section class="app-view" id="motor" data-view="motor" aria-label="Motor tributário">
@@ -3908,6 +3918,11 @@ export function renderDashboard(): string {
 
       const obligationsState = {
         items: [],
+        loadedTenantId: ""
+      };
+
+      const auditLogState = {
+        events: [],
         loadedTenantId: ""
       };
 
@@ -5103,6 +5118,51 @@ export function renderDashboard(): string {
         } catch (error) {
           setText("#obligation-message", error instanceof Error ? error.message : "Falha ao atualizar prazo.");
         }
+      }
+
+      function renderAuditLog(events) {
+        const normalized = Array.isArray(events) ? events : [];
+        auditLogState.events = normalized;
+        setText("#audit-log-count", normalized.length + " eventos");
+
+        const list = qs("#audit-log-list");
+        if (!list) {
+          return;
+        }
+        if (normalized.length === 0) {
+          list.innerHTML = '<div class="empty-state"><strong>Nenhum evento registrado</strong><span>Ações sensíveis (criar, editar, publicar, excluir) aparecem aqui.</span></div>';
+          return;
+        }
+        list.innerHTML = normalized.map((entry) => {
+          const when = entry.created_at ? new Date(entry.created_at).toLocaleString("pt-BR") : "sem data";
+          return (
+            '<div class="tax-doc-card">' +
+              '<span class="tax-status-pill">' + escapeHtml(entry.actor_type || "system") + '</span>' +
+              '<div><strong>' + escapeHtml(entry.event_type || "evento") + '</strong>' +
+              '<span>' + escapeHtml(entry.resource_type || "recurso") + ' · ' + escapeHtml(when) + '</span></div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      async function loadAuditLog(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          auditLogState.loadedTenantId = "";
+          renderAuditLog([]);
+          return [];
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/audit/events?limit=100", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar o log de auditoria.");
+        }
+        auditLogState.loadedTenantId = tenantId;
+        renderAuditLog(body.events || []);
+        return body.events || [];
       }
 
       async function loadFiscalRegistrations(tenantId) {
@@ -7135,6 +7195,9 @@ export function renderDashboard(): string {
             loadObligations(primaryTenant.id).catch((error) => {
               addFeed("obligations.error", error instanceof Error ? error.message : "Falha ao carregar obrigações");
             });
+            loadAuditLog(primaryTenant.id).catch((error) => {
+              addFeed("audit.error", error instanceof Error ? error.message : "Falha ao carregar log de auditoria");
+            });
           }
         }
       }
@@ -8341,7 +8404,8 @@ export function renderDashboard(): string {
               loadCommerceOrganizations(tenantId),
               loadParties(tenantId).then(() => loadOperations(tenantId)),
               loadRuleVersions(tenantId),
-              loadObligations(tenantId)
+              loadObligations(tenantId),
+              loadAuditLog(tenantId)
             ]);
           }
 

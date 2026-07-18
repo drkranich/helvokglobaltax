@@ -1193,6 +1193,31 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/audit/events", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const limitParam = c.req.query("limit");
+    const parsedLimit = limitParam ? parseInt(limitParam, 10) : 100;
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 500) : 100;
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const events = await client.rpc("helvok_current_list_audit_events", { p_tenant_id: tenantId, p_limit: limit });
+      return jsonResponse(c, { events });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

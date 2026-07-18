@@ -453,6 +453,31 @@ export function createAdminRouter(): Hono<AppEnv> {
     }
   });
 
+  admin.get("/tenants/:tenantId/audit/events", async (c) => {
+    const tenantId = c.req.param("tenantId");
+
+    if (!isUuid(tenantId)) {
+      return jsonResponse(
+        c,
+        {
+          error: {
+            code: "invalid_tenant_id",
+            message: "tenantId must be a valid UUID.",
+          },
+        },
+        400,
+      );
+    }
+
+    try {
+      const client = new SupabaseAdminRpcClient(c.env);
+      const events = await client.rpc("helvok_admin_list_audit_events", { p_tenant_id: tenantId, p_limit: 100 });
+      return jsonResponse(c, { events });
+    } catch (error) {
+      return adminErrorResponse(c, error);
+    }
+  });
+
   admin.post("/fiscal/documents", async (c) => {
     const validation = validateFiscalDocumentPayload(await readJsonBody(c));
 
