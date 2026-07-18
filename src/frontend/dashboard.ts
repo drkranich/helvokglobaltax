@@ -1693,6 +1693,7 @@ export function renderDashboard(): string {
       .tax-simulator-panel,
       .tax-result-panel {
         display: grid;
+        align-content: start;
         gap: 14px;
       }
 
