@@ -725,6 +725,202 @@ export function createSessionRouter(): Hono<AppEnv> {
     }
   });
 
+  session.get("/tenants/:tenantId/commerce/parties", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const parties = await client.rpc("helvok_current_list_parties", { p_tenant_id: tenantId });
+      return jsonResponse(c, { parties });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/commerce/parties", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    if (typeof payload.name !== "string" || payload.name.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_name", message: "name is required." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_upsert_party", { p_tenant_id: tenantId, p_payload: payload });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/commerce/parties/:partyId/archive", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const partyId = c.req.param("partyId");
+    if (!isUuid(tenantId) || !isUuid(partyId)) {
+      return jsonResponse(c, { error: { code: "invalid_party_archive_target", message: "tenantId and partyId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_archive_party", { p_tenant_id: tenantId, p_party_id: partyId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/commerce/parties/:partyId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const partyId = c.req.param("partyId");
+    if (!isUuid(tenantId) || !isUuid(partyId)) {
+      return jsonResponse(c, { error: { code: "invalid_party_delete_target", message: "tenantId and partyId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_party", { p_tenant_id: tenantId, p_party_id: partyId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.get("/tenants/:tenantId/commerce/operations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const operations = await client.rpc("helvok_current_list_operations", { p_tenant_id: tenantId });
+      return jsonResponse(c, { operations });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/commerce/operations", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    if (!isUuid(tenantId)) {
+      return jsonResponse(c, { error: { code: "invalid_tenant_id", message: "tenantId must be a valid UUID." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+
+    if (typeof payload.organization_id !== "string" || payload.organization_id.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_organization_id", message: "organization_id is required." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_create_operation", { p_tenant_id: tenantId, p_payload: payload });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result }, 201);
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.post("/tenants/:tenantId/commerce/operations/:operationId/status", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const operationId = c.req.param("operationId");
+    if (!isUuid(tenantId) || !isUuid(operationId)) {
+      return jsonResponse(c, { error: { code: "invalid_operation_status_target", message: "tenantId and operationId must be valid UUIDs." } }, 400);
+    }
+
+    const body = await readJsonBody(c);
+    const payload = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+    if (typeof payload.status !== "string" || payload.status.trim() === "") {
+      return jsonResponse(c, { error: { code: "invalid_status", message: "status is required." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_update_operation_status", {
+        p_tenant_id: tenantId,
+        p_operation_id: operationId,
+        p_status: payload.status,
+      });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
+  session.delete("/tenants/:tenantId/commerce/operations/:operationId", async (c) => {
+    const accessToken = extractBearerToken(c.req.header("authorization"));
+    if (!accessToken) {
+      return missingTokenResponse(c);
+    }
+
+    const tenantId = c.req.param("tenantId");
+    const operationId = c.req.param("operationId");
+    if (!isUuid(tenantId) || !isUuid(operationId)) {
+      return jsonResponse(c, { error: { code: "invalid_operation_delete_target", message: "tenantId and operationId must be valid UUIDs." } }, 400);
+    }
+
+    try {
+      const client = new SupabaseAuthenticatedClient(c.env, accessToken);
+      await client.getUser();
+      const result = await client.rpc("helvok_current_delete_operation", { p_tenant_id: tenantId, p_operation_id: operationId });
+      return jsonResponse(c, result && typeof result === "object" ? (result as Record<string, unknown>) : { result });
+    } catch (error) {
+      return sessionErrorResponse(c, error);
+    }
+  });
+
   session.get("/tenants/:tenantId/fiscal/certificates", async (c) => {
     const accessToken = extractBearerToken(c.req.header("authorization"));
     if (!accessToken) {

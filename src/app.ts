@@ -58,6 +58,8 @@ export function createApp(): Hono<AppEnv> {
         fiscal_adapters: "country-adapter-scaffold-preview",
         fiscal_registrations: "tenant-registration-preview",
         fiscal_certificates: "encrypted-storage-preview",
+        commerce_parties: "authenticated-crud-preview",
+        commerce_operations: "authenticated-crud-preview",
         audit: "planned",
       },
     }),
