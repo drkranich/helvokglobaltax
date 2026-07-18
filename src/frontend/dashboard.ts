@@ -6654,6 +6654,7 @@ export function renderDashboard(): string {
           panel.addEventListener("click", (event) => {
             var navButton = event.target && event.target.closest ? event.target.closest(".date-nav-button") : null;
             if (navButton) {
+              event.stopPropagation();
               var direction = navButton.getAttribute("data-nav") === "prev" ? -1 : 1;
               var nextMonth = parseInt(shell.dataset.viewMonth, 10) + direction;
               var nextYear = parseInt(shell.dataset.viewYear, 10);
