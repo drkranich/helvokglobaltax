@@ -2509,6 +2509,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
+          <a class="nav-button" href="#configuracoes"><span>Configurações</span><span class="nav-code">CFG</span></a>
         </nav>
 
         <div class="rail-footer">
@@ -3841,6 +3842,70 @@ export function renderDashboard(): string {
           </article>
         </section>
         </section>
+
+        <section class="app-view" id="configuracoes" data-view="configuracoes" aria-label="Configurações gerais">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">Preferências do tenant</span>
+              <h1>Configurações gerais</h1>
+              <p>Nome de exibição, idioma, moeda padrão e contato de suporte usados em toda a operação deste tenant.</p>
+            </div>
+            <span class="view-status" id="settings-view-status">settings.manage</span>
+          </div>
+
+          <section class="work-grid" aria-label="Configurações gerais do tenant">
+            <article class="panel">
+              <div class="panel-title">
+                <h2>Dados do tenant</h2>
+                <span id="settings-tenant-slug">—</span>
+              </div>
+              <div class="tax-section">
+                <div class="tax-section-head"><strong>Identificação</strong><span>somente leitura</span></div>
+                <div class="tax-input-grid">
+                  <div class="field-block">
+                    <label>Razão social</label>
+                    <div class="glass-field" id="settings-legal-name" style="display:flex;align-items:center;">—</div>
+                  </div>
+                  <div class="field-block">
+                    <label>Status</label>
+                    <div class="glass-field" id="settings-status" style="display:flex;align-items:center;">—</div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-title">
+                <h2>Editar configurações</h2>
+                <span>settings.manage</span>
+              </div>
+              <form class="stacked-form" id="tenant-settings-form">
+                <div class="field-block">
+                  <label for="settings-display-name">Nome de exibição</label>
+                  <input id="settings-display-name" class="glass-field" type="text" placeholder="Ex: Helvok Tax Foundation" />
+                </div>
+                <div class="field-block">
+                  <label for="settings-default-locale">Idioma padrão</label>
+                  <select id="settings-default-locale" class="glass-select">
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="es-ES">Español</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="settings-default-currency">Moeda padrão</label>
+                  <input id="settings-default-currency" class="glass-field" type="text" placeholder="BRL, USD, EUR..." maxlength="8" />
+                </div>
+                <div class="field-block">
+                  <label for="settings-support-email">Email de suporte</label>
+                  <input id="settings-support-email" class="glass-field" type="email" placeholder="suporte@empresa.com" />
+                </div>
+                <button class="glass-button primary" id="tenant-settings-save-button" type="submit">Salvar configurações</button>
+                <div class="financial-message" id="tenant-settings-message">Alterações valem para todo o tenant.</div>
+              </form>
+            </aside>
+          </section>
+        </section>
       </main>
     </div>
 
@@ -3923,6 +3988,10 @@ export function renderDashboard(): string {
 
       const auditLogState = {
         events: [],
+        loadedTenantId: ""
+      };
+
+      const tenantSettingsState = {
         loadedTenantId: ""
       };
 
@@ -5163,6 +5232,95 @@ export function renderDashboard(): string {
         auditLogState.loadedTenantId = tenantId;
         renderAuditLog(body.events || []);
         return body.events || [];
+      }
+
+      function renderTenantSettings(settings) {
+        if (!settings) {
+          return;
+        }
+        setText("#settings-tenant-slug", settings.slug || "—");
+        setText("#settings-legal-name", settings.legal_name || "—");
+        setText("#settings-status", settings.status || "—");
+
+        const nameField = qs("#settings-display-name");
+        if (nameField && document.activeElement !== nameField) {
+          nameField.value = settings.display_name || "";
+        }
+        const localeField = qs("#settings-default-locale");
+        if (localeField && document.activeElement !== localeField) {
+          localeField.value = settings.default_locale || "pt-BR";
+          refreshCustomSelect(localeField);
+        }
+        const currencyField = qs("#settings-default-currency");
+        if (currencyField && document.activeElement !== currencyField) {
+          currencyField.value = settings.default_currency || "";
+        }
+        const supportField = qs("#settings-support-email");
+        if (supportField && document.activeElement !== supportField) {
+          supportField.value = settings.support_email || "";
+        }
+      }
+
+      async function loadTenantSettings(tenantId) {
+        const accessToken = getStoredAccessToken();
+        if (!accessToken || !tenantId) {
+          tenantSettingsState.loadedTenantId = "";
+          return null;
+        }
+        const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/settings", {
+          headers: { authorization: "Bearer " + accessToken },
+          cache: "no-store"
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Não foi possível carregar configurações.");
+        }
+        tenantSettingsState.loadedTenantId = tenantId;
+        renderTenantSettings(body.settings);
+        return body.settings;
+      }
+
+      async function submitTenantSettingsForm(event) {
+        event.preventDefault();
+        const tenantId = getActiveTenantId();
+        const accessToken = getStoredAccessToken();
+        const messageNode = qs("#tenant-settings-message");
+
+        if (!tenantId || !accessToken) {
+          if (messageNode) {
+            messageNode.textContent = "Entre com uma sessão autorizada para editar configurações.";
+          }
+          return;
+        }
+
+        try {
+          if (messageNode) {
+            messageNode.textContent = "Salvando configurações...";
+          }
+          const response = await fetch("/v1/tenants/" + encodeURIComponent(tenantId) + "/settings", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
+            body: JSON.stringify({
+              display_name: textValue("#settings-display-name"),
+              default_locale: textValue("#settings-default-locale"),
+              default_currency: textValue("#settings-default-currency"),
+              support_email: textValue("#settings-support-email")
+            })
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            throw new Error(body && body.error && body.error.message ? body.error.message : "Falha ao salvar configurações.");
+          }
+          renderTenantSettings(body.settings);
+          if (messageNode) {
+            messageNode.textContent = "Configurações salvas.";
+          }
+          addFeed(body.event_type || "tenant_settings.updated", "Configurações do tenant atualizadas");
+        } catch (error) {
+          if (messageNode) {
+            messageNode.textContent = error instanceof Error ? error.message : "Falha ao salvar configurações.";
+          }
+        }
       }
 
       async function loadFiscalRegistrations(tenantId) {
@@ -7198,6 +7356,9 @@ export function renderDashboard(): string {
             loadAuditLog(primaryTenant.id).catch((error) => {
               addFeed("audit.error", error instanceof Error ? error.message : "Falha ao carregar log de auditoria");
             });
+            loadTenantSettings(primaryTenant.id).catch((error) => {
+              addFeed("tenant_settings.error", error instanceof Error ? error.message : "Falha ao carregar configurações");
+            });
           }
         }
       }
@@ -8405,7 +8566,8 @@ export function renderDashboard(): string {
               loadParties(tenantId).then(() => loadOperations(tenantId)),
               loadRuleVersions(tenantId),
               loadObligations(tenantId),
-              loadAuditLog(tenantId)
+              loadAuditLog(tenantId),
+              loadTenantSettings(tenantId)
             ]);
           }
 
@@ -8798,6 +8960,11 @@ export function renderDashboard(): string {
       const obligationsList = qs("#obligations-list");
       if (obligationsList) {
         obligationsList.addEventListener("click", handleObligationsListClick);
+      }
+
+      const tenantSettingsForm = qs("#tenant-settings-form");
+      if (tenantSettingsForm) {
+        tenantSettingsForm.addEventListener("submit", submitTenantSettingsForm);
       }
 
       const fiscalRegistrationForm = qs("#fiscal-registration-form");
