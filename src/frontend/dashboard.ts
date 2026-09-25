@@ -29,10 +29,10 @@ export function renderDashboard(): string {
         --gold-500: #0a0a0a;
         --gold-300: #3f3f46;
         --champagne: #0a0a0a;
-        --champagne-80: rgba(9, 9, 11, 0.1);
-        --champagne-64: rgba(9, 9, 11, 0.1);
-        --champagne-18: rgba(9, 9, 11, 0.1);
-        --champagne-10: rgba(9, 9, 11, 0.06);
+        --champagne-80: rgba(10, 10, 10, 0.88);
+        --champagne-64: rgba(10, 10, 10, 0.68);
+        --champagne-18: rgba(10, 10, 10, 0.14);
+        --champagne-10: rgba(10, 10, 10, 0.06);
         --ink: #ffffff;
         --ink-soft: #fafafa;
         --glass-petroleum: rgba(255, 255, 255, 0.92);
@@ -517,9 +517,9 @@ export function renderDashboard(): string {
 
       .select-option:hover,
       .select-option.active {
-        border-color: rgba(113, 113, 122, 0.42);
-        background: #ededf0;
-        color: #fff7df;
+        border-color: #d4d4d8;
+        background: #f4f4f5;
+        color: #0a0a0a;
       }
 
       .date-native-hidden {
@@ -668,7 +668,7 @@ export function renderDashboard(): string {
       .date-cell:hover {
         border-color: rgba(113, 113, 122, 0.42);
         background: #ededf0;
-        color: #fff7df;
+        color: #0a0a0a;
       }
 
       .date-cell.is-adjacent {
@@ -683,7 +683,7 @@ export function renderDashboard(): string {
       .date-cell.is-selected {
         border-color: rgba(113, 113, 122, 0.7);
         background: #ffffff;
-        color: #fff7df;
+        color: #0a0a0a;
       }
 
       .date-panel-footer {
@@ -1690,7 +1690,7 @@ export function renderDashboard(): string {
 
       @keyframes result-panel-flash {
         0% {
-          box-shadow: 0 0 0 2px rgba(244, 200, 120, 0.85), var(--shadow);
+          box-shadow: 0 0 0 2px rgba(10, 10, 10, 0.25), var(--shadow);
         }
         100% {
           box-shadow: var(--shadow);
