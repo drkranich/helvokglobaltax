@@ -45,7 +45,7 @@ Deploy Cloudflare:
 
 ```text
 worker: helvokglobaltax
-url: https://helvokglobaltax.genialidadefilosofica.workers.dev
+url: https://helvokglobaltax.helvokhelvok.workers.dev
 version_id: ce993256-3c87-499e-ab8a-67d0728c7593
 ```
 

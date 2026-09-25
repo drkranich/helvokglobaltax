@@ -11,7 +11,7 @@ Esta entrega e um painel operacional inicial. Ela nao substitui a futura aplicac
 | Item | Valor |
 | --- | --- |
 | Worker | `helvokglobaltax` |
-| URL | `https://helvokglobaltax.genialidadefilosofica.workers.dev` |
+| URL | `https://helvokglobaltax.helvokhelvok.workers.dev` |
 | Versao Cloudflare | `3565b240-0be7-4417-95ab-433cb39777fa` |
 | Rota principal | `/` |
 | Rota alternativa | `/app` |

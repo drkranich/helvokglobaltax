@@ -11,9 +11,9 @@ Esta entrega ainda nao expõe frontend nem fluxo de usuario final. Ela cria o ca
 | Item | Valor |
 | --- | --- |
 | Worker | `helvokglobaltax` |
-| URL | `https://helvokglobaltax.genialidadefilosofica.workers.dev` |
+| URL | `https://helvokglobaltax.helvokhelvok.workers.dev` |
 | Versao Cloudflare | `5295e8e5-4812-4c7f-84b7-1cd5c73607c3` |
-| Perfil Wrangler | `genialidadefilosofica` |
+| Conta Cloudflare | `helvokhelvok@gmail.com` |
 
 ## Rotas adicionadas
 

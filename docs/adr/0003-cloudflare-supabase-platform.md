@@ -6,7 +6,7 @@ Aceita inicialmente.
 
 ## Contexto
 
-O ambiente alvo informado usa Supabase PostgreSQL/Auth e Cloudflare Workers/Pages. O dominio provisório de validacao e `helvokglobaltax.genialidadefilosofica.workers.dev`. O fluxo desejado evita testes centrados em localhost.
+O ambiente alvo informado usa Supabase PostgreSQL/Auth e Cloudflare Workers/Pages. O dominio provisório de validacao e `helvokglobaltax.helvokhelvok.workers.dev`. O fluxo desejado evita testes centrados em localhost.
 
 ## Decisao
 

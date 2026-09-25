@@ -45,7 +45,7 @@ O Core da plataforma nunca conhece legislações específicas como ICMS, VAT, IV
 
 - Supabase: `https://jlvwudjgfzhhdgttrycj.supabase.co`
 - GitHub: `https://github.com/drkranich/helvokglobaltax`
-- Cloudflare Workers: `https://helvokglobaltax.genialidadefilosofica.workers.dev`
+- Cloudflare Workers: `https://helvokglobaltax.helvokhelvok.workers.dev`
 
 ## Rotas publicadas
 

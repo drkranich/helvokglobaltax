@@ -248,6 +248,6 @@ Obrigacoes e transmissoes devem declarar se suportam automacao integral, automac
 
 O dominio provisório informado para testes diretos na plataforma e:
 
-`helvokglobaltax.genialidadefilosofica.workers.dev`
+`helvokglobaltax.helvokhelvok.workers.dev`
 
 Durante fases implementaveis, validacoes devem preferir deploys Cloudflare e checks remotos. Localhost e portas locais nao sao o fluxo principal de validacao deste projeto.

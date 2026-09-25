@@ -1665,7 +1665,7 @@ describe("Helvok Tax Worker API", () => {
 
     const app = createApp();
     const response = await app.request(
-      `https://helvokglobaltax.genialidadefilosofica.workers.dev/v1/tenants/${tenantId}/invitations`,
+      `https://helvokglobaltax.helvokhelvok.workers.dev/v1/tenants/${tenantId}/invitations`,
       {
         method: "POST",
         headers: {

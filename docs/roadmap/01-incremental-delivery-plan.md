@@ -242,4 +242,4 @@ Gate:
 
 ## Regra operacional de deploy
 
-O dominio provisorio informado e `helvokglobaltax.genialidadefilosofica.workers.dev`. As fases implementaveis devem preferir deploy e validacao remota na Cloudflare, com smoke tests contra a plataforma, em vez de fluxo baseado em porta local.
+O dominio provisorio informado e `helvokglobaltax.helvokhelvok.workers.dev`. As fases implementaveis devem preferir deploy e validacao remota na Cloudflare, com smoke tests contra a plataforma, em vez de fluxo baseado em porta local.

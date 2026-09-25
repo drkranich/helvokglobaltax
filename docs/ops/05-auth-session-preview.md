@@ -9,7 +9,7 @@ Adicionar a primeira camada real de autenticacao e sessao da Helvok Tax, mantend
 | Item | Valor |
 | --- | --- |
 | Worker | `helvokglobaltax` |
-| URL | `https://helvokglobaltax.genialidadefilosofica.workers.dev` |
+| URL | `https://helvokglobaltax.helvokhelvok.workers.dev` |
 | Versao Cloudflare | `8a8c7fd1-08cc-4cb8-af06-39222037b8ec` |
 
 ## Banco
