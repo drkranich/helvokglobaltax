@@ -2454,6 +2454,21 @@ export function renderDashboard(): string {
         opacity: 0.7;
       }
 
+
+      .auth-link {
+        border: 0;
+        background: transparent;
+        color: var(--champagne-64);
+        cursor: pointer;
+        font-size: 12.5px;
+        text-align: center;
+        text-decoration: underline;
+        padding: 4px;
+        justify-self: center;
+      }
+      .auth-link:hover { color: #0a0a0a; }
+
+      [hidden] { display: none !important; }
     </style>
   </head>
   <body>
@@ -2472,7 +2487,7 @@ export function renderDashboard(): string {
           <div class="auth-tabs" role="tablist" aria-label="Modo de acesso" hidden>
             <button class="auth-tab active" type="button" data-auth-mode="login">Entrar</button>
           </div>
-          <div class="field-block">
+          <div class="field-block" id="auth-name-block" hidden>
             <label for="auth-name">Nome</label>
             <input id="auth-name" class="glass-field" autocomplete="name" placeholder="Seu nome" />
           </div>
@@ -2485,6 +2500,12 @@ export function renderDashboard(): string {
             <input id="auth-password" class="glass-field" autocomplete="current-password" type="password" minlength="6" placeholder="minimo 6 caracteres" required />
           </div>
           <button class="glass-button primary" id="auth-submit" type="submit">Entrar</button>
+          <button class="auth-link" id="auth-forgot" type="button">Esqueci minha senha</button>
+          <div class="field-block" id="auth-newpass-block" hidden>
+            <label for="auth-new-password">Nova senha</label>
+            <input id="auth-new-password" class="glass-field" type="password" minlength="6" autocomplete="new-password" placeholder="mínimo 6 caracteres" />
+            <button class="glass-button primary" id="auth-set-password" type="button" style="margin-top:10px;width:100%">Definir nova senha</button>
+          </div>
           <div class="auth-message" id="auth-message">Acesso restrito a usuários convidados. Entre com o e-mail e a senha da sua conta. Não tem acesso? Solicite um convite ao administrador.</div>
         </form>
       </div>
@@ -7858,6 +7879,89 @@ export function renderDashboard(): string {
         }
       }
 
+      async function requestPasswordRecovery() {
+        const email = qs("#auth-email").value.trim().toLowerCase();
+        if (!email) {
+          setAuthMessage("Digite seu e-mail acima e clique em 'Esqueci minha senha'.", "warn");
+          return;
+        }
+        setAuthMessage("Enviando link de redefinição...", null);
+        try {
+          const config = await getAuthConfig();
+          const redirectTo = window.location.origin + window.location.pathname;
+          const response = await fetch(config.supabase_url + "/auth/v1/recover", {
+            method: "POST",
+            headers: { apikey: config.supabase_publishable_key, "content-type": "application/json" },
+            body: JSON.stringify({ email: email, options: { redirect_to: redirectTo } })
+          });
+          // O Supabase responde 200 mesmo quando o e-mail não existe (anti-enumeração).
+          if (!response.ok) {
+            const body = await response.json().catch(() => ({}));
+            throw new Error(body.msg || body.message || "Não foi possível enviar o link.");
+          }
+          setAuthMessage("Se este e-mail tiver conta, enviamos um link de redefinição. Verifique sua caixa de entrada e o spam.", "good");
+          addFeed("auth.recovery.sent", "Link de redefinição solicitado");
+        } catch (error) {
+          setAuthMessage(error instanceof Error ? error.message : "Falha ao enviar o link.", "warn");
+        }
+      }
+
+      // Detecta o retorno do e-mail de recuperação (Supabase devolve no hash: type=recovery + access_token)
+      function detectRecoveryReturn() {
+        const raw = window.location.hash ? window.location.hash.substring(1) : "";
+        if (!raw || raw.indexOf("type=recovery") === -1) { return; }
+        const params = new URLSearchParams(raw);
+        const token = params.get("access_token");
+        if (!token) { return; }
+        recoveryAccessToken = token;
+        showAuthGate(true);
+        const block = qs("#auth-newpass-block");
+        if (block) { block.hidden = false; }
+        const forgot = qs("#auth-forgot");
+        if (forgot) { forgot.hidden = true; }
+        setAuthMessage("Defina sua nova senha abaixo.", "good");
+        // limpa o hash sensível da URL
+        try { window.history.replaceState(null, "", window.location.pathname); } catch (e) {}
+      }
+
+      async function setNewPassword() {
+        const newPass = qs("#auth-new-password").value;
+        if (!newPass || newPass.length < 6) {
+          setAuthMessage("A nova senha precisa de ao menos 6 caracteres.", "warn");
+          return;
+        }
+        if (!recoveryAccessToken) {
+          setAuthMessage("Link de redefinição inválido ou expirado. Solicite um novo.", "warn");
+          return;
+        }
+        setAuthMessage("Salvando nova senha...", null);
+        try {
+          const config = await getAuthConfig();
+          const response = await fetch(config.supabase_url + "/auth/v1/user", {
+            method: "PUT",
+            headers: {
+              apikey: config.supabase_publishable_key,
+              authorization: "Bearer " + recoveryAccessToken,
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({ password: newPass })
+          });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(body.msg || body.message || "Não foi possível salvar a senha.");
+          }
+          recoveryAccessToken = null;
+          const block = qs("#auth-newpass-block");
+          if (block) { block.hidden = true; }
+          const forgot = qs("#auth-forgot");
+          if (forgot) { forgot.hidden = false; }
+          setAuthMessage("Senha redefinida com sucesso. Entre com a nova senha.", "good");
+          addFeed("auth.recovery.done", "Senha redefinida");
+        } catch (error) {
+          setAuthMessage(error instanceof Error ? error.message : "Falha ao salvar a senha.", "warn");
+        }
+      }
+
       async function submitAuthForm(event) {
         event.preventDefault();
         const email = qs("#auth-email").value.trim().toLowerCase();
@@ -7940,6 +8044,7 @@ export function renderDashboard(): string {
       }
 
       var selectedMarkets = new Set();
+      var recoveryAccessToken = null;
 
       function renderMarketChips(markets) {
         var box = qs("#market-chips");
@@ -8767,6 +8872,14 @@ export function renderDashboard(): string {
       if (authForm) {
         authForm.addEventListener("submit", submitAuthForm);
       }
+      const authForgot = qs("#auth-forgot");
+      if (authForgot) {
+        authForgot.addEventListener("click", requestPasswordRecovery);
+      }
+      const authSetPassword = qs("#auth-set-password");
+      if (authSetPassword) {
+        authSetPassword.addEventListener("click", setNewPassword);
+      }
 
       const memberForm = qs("#member-form");
       if (memberForm) {
@@ -9202,6 +9315,7 @@ export function renderDashboard(): string {
       window.setInterval(refreshStatus, 8000);
       bootstrapFeed();
       setAuthMode("login");
+      detectRecoveryReturn();
       activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
       renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
