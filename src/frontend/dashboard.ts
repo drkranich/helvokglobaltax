@@ -2348,6 +2348,40 @@ export function renderDashboard(): string {
           transition-duration: 1ms !important;
         }
       }
+
+      /* ===== Sub-abas dentro das views (evita landing infinita) ===== */
+      .view-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 2px 0 4px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .view-tab {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--champagne-64);
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 13px;
+        white-space: nowrap;
+        transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+      }
+      .view-tab:hover { background: #f4f4f5; }
+      .view-tab.active {
+        border-color: #0a0a0a;
+        background: #0a0a0a;
+        color: #ffffff;
+      }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+      .tab-panel > .work-grid,
+      .tab-panel > .hero-grid { margin: 0; }
+
     </style>
   </head>
   <body>
@@ -2576,7 +2610,12 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="users-view-status">RBAC ativo</span>
           </div>
-        <section class="members-workbench" aria-label="Usuários, roles e memberships">
+        <div class="view-tabs" data-tab-group="usuarios">
+          <button type="button" class="view-tab active" data-tab="usuarios-0">Membros</button>
+          <button type="button" class="view-tab" data-tab="usuarios-1">Conceder acesso</button>
+          <button type="button" class="view-tab" data-tab="usuarios-2">Convites</button>
+        </div>
+        <div class="tab-panel active" data-tab-group="usuarios" data-tab="usuarios-0">
           <article class="panel members-panel">
             <div class="panel-title">
               <h2>Usuários e memberships</h2>
@@ -2589,7 +2628,8 @@ export function renderDashboard(): string {
               </div>
             </div>
           </article>
-
+        </div>
+        <div class="tab-panel" data-tab-group="usuarios" data-tab="usuarios-1">
           <aside class="panel members-panel">
             <div class="panel-title">
               <h2>Conceder acesso</h2>
@@ -2635,7 +2675,8 @@ export function renderDashboard(): string {
             </div>
             <div class="audit-mini" id="membership-audit"></div>
           </aside>
-
+        </div>
+        <div class="tab-panel" data-tab-group="usuarios" data-tab="usuarios-2">
           <article class="panel members-panel invitation-panel">
             <div class="panel-title">
               <h2>Convites de acesso</h2>
@@ -2684,7 +2725,7 @@ export function renderDashboard(): string {
               </div>
             </div>
           </article>
-        </section>
+        </div>
         </section>
 
         <section class="app-view" id="empresas" data-view="empresas" aria-label="Empresas">
@@ -2696,7 +2737,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="jurisdiction-count-label">carregando mercados</span>
           </div>
-        <section class="work-grid">
+        <div class="view-tabs" data-tab-group="empresas">
+          <button type="button" class="view-tab active" data-tab="empresas-0">Malha fiscal</button>
+          <button type="button" class="view-tab" data-tab="empresas-1">Cadastro fiscal</button>
+        </div>
+        <div class="tab-panel active" data-tab-group="empresas" data-tab="empresas-0">
           <article class="panel">
             <div class="panel-title">
               <h2>Malha fiscal por jurisdição</h2>
@@ -2706,7 +2751,8 @@ export function renderDashboard(): string {
               <div class="country-tile active"><strong>Carregando</strong><span>pacote de regras global</span><small>...</small></div>
             </div>
           </article>
-
+        </div>
+        <div class="tab-panel" data-tab-group="empresas" data-tab="empresas-1">
           <aside class="panel">
             <div class="panel-title">
               <h2>Fontes e cobertura</h2>
@@ -2725,7 +2771,7 @@ export function renderDashboard(): string {
               <span class="status-badge pending" id="markets-scope-status">0</span>
             </div>
           </aside>
-        </section>
+        </div>
 
         <section class="work-grid">
           <article class="panel">
@@ -2838,7 +2884,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="catalog-view-status">aguardando sessão</span>
           </div>
-          <section class="catalog-workbench">
+          <div class="view-tabs" data-tab-group="produtos">
+            <button type="button" class="view-tab active" data-tab="produtos-0">Catálogo</button>
+            <button type="button" class="view-tab" data-tab="produtos-1">Novo item</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="produtos" data-tab="produtos-0">
             <article class="panel">
               <div class="panel-title">
                 <h2>Catálogo do tenant</h2>
@@ -2856,7 +2906,8 @@ export function renderDashboard(): string {
                 </div>
               </div>
             </article>
-
+          </div>
+          <div class="tab-panel" data-tab-group="produtos" data-tab="produtos-1">
             <aside class="panel">
               <div class="panel-title">
                 <h2>Novo item fiscal</h2>
@@ -2954,7 +3005,7 @@ export function renderDashboard(): string {
                 <div class="auth-message catalog-message" id="catalog-message">O catálogo usa products.manage e fica isolado por tenant.</div>
               </form>
             </aside>
-          </section>
+          </div>
         </section>
 
         <section class="app-view" id="clientes" data-view="clientes" aria-label="Clientes e pedidos">
@@ -2967,6 +3018,11 @@ export function renderDashboard(): string {
             <span class="view-status" id="commerce-view-status">operations.create/read</span>
           </div>
 
+          <div class="view-tabs" data-tab-group="clientes">
+            <button type="button" class="view-tab active" data-tab="clientes-0">Clientes</button>
+            <button type="button" class="view-tab" data-tab="clientes-1">Pedidos</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="clientes" data-tab="clientes-0">
           <section class="work-grid">
             <article class="panel">
               <div class="panel-title">
@@ -3011,7 +3067,8 @@ export function renderDashboard(): string {
               </form>
             </aside>
           </section>
-
+          </div>
+          <div class="tab-panel" data-tab-group="clientes" data-tab="clientes-1">
           <section class="work-grid">
             <article class="panel">
               <div class="panel-title">
@@ -3064,6 +3121,7 @@ export function renderDashboard(): string {
               </form>
             </aside>
           </section>
+          </div>
         </section>
 
         <section class="app-view" id="auditoria" data-view="auditoria" aria-label="Auditoria">
@@ -3075,7 +3133,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="audit-view-status">stream local</span>
           </div>
-          <section class="work-grid" aria-label="Auditoria viva e logs persistentes">
+          <div class="view-tabs" data-tab-group="auditoria">
+            <button type="button" class="view-tab active" data-tab="auditoria-0">Sessão</button>
+            <button type="button" class="view-tab" data-tab="auditoria-1">Banco</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="auditoria" data-tab="auditoria-0">
             <aside class="feed">
               <div class="feed-head">
                 <div class="panel-title">
@@ -3085,7 +3147,8 @@ export function renderDashboard(): string {
               </div>
               <div class="feed-list" id="feed-list" aria-live="polite"></div>
             </aside>
-
+          </div>
+          <div class="tab-panel" data-tab-group="auditoria" data-tab="auditoria-1">
             <article class="panel">
               <div class="panel-title">
                 <h2>Logs de auditoria (banco)</h2>
@@ -3093,7 +3156,7 @@ export function renderDashboard(): string {
               </div>
               <div class="catalog-list" id="audit-log-list"></div>
             </article>
-          </section>
+          </div>
         </section>
 
         <section class="app-view" id="motor" data-view="motor" aria-label="Motor tributário">
@@ -3105,7 +3168,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="motor-view-status">estimativa edge</span>
           </div>
-        <section class="work-grid tax-workbench">
+        <div class="view-tabs" data-tab-group="motor">
+          <button type="button" class="view-tab active" data-tab="motor-0">Simulador</button>
+          <button type="button" class="view-tab" data-tab="motor-1">Resultado</button>
+        </div>
+        <div class="tab-panel active" data-tab-group="motor" data-tab="motor-0">
           <article class="panel tax-simulator-panel">
             <div class="panel-title">
               <h2>Simulador fiscal operacional</h2>
@@ -3310,7 +3377,8 @@ export function renderDashboard(): string {
               </div>
             </form>
           </article>
-
+        </div>
+        <div class="tab-panel" data-tab-group="motor" data-tab="motor-1">
           <aside class="panel tax-result-panel">
             <div class="panel-title">
               <h2>Resultado da simulação</h2>
@@ -3347,7 +3415,7 @@ export function renderDashboard(): string {
               <div class="tax-warning-list" id="tax-warnings"></div>
             </div>
           </aside>
-        </section>
+        </div>
         </section>
 
         <section class="app-view" id="regras" data-view="regras" aria-label="Regras fiscais">
@@ -3360,7 +3428,11 @@ export function renderDashboard(): string {
             <span class="view-status" id="rules-view-status">workflow ativo</span>
           </div>
 
-          <section class="work-grid" aria-label="Regras fiscais e workflow de revisão">
+          <div class="view-tabs" data-tab-group="regras">
+            <button type="button" class="view-tab active" data-tab="regras-0">Versões</button>
+            <button type="button" class="view-tab" data-tab="regras-1">Nova versão</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="regras" data-tab="regras-0">
             <article class="panel">
               <div class="panel-title">
                 <h2>Versões de regras</h2>
@@ -3368,7 +3440,8 @@ export function renderDashboard(): string {
               </div>
               <div class="catalog-list" id="rules-list"></div>
             </article>
-
+          </div>
+          <div class="tab-panel" data-tab-group="regras" data-tab="regras-1">
             <aside class="panel">
               <div class="panel-title">
                 <h2>Nova versão (rascunho)</h2>
@@ -3395,7 +3468,7 @@ export function renderDashboard(): string {
                 <div class="financial-message" id="rule-version-message">Regras ficam isoladas por tenant.</div>
               </form>
             </aside>
-          </section>
+          </div>
         </section>
 
         <section class="app-view" id="obrigacoes" data-view="obrigacoes" aria-label="Obrigações acessórias">
@@ -3408,7 +3481,11 @@ export function renderDashboard(): string {
             <span class="view-status" id="obligations-view-status">calendário ativo</span>
           </div>
 
-          <section class="work-grid" aria-label="Obrigações acessórias e novo prazo">
+          <div class="view-tabs" data-tab-group="obrigacoes">
+            <button type="button" class="view-tab active" data-tab="obrigacoes-0">Prazos</button>
+            <button type="button" class="view-tab" data-tab="obrigacoes-1">Novo prazo</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="obrigacoes" data-tab="obrigacoes-0">
             <article class="panel">
               <div class="panel-title">
                 <h2>Prazos cadastrados</h2>
@@ -3416,7 +3493,8 @@ export function renderDashboard(): string {
               </div>
               <div class="catalog-list" id="obligations-list"></div>
             </article>
-
+          </div>
+          <div class="tab-panel" data-tab-group="obrigacoes" data-tab="obrigacoes-1">
             <aside class="panel">
               <div class="panel-title">
                 <h2>Novo prazo</h2>
@@ -3462,7 +3540,7 @@ export function renderDashboard(): string {
                 <div class="financial-message" id="obligation-message">Prazos ficam isolados por tenant.</div>
               </form>
             </aside>
-          </section>
+          </div>
         </section>
 
         <section class="app-view" id="financeiro" data-view="financeiro" aria-label="Planejamento financeiro">
@@ -3474,6 +3552,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="financial-view-status">cost engine preview</span>
           </div>
+          <div class="view-tabs" data-tab-group="financeiro">
+            <button type="button" class="view-tab active" data-tab="financeiro-0">Motor de custo</button>
+            <button type="button" class="view-tab" data-tab="financeiro-1">Operações</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="financeiro" data-tab="financeiro-0">
           <section class="work-grid tax-workbench">
             <article class="panel tax-simulator-panel">
               <div class="panel-title">
@@ -3541,6 +3624,8 @@ export function renderDashboard(): string {
               </div>
             </aside>
           </section>
+          </div>
+          <div class="tab-panel" data-tab-group="financeiro" data-tab="financeiro-1">
           <section class="panel financial-operations" aria-label="Operações financeiras do tenant">
             <div class="panel-title">
               <h2>Mesa operacional financeira</h2>
@@ -3602,17 +3687,7 @@ export function renderDashboard(): string {
               <div class="empty-state"><strong>Nenhum registro financeiro carregado</strong><span>Entre com sessão autorizada e selecione um módulo financeiro.</span></div>
             </div>
           </section>
-          <section class="modules-grid" aria-label="Módulos financeiros Helvok">
-            <article class="module"><h3>Lançamentos</h3><p>Ledger por competência, pagamento, origem, documento, pedido, produto, país, canal e tags.</p><div class="module-meter"><span style="--meter: 52%;"></span></div></article>
-            <article class="module"><h3>Centros de custo</h3><p>Rateios por quantidade, peso, volume, valor, horas, porcentagem ou regra personalizada.</p><div class="module-meter"><span style="--meter: 48%;"></span></div></article>
-            <article class="module"><h3>Projetos</h3><p>Custos, orçamento, realizado, desvio, tendência e projeção por operação, cliente e país.</p><div class="module-meter"><span style="--meter: 46%;"></span></div></article>
-            <article class="module"><h3>Orçamento</h3><p>Budget lines por conta, categoria, centro de custo e memória de cálculo reproduzível.</p><div class="module-meter"><span style="--meter: 42%;"></span></div></article>
-            <article class="module"><h3>Investimentos</h3><p>Aportes, financiamento, juros, depreciação, amortização, payback, ROI, VPL e TIR.</p><div class="module-meter"><span style="--meter: 50%;"></span></div></article>
-            <article class="module"><h3>Formação de preços</h3><p>Preço mínimo, markup, margem desejada, canal, país, moeda, B2B, B2C e promoção.</p><div class="module-meter"><span style="--meter: 58%;"></span></div></article>
-            <article class="module"><h3>Cenários</h3><p>Conservador, base, agressivo e personalizado com volume, câmbio, frete, tributos e inadimplência.</p><div class="module-meter"><span style="--meter: 54%;"></span></div></article>
-            <article class="module"><h3>Fluxo de caixa</h3><p>Entradas, saídas, saldo acumulado, prazo de pagamento, prazo de recebimento e capital de giro.</p><div class="module-meter"><span style="--meter: 44%;"></span></div></article>
-            <article class="module"><h3>Planilhas e relatórios</h3><p>XLSX, CSV, PDF, dashboards, demonstrativos, memórias e relatórios por projeto, canal, país, produto e período.</p><div class="module-meter"><span style="--meter: 40%;"></span></div></article>
-          </section>
+          </div>
         </section>
 
         <section class="app-view" id="documentos" data-view="documentos" aria-label="Documentos">
@@ -3624,6 +3699,11 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="documents-view-status">aguardando documentos reais</span>
           </div>
+          <div class="view-tabs" data-tab-group="documentos">
+            <button type="button" class="view-tab active" data-tab="documentos-0">Pipeline</button>
+            <button type="button" class="view-tab" data-tab="documentos-1">Homologação e rejeições</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="documentos" data-tab="documentos-0">
           <section class="work-grid">
             <article class="panel">
               <div class="panel-title">
@@ -3644,7 +3724,8 @@ export function renderDashboard(): string {
               </div>
             </article>
           </section>
-
+          </div>
+          <div class="tab-panel" data-tab-group="documentos" data-tab="documentos-1">
           <section class="work-grid">
             <article class="panel">
               <div class="panel-title">
@@ -3674,6 +3755,7 @@ export function renderDashboard(): string {
               </div>
             </article>
           </section>
+          </div>
         </section>
 
         <section class="app-view" id="mercados" data-view="mercados" aria-label="Mercados">
@@ -3728,23 +3810,14 @@ export function renderDashboard(): string {
             </div>
             <span class="view-status" id="integrations-view-status">roadmap ativo</span>
           </div>
-        <section class="modules-grid">
-          <article class="module">
-            <h3>Shopify</h3>
-            <p>Conector preparado para pedidos, clientes, produtos e webhooks fiscais.</p>
-            <div class="module-meter"><span style="--meter: 22%;"></span></div>
-          </article>
-          <article class="module">
-            <h3>ERPs</h3>
-            <p>Base para importar cadastros, regimes, estabelecimentos e documentos emitidos.</p>
-            <div class="module-meter"><span style="--meter: 18%;"></span></div>
-          </article>
-          <article class="module">
-            <h3>SDK público</h3>
-            <p>TypeScript, REST, webhooks e CLI vao nascer sobre o mesmo core versionado.</p>
-            <div class="module-meter"><span style="--meter: 14%;"></span></div>
-          </article>
-        </section>
+        <div class="panel" style="padding:22px">
+          <div class="panel-title"><h2>Em desenvolvimento</h2><span>roadmap</span></div>
+          <p style="margin:10px 0 0;color:var(--champagne-64);line-height:1.6;max-width:60ch">
+            Conectores (e-commerce, ERP, marketplace, pagamentos) e o SDK público serão
+            construídos sobre o mesmo core versionado. Ainda não há conector ativo — esta
+            área entra em produção quando o primeiro conector real for homologado.
+          </p>
+        </div>
         </section>
 
         <section class="app-view" id="configuracoes" data-view="configuracoes" aria-label="Configurações gerais">
@@ -3757,7 +3830,11 @@ export function renderDashboard(): string {
             <span class="view-status" id="settings-view-status">settings.manage</span>
           </div>
 
-          <section class="work-grid" aria-label="Configurações gerais do tenant">
+          <div class="view-tabs" data-tab-group="configuracoes">
+            <button type="button" class="view-tab active" data-tab="configuracoes-0">Dados do tenant</button>
+            <button type="button" class="view-tab" data-tab="configuracoes-1">Editar</button>
+          </div>
+          <div class="tab-panel active" data-tab-group="configuracoes" data-tab="configuracoes-0">
             <article class="panel">
               <div class="panel-title">
                 <h2>Dados do tenant</h2>
@@ -3777,7 +3854,8 @@ export function renderDashboard(): string {
                 </div>
               </div>
             </article>
-
+          </div>
+          <div class="tab-panel" data-tab-group="configuracoes" data-tab="configuracoes-1">
             <aside class="panel">
               <div class="panel-title">
                 <h2>Editar configurações</h2>
@@ -3808,7 +3886,7 @@ export function renderDashboard(): string {
                 <div class="financial-message" id="tenant-settings-message">Alterações valem para todo o tenant.</div>
               </form>
             </aside>
-          </section>
+          </div>
         </section>
       </main>
     </div>
@@ -8505,6 +8583,28 @@ export function renderDashboard(): string {
           window.setTimeout(() => addFeed(entry[0], entry[1]), 180 * index);
         });
       }
+
+
+      // ===== Sub-abas por view: delegação global =====
+      function initViewTabs() {
+        document.querySelectorAll(".view-tabs").forEach(function (bar) {
+          if (bar.dataset.bound === "1") return;
+          bar.dataset.bound = "1";
+          bar.addEventListener("click", function (event) {
+            var btn = event.target.closest ? event.target.closest(".view-tab") : null;
+            if (!btn || !bar.contains(btn)) return;
+            var group = bar.getAttribute("data-tab-group");
+            var target = btn.getAttribute("data-tab");
+            bar.querySelectorAll(".view-tab").forEach(function (b) {
+              b.classList.toggle("active", b === btn);
+            });
+            document.querySelectorAll('.tab-panel[data-tab-group="' + group + '"]').forEach(function (p) {
+              p.classList.toggle("active", p.getAttribute("data-tab") === target);
+            });
+          });
+        });
+      }
+      initViewTabs();
 
       function activateView(viewId, updateHash) {
         const targetId = viewId || "dashboard";
