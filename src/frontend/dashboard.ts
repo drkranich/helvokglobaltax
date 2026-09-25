@@ -125,6 +125,10 @@ export function renderDashboard(): string {
         flex-direction: column;
         gap: 24px;
         height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
         padding: 22px;
         border-right: 1px solid var(--line);
         background: #ffffff;
@@ -249,7 +253,8 @@ export function renderDashboard(): string {
       .rail-footer {
         display: grid;
         gap: 12px;
-        margin-top: auto;
+        margin-top: 8px;
+        flex-shrink: 0;
       }
 
       .glass-note {
