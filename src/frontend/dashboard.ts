@@ -2469,6 +2469,90 @@ export function renderDashboard(): string {
       .auth-link:hover { color: #0a0a0a; }
 
       [hidden] { display: none !important; }
+
+      /* ===== Pop-up de comparação exclusiva ===== */
+      .compare-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        padding-top: calc(20px + env(safe-area-inset-top, 0px));
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      }
+      .compare-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(9, 9, 11, 0.45);
+        backdrop-filter: blur(2px);
+      }
+      .compare-modal-card {
+        position: relative;
+        width: min(1100px, 100%);
+        max-height: 88vh;
+        overflow-y: auto;
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 12px 48px rgba(9, 9, 11, 0.24);
+      }
+      .compare-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .compare-modal-kicker {
+        font-family: var(--font-data);
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted, #71717a);
+      }
+      .compare-modal-head h2 {
+        margin: 6px 0 0;
+        font-family: var(--font-display);
+        font-size: clamp(20px, 3vw, 26px);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .compare-modal-head p {
+        margin: 4px 0 0;
+        color: var(--muted, #71717a);
+        font-size: 13px;
+      }
+      .compare-modal-close {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: #ffffff;
+        color: #0a0a0a;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .compare-modal-close:hover { background: #f4f4f5; }
+      .compare-modal-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+      .compare-modal-summary .tax-mini-card {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card-soft, #fbfbfc);
+      }
+      @media (max-width: 640px) {
+        .compare-modal-card { padding: 16px; }
+      }
+
     </style>
   </head>
   <body>
@@ -3991,6 +4075,22 @@ export function renderDashboard(): string {
           </div>
         </section>
       </main>
+    </div>
+
+    <div class="compare-modal" id="compare-modal" hidden aria-modal="true" role="dialog" aria-label="Comparação de países">
+      <div class="compare-modal-backdrop" data-compare-close></div>
+      <div class="compare-modal-card">
+        <div class="compare-modal-head">
+          <div>
+            <span class="compare-modal-kicker">Comparação exclusiva</span>
+            <h2 id="compare-modal-title">Países selecionados</h2>
+            <p id="compare-modal-sub">Somente os países escolhidos, com a tabela de valores fiscais.</p>
+          </div>
+          <button type="button" class="compare-modal-close" data-compare-close aria-label="Fechar">&times;</button>
+        </div>
+        <div class="compare-modal-summary" id="compare-modal-summary"></div>
+        <div class="compare-modal-body" id="compare-modal-table"></div>
+      </div>
     </div>
 
     <script>
@@ -8376,6 +8476,7 @@ export function renderDashboard(): string {
           }
           taxState.lastComparison = body;
           renderTaxComparison(body);
+          if (showLoading) { openCompareModal(body); }
           addFeed(body.event_type || "tax.market_comparison.completed", String(body.count || 0) + " mercados comparados");
         } catch (error) {
           setText("#tax-compare-status", "erro");
@@ -8393,6 +8494,70 @@ export function renderDashboard(): string {
             button.textContent = "Comparar mercados";
           }
         }
+      }
+
+      function openCompareModal(comparison) {
+        var modal = qs("#compare-modal");
+        if (!modal) { return; }
+        var comparisons = comparison && Array.isArray(comparison.comparisons) ? comparison.comparisons : [];
+
+        // subtítulo com os países escolhidos
+        var names = comparisons.map(function (it) { return it && it.market ? it.market.name : ""; }).filter(Boolean);
+        setText("#compare-modal-title", comparisons.length + (comparisons.length === 1 ? " país comparado" : " países comparados"));
+        setText("#compare-modal-sub", names.length ? ("Exclusivamente: " + names.join(", ")) : "Selecione países para comparar.");
+
+        // cartões-resumo (vencedores)
+        var summary = comparison && comparison.summary ? comparison.summary : {};
+        var sBox = qs("#compare-modal-summary");
+        if (sBox) {
+          function card(label, m, extra) {
+            if (!m || !m.market) { return ""; }
+            return '<div class="tax-mini-card"><strong>' + escapeHtml(m.market.name) + '</strong><span>' + escapeHtml(label) + (extra ? " · " + escapeHtml(extra) : "") + '</span></div>';
+          }
+          var cheap = summary.cheapest_market, marg = summary.best_margin_market, load = summary.lowest_operational_load_market;
+          sBox.innerHTML =
+            card("Menor total ao cliente", cheap, cheap && cheap.totals ? Number(cheap.totals.cost_index || 0).toFixed(2) + "x" : "") +
+            card("Melhor margem", marg, marg && marg.totals ? formatPercent(marg.totals.seller_gross_margin_rate || 0) : "") +
+            card("Menor carga operacional", load, load && load.operational_load ? "risco " + Number(load.operational_load.risk_score || 0) : "");
+        }
+
+        // tabela exclusiva dos países selecionados
+        var table = qs("#compare-modal-table");
+        if (table) {
+          if (comparisons.length === 0) {
+            table.innerHTML = '<div class="comparison-row"><div><strong>Nenhum país selecionado</strong><span>Marque países nos chips e compare.</span></div></div>';
+          } else {
+            var header =
+              '<div class="comparison-row header">' +
+                '<span>Mercado</span><span>Total/índice</span><span>Imposto destino</span>' +
+                '<span>Margem</span><span>Preço unitário alvo</span><span>Carga operacional</span>' +
+              '</div>';
+            table.innerHTML = header + comparisons.map(function (item) {
+              var market = item && item.market ? item.market : {};
+              var totals = item && item.totals ? item.totals : {};
+              var load = item && item.operational_load ? item.operational_load : {};
+              var currency = market.currency ? market.currency : "USD";
+              var risk = Math.min(100, Math.max(8, Number(load.risk_score || 0) * 7));
+              return (
+                '<div class="comparison-row">' +
+                  '<div><strong>' + escapeHtml(market.name || "-") + '</strong><span>' + escapeHtml(market.code || "") + ' / ' + escapeHtml(market.indirect_tax_name || "") + '</span></div>' +
+                  '<div class="comparison-value">' + escapeHtml(formatCurrency(totals.customer_total, currency)) + '<span>' + Number(totals.cost_index || 0).toFixed(2) + 'x do subtotal</span></div>' +
+                  '<div class="comparison-value">' + escapeHtml(formatCurrency(totals.destination_indirect_tax, currency)) + '<span>duty ' + escapeHtml(formatCurrency(totals.import_duty, currency)) + '</span></div>' +
+                  '<div class="comparison-value">' + escapeHtml(formatCurrency(totals.seller_gross_margin, currency)) + '<span>' + escapeHtml(formatPercent(totals.seller_gross_margin_rate)) + '</span></div>' +
+                  '<div class="comparison-value">' + escapeHtml(formatCurrency(totals.suggested_unit_price, currency)) + '<span>moeda nativa</span></div>' +
+                  '<div><div class="risk-meter"><span style="--risk: ' + risk.toFixed(0) + '%;"></span></div><span>' + Number(load.risk_score || 0) + ' risco / ' + Number(load.documents || 0) + ' docs</span></div>' +
+                '</div>'
+              );
+            }).join("");
+          }
+        }
+
+        modal.hidden = false;
+      }
+
+      function closeCompareModal() {
+        var modal = qs("#compare-modal");
+        if (modal) { modal.hidden = true; }
       }
 
       function renderTaxComparison(comparison) {
@@ -8925,6 +9090,12 @@ export function renderDashboard(): string {
       if (taxCompareButton) {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
       }
+      document.querySelectorAll("[data-compare-close]").forEach((el) => {
+        el.addEventListener("click", closeCompareModal);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") { closeCompareModal(); }
+      });
 
       // Seletor de países: clicar num chip alterna a seleção
       const marketChips = qs("#market-chips");
