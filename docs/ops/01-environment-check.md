@@ -12,10 +12,10 @@ Confirmar se o workspace local, GitHub, Wrangler/Cloudflare e Supabase estao apo
 | Branch | OK | `main` rastreia `origin/main`. |
 | Repo local | OK | Workspace limpo antes desta checagem; ainda sem backend, frontend, Supabase config ou Wrangler config. |
 | Wrangler CLI | OK | `wrangler` disponivel via `npx`, versao `4.110.0`. |
-| Cloudflare auth | OK | Perfil `genialidadefilosofica` vinculado ao diretorio do projeto. Conta `NOXIS DRATHOS (OBSERVATORIO)`, account id `88d4a501b053d9cfc5e7bee644c473da`. |
+| Cloudflare auth | OK | Conta `Helvokhelvok@gmail.com's Account`, account id `f83a966b888114f64db46ffdde1ac023`, vinculada ao diretorio do projeto. (Worker migrado da conta `NOXIS DRATHOS` em 2026-09-24.) |
 | Cloudflare Worker | OK | Wrangler encontra Worker `helvokglobaltax` nessa conta. |
 | Cloudflare Pages | Bloqueado | Wrangler nao encontrou Pages project `helvokglobaltax` nessa conta. |
-| Workers.dev dominio | Parcial | `https://helvokglobaltax.genialidadefilosofica.workers.dev` responde `200 OK` com `Hello world`. |
+| Workers.dev dominio | Parcial | `https://helvokglobaltax.helvokhelvok.workers.dev` responde `200 OK` com `Hello world`. |
 | Supabase URL | OK | `https://jlvwudjgfzhhdgttrycj.supabase.co` corresponde ao projeto `jlvwudjgfzhhdgttrycj`. |
 | Supabase project | OK | Projeto `HELVOK GLOBAL TAX`, region `us-west-2`, status `ACTIVE_HEALTHY`, Postgres `17.6.1.141`. |
 | Supabase CLI | Parcial | CLI versao `2.104.0`, mas nao esta logado via access token local. |
@@ -79,17 +79,16 @@ Permissoes incluem Workers, Pages, KV, Queues, R2, D1, Workflows e Secrets Store
 Depois da autorizacao OAuth, foi criado e vinculado ao diretorio o perfil:
 
 ```text
-Profile: genialidadefilosofica
-Email: genialidadefilosofica@gmail.com
-Account Name: NOXIS DRATHOS (OBSERVATORIO)
-Account ID: 88d4a501b053d9cfc5e7bee644c473da
-Bound directory: C:\Users\GUSTAVO\OneDrive\Documentos\ATLAS TAX
+Email: helvokhelvok@gmail.com
+Account Name: Helvokhelvok@gmail.com's Account
+Account ID: f83a966b888114f64db46ffdde1ac023
+Bound directory: C:\Users\GUSTAVO\Claude\Projects\helvokglobaltax
 ```
 
 Validacao sem `--profile`:
 
 ```text
-Active profile: genialidadefilosofica
+Account: helvokhelvok@gmail.com
 Worker: helvokglobaltax
 Deployments: encontrados
 ```
@@ -99,7 +98,7 @@ Deployments: encontrados
 O dominio:
 
 ```text
-https://helvokglobaltax.genialidadefilosofica.workers.dev
+https://helvokglobaltax.helvokhelvok.workers.dev
 ```
 
 responde publicamente:
@@ -118,9 +117,9 @@ Pages project helvokglobaltax: Project not found.
 
 ### Interpretacao
 
-O dominio existe e esta ativo. Ele nao estava acessivel pelos perfis `default` ou `seravie-campo`, mas ficou acessivel pelo perfil `genialidadefilosofica`.
+O dominio existe e esta ativo na conta `helvokhelvok@gmail.com` (o Worker foi migrado da conta `NOXIS DRATHOS` em 2026-09-24).
 
-O Worker correto esta na conta `NOXIS DRATHOS (OBSERVATORIO)`.
+O Worker correto esta na conta `helvokhelvok@gmail.com` (migrado de `NOXIS DRATHOS` em 2026-09-24).
 
 ### Acao necessaria
 
@@ -214,7 +213,7 @@ Verificar se `public.rls_auto_enable()` foi criada manualmente. Se nao for uma A
 
 ## Decisao de sequencia
 
-Nao iniciar deploys Cloudflare fora do perfil `genialidadefilosofica`.
+Iniciar deploys Cloudflare apenas logado na conta `helvokhelvok@gmail.com` (`npx wrangler whoami` deve mostrar esse e-mail).
 
 Pendencias antes da Fase 1:
 
