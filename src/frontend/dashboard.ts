@@ -8045,13 +8045,16 @@ export function renderDashboard(): string {
 
       var selectedMarkets = new Set();
       var recoveryAccessToken = null;
+      var marketChipsInitialized = false;
 
       function renderMarketChips(markets) {
         var box = qs("#market-chips");
         if (!box) { return; }
-        // seleção inicial: todos os destinos (menos a origem), na primeira carga
-        if (selectedMarkets.size === 0) {
+        // seleção inicial: todos marcados APENAS na primeira carga.
+        // Depois disso a seleção do usuário é respeitada (inclusive vazia, via "Nenhum").
+        if (!marketChipsInitialized) {
           markets.forEach(function (m) { if (m && m.code) { selectedMarkets.add(m.code); } });
+          marketChipsInitialized = true;
         }
         box.innerHTML = markets.map(function (m) {
           var sel = selectedMarkets.has(m.code) ? " selected" : "";
@@ -8348,10 +8351,11 @@ export function renderDashboard(): string {
         // usa apenas os países que o usuário selecionou nos chips
         let destinations = getSelectedDestinations(payload.origin_country).slice(0, 40);
         if (destinations.length === 0) {
-          // nenhum selecionado -> cai para todos os mercados carregados (evita comparação vazia)
-          destinations = taxState.markets.length > 0
-            ? taxState.markets.map((market) => market.code).filter((code) => code && code !== payload.origin_country).slice(0, 40)
-            : ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP"];
+          // nenhum país selecionado: avisa o usuário em vez de comparar tudo silenciosamente
+          setText("#tax-compare-status", "selecione ao menos um país");
+          if (button) { button.disabled = false; button.textContent = "Comparar mercados"; }
+          addFeed("tax.compare.empty", "Selecione ao menos um país para comparar");
+          return;
         }
 
         try {
