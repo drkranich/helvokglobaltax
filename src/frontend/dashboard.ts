@@ -152,9 +152,7 @@ export function renderDashboard(): string {
         overflow: hidden;
         border: 1px solid rgba(113, 113, 122, 0.42);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.08);
+        background: var(--card);
         box-shadow: 0 1px 3px rgba(9, 9, 11, 0.1);
       }
 
@@ -455,9 +453,7 @@ export function renderDashboard(): string {
         padding: 0 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(255, 255, 255, 0.88);
+        background: var(--card);
         color: var(--champagne);
         cursor: pointer;
         text-align: left;
@@ -489,9 +485,7 @@ export function renderDashboard(): string {
         padding: 6px;
         border: 1px solid rgba(113, 113, 122, 0.36);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(255, 255, 255, 0.98);
+        background: var(--card);
         color: var(--champagne);
         box-shadow: 0 2px 8px rgba(9, 9, 11, 0.1);
       }
@@ -546,9 +540,7 @@ export function renderDashboard(): string {
         padding: 0 12px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(255, 255, 255, 0.4);
+        background: var(--card);
         color: var(--champagne);
         cursor: pointer;
         text-align: left;
@@ -583,9 +575,7 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid rgba(113, 113, 122, 0.36);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(255, 255, 255, 0.42);
+        background: var(--card);
         color: var(--champagne);
         box-shadow: 0 2px 8px rgba(9, 9, 11, 0.1);
       }
@@ -603,6 +593,7 @@ export function renderDashboard(): string {
       }
 
       .date-panel-month {
+        color: #0a0a0a;
         font-family: var(--font-data);
         font-size: 13px;
         text-transform: capitalize;
@@ -980,50 +971,50 @@ export function renderDashboard(): string {
 
       .fiscal-certificate-panel .glass-field {
         border-color: rgba(24, 24, 27, 0.36);
-        background: rgba(255, 255, 255, 0.3);
-        color: var(--petroleum-950);
+        background: #ffffff;
+        color: #0a0a0a;
       }
 
       .fiscal-certificate-panel .glass-field::placeholder {
-        color: rgba(250, 250, 250, 0.55);
+        color: rgba(10, 10, 10, 0.55);
       }
 
       .fiscal-certificate-panel .file-upload-name {
-        color: rgba(250, 250, 250, 0.72);
+        color: rgba(10, 10, 10, 0.72);
       }
 
       .fiscal-certificate-panel .glass-upload-button,
       .fiscal-certificate-panel .date-trigger {
         border-color: rgba(24, 24, 27, 0.4);
         background: #ffffff;
-        color: var(--petroleum-950);
+        color: #0a0a0a;
       }
 
       .fiscal-certificate-panel .date-trigger.placeholder {
-        color: rgba(250, 250, 250, 0.55);
+        color: rgba(10, 10, 10, 0.55);
       }
 
       .fiscal-certificate-panel .date-panel {
         border-color: rgba(24, 24, 27, 0.42);
         background: #ffffff;
-        color: var(--petroleum-950);
+        color: #0a0a0a;
       }
 
       .fiscal-certificate-panel .date-panel-month {
-        color: var(--petroleum-950);
+        color: #0a0a0a;
       }
 
       .fiscal-certificate-panel .date-weekday {
-        color: rgba(250, 250, 250, 0.6);
+        color: rgba(10, 10, 10, 0.6);
       }
 
       .fiscal-certificate-panel .date-cell {
-        color: var(--petroleum-950);
-        background: rgba(255, 255, 255, 0.25);
+        color: #0a0a0a;
+        background: #ffffff;
       }
 
       .fiscal-certificate-panel .date-cell.is-adjacent {
-        color: rgba(250, 250, 250, 0.4);
+        color: rgba(10, 10, 10, 0.45);
       }
 
       .stacked-form {
@@ -1124,9 +1115,7 @@ export function renderDashboard(): string {
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.07);
+        background: var(--card);
       }
 
       .access-pulse::before {
@@ -1300,7 +1289,7 @@ export function renderDashboard(): string {
 
       .mini-button.danger {
         border-color: rgba(216, 92, 92, 0.5);
-        color: #ffb7a8;
+        color: #b91c1c;
         background: #f1f1f3;
       }
 
@@ -1308,9 +1297,7 @@ export function renderDashboard(): string {
         display: grid;
         gap: 10px;
         padding: 12px;
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.08);
+        background: var(--card);
       }
 
       .catalog-workbench {
@@ -1351,9 +1338,7 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.06);
+        background: var(--card);
       }
 
       .catalog-item-card strong {
@@ -1452,9 +1437,7 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.06);
+        background: var(--card);
       }
 
       .financial-record-card > div:first-child {
@@ -1571,9 +1554,7 @@ export function renderDashboard(): string {
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.07);
+        background: var(--card);
       }
 
       .country-tile::after {
@@ -1715,9 +1696,7 @@ export function renderDashboard(): string {
         padding: 13px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          #ffffff,
-          rgba(24, 24, 27, 0.07);
+        background: var(--card);
       }
 
       .tax-section-head {
