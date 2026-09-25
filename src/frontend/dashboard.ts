@@ -2387,6 +2387,73 @@ export function renderDashboard(): string {
       .tab-panel > .work-grid,
       .tab-panel > .hero-grid { margin: 0; }
 
+
+      /* ===== Seletor de países (Comparar mercados) ===== */
+      .market-picker {
+        display: grid;
+        gap: 10px;
+        margin: 4px 0 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--card-soft, #fbfbfc);
+      }
+      .market-picker-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .market-picker-title {
+        font-family: var(--font-data);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--champagne-64);
+      }
+      .market-picker-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .market-picker-count {
+        font-family: var(--font-data);
+        font-size: 11px;
+        color: var(--champagne-64);
+      }
+      .market-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .market-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--champagne);
+        cursor: pointer;
+        font-size: 13px;
+        user-select: none;
+        transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+      }
+      .market-chip:hover { background: #f4f4f5; }
+      .market-chip.selected {
+        border-color: #0a0a0a;
+        background: #0a0a0a;
+        color: #ffffff;
+      }
+      .market-chip .chip-code {
+        font-family: var(--font-data);
+        font-size: 10.5px;
+        opacity: 0.7;
+      }
+
     </style>
   </head>
   <body>
@@ -2402,9 +2469,8 @@ export function renderDashboard(): string {
             <h2 id="auth-title">Entrar na Helvok Tax</h2>
             <span id="auth-mode-label">login</span>
           </div>
-          <div class="auth-tabs" role="tablist" aria-label="Modo de acesso">
+          <div class="auth-tabs" role="tablist" aria-label="Modo de acesso" hidden>
             <button class="auth-tab active" type="button" data-auth-mode="login">Entrar</button>
-            <button class="auth-tab" type="button" data-auth-mode="signup">Criar acesso</button>
           </div>
           <div class="field-block">
             <label for="auth-name">Nome</label>
@@ -2419,8 +2485,7 @@ export function renderDashboard(): string {
             <input id="auth-password" class="glass-field" autocomplete="current-password" type="password" minlength="6" placeholder="minimo 6 caracteres" required />
           </div>
           <button class="glass-button primary" id="auth-submit" type="submit">Entrar</button>
-          <button class="glass-button" id="auth-skip" type="button">Ver cockpit sem sessão</button>
-          <div class="auth-message" id="auth-message">Use seu email e senha do Supabase Auth. Se criar acesso e o projeto exigir confirmação, confirme no email antes de entrar.</div>
+          <div class="auth-message" id="auth-message">Acesso restrito a usuários convidados. Entre com o e-mail e a senha da sua conta. Não tem acesso? Solicite um convite ao administrador.</div>
         </form>
       </div>
     </section>
@@ -3779,6 +3844,17 @@ export function renderDashboard(): string {
               <span id="tax-compare-status">aguardando simulação</span>
             </div>
             <button class="glass-button primary" id="tax-compare-button" type="button">Comparar mercados</button>
+          </div>
+          <div class="market-picker" aria-label="Escolha os países para comparar">
+            <div class="market-picker-head">
+              <span class="market-picker-title">Países a comparar</span>
+              <div class="market-picker-actions">
+                <button type="button" class="mini-button" data-market-pick="all">Todos</button>
+                <button type="button" class="mini-button" data-market-pick="none">Nenhum</button>
+                <span id="market-picker-count" class="market-picker-count">0 selecionados</span>
+              </div>
+            </div>
+            <div class="market-chips" id="market-chips"></div>
           </div>
           <div class="comparison-summary">
             <div class="tax-mini-card"><strong id="compare-cheapest">--</strong><span>Menor total ao cliente</span></div>
@@ -7786,7 +7862,6 @@ export function renderDashboard(): string {
         event.preventDefault();
         const email = qs("#auth-email").value.trim().toLowerCase();
         const password = qs("#auth-password").value;
-        const fullName = qs("#auth-name").value.trim();
 
         if (!email || !password) {
           setAuthMessage("Informe email e senha para continuar.", "warn");
@@ -7796,18 +7871,12 @@ export function renderDashboard(): string {
         setAuthMessage("Autenticando com Supabase Auth...", null);
 
         try {
-          const payload = authState.mode === "signup"
-            ? await callSupabaseAuth("/auth/v1/signup", {
-                email: email,
-                password: password,
-                data: {
-                  full_name: fullName || email
-                }
-              })
-            : await callSupabaseAuth("/auth/v1/token?grant_type=password", {
-                email: email,
-                password: password
-              });
+          // Auto-cadastro público desativado: acesso somente por convite.
+          // O modo "signup" foi removido da UI; aqui garantimos que apenas login por senha ocorra.
+          const payload = await callSupabaseAuth("/auth/v1/token?grant_type=password", {
+            email: email,
+            password: password
+          });
 
           if (!payload.access_token) {
             setAuthMessage("Acesso criado. Se o Supabase exigir confirmação, confirme no email e depois entre.", "warn");
@@ -7870,6 +7939,35 @@ export function renderDashboard(): string {
         }).join("");
       }
 
+      var selectedMarkets = new Set();
+
+      function renderMarketChips(markets) {
+        var box = qs("#market-chips");
+        if (!box) { return; }
+        // seleção inicial: todos os destinos (menos a origem), na primeira carga
+        if (selectedMarkets.size === 0) {
+          markets.forEach(function (m) { if (m && m.code) { selectedMarkets.add(m.code); } });
+        }
+        box.innerHTML = markets.map(function (m) {
+          var sel = selectedMarkets.has(m.code) ? " selected" : "";
+          return '<button type="button" class="market-chip' + sel + '" data-market-code="' + escapeHtml(m.code) + '">' +
+            escapeHtml(m.name) + ' <span class="chip-code">' + escapeHtml(m.code) + '</span></button>';
+        }).join("");
+        updateMarketPickerCount();
+      }
+
+      function updateMarketPickerCount() {
+        setText("#market-picker-count", String(selectedMarkets.size) + " selecionados");
+      }
+
+      function getSelectedDestinations(originCountry) {
+        var list = [];
+        selectedMarkets.forEach(function (code) {
+          if (code && code !== originCountry) { list.push(code); }
+        });
+        return list;
+      }
+
       function populateMarketSelects(markets) {
         const origin = qs("#tax-origin");
         const destination = qs("#tax-destination");
@@ -7899,6 +7997,7 @@ export function renderDashboard(): string {
           taxState.rulePackVersion = body.rule_pack_version || "";
           renderJurisdictionMap(taxState.markets);
           populateMarketSelects(taxState.markets);
+          renderMarketChips(taxState.markets);
           setText("#tax-rule-pack", taxState.rulePackVersion || "pacote de regras");
           addFeed("tax.markets", String(taxState.markets.length) + " mercados de exportação carregados");
           await runTaxSimulation();
@@ -8141,9 +8240,14 @@ export function renderDashboard(): string {
         setText("#tax-compare-status", "comparando mercados");
 
         const payload = collectTaxPayload();
-        const destinations = taxState.markets.length > 0
-          ? taxState.markets.map((market) => market.code).filter((code) => code && code !== payload.origin_country).slice(0, 40)
-          : ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP", "SG", "AU", "AG", "BB", "DO", "JM", "LC", "KN", "VC", "TT"];
+        // usa apenas os países que o usuário selecionou nos chips
+        let destinations = getSelectedDestinations(payload.origin_country).slice(0, 40);
+        if (destinations.length === 0) {
+          // nenhum selecionado -> cai para todos os mercados carregados (evita comparação vazia)
+          destinations = taxState.markets.length > 0
+            ? taxState.markets.map((market) => market.code).filter((code) => code && code !== payload.origin_country).slice(0, 40)
+            : ["PT", "DE", "FR", "ES", "IT", "NL", "GB", "US", "CA", "JP"];
+        }
 
         try {
           const response = await fetch("/v1/tax/compare", {
@@ -8704,6 +8808,32 @@ export function renderDashboard(): string {
       if (taxCompareButton) {
         taxCompareButton.addEventListener("click", () => runTaxComparison(true));
       }
+
+      // Seletor de países: clicar num chip alterna a seleção
+      const marketChips = qs("#market-chips");
+      if (marketChips) {
+        marketChips.addEventListener("click", (event) => {
+          const chip = event.target && event.target.closest ? event.target.closest(".market-chip") : null;
+          if (!chip) { return; }
+          const code = chip.getAttribute("data-market-code");
+          if (!code) { return; }
+          if (selectedMarkets.has(code)) { selectedMarkets.delete(code); chip.classList.remove("selected"); }
+          else { selectedMarkets.add(code); chip.classList.add("selected"); }
+          updateMarketPickerCount();
+        });
+      }
+      // Botões Todos / Nenhum
+      document.querySelectorAll("[data-market-pick]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const mode = btn.getAttribute("data-market-pick");
+          if (mode === "all") {
+            taxState.markets.forEach((m) => { if (m && m.code) { selectedMarkets.add(m.code); } });
+          } else if (mode === "none") {
+            selectedMarkets.clear();
+          }
+          renderMarketChips(taxState.markets);
+        });
+      });
 
       const financialPlanForm = qs("#financial-plan-form");
       if (financialPlanForm) {
