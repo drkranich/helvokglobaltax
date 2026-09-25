@@ -2619,6 +2619,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#obrigacoes"><span>Obrigações</span><span class="nav-code">OBG</span></a>
           <a class="nav-button" href="#financeiro"><span>Planejamento financeiro</span><span class="nav-code">FIN</span></a>
           <a class="nav-button" href="#mercados"><span>Mercados</span><span class="nav-code">EXP</span></a>
+          <a class="nav-button" href="#internacional"><span>Internacional</span><span class="nav-code">INT</span></a>
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
@@ -4072,6 +4073,136 @@ export function renderDashboard(): string {
                 <div class="financial-message" id="tenant-settings-message">Alterações valem para todo o tenant.</div>
               </form>
             </aside>
+          </div>
+        </section>
+        <section class="app-view" id="internacional" data-view="internacional" aria-label="Serviços fiscais internacionais">
+          <div class="view-head">
+            <div>
+              <span class="view-kicker">VAT · e-invoicing · Peppol</span>
+              <h1>Serviços fiscais internacionais</h1>
+              <p>Calcule o VAT de destino (OSS/IOSS/reverse charge) e monte a fatura eletrônica roteada por país — Brasil via Focus NFe, União Europeia via Helvok Peppol (EN 16931), demais países via fatura comercial.</p>
+            </div>
+            <span class="view-status" id="intl-view-status">motor internacional</span>
+          </div>
+
+          <div class="view-tabs" data-tab-group="internacional">
+            <button type="button" class="view-tab active" data-tab="internacional-0">Calculadora de VAT</button>
+            <button type="button" class="view-tab" data-tab="internacional-1">Emissão de documento</button>
+          </div>
+
+          <div class="tab-panel active" data-tab-group="internacional" data-tab="internacional-0">
+            <section class="work-grid">
+              <article class="panel">
+                <div class="panel-title"><h2>Calcular VAT de destino</h2><span>vat.ts</span></div>
+                <form class="stacked-form" id="intl-vat-form">
+                  <div class="field-block">
+                    <label for="intl-vat-origin">País de origem (vendedor)</label>
+                    <input id="intl-vat-origin" class="glass-field" placeholder="PT, DE, BR..." maxlength="2" value="PT" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-vat-destination">País de destino (comprador)</label>
+                    <input id="intl-vat-destination" class="glass-field" placeholder="DE, FR, ES..." maxlength="2" value="DE" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-vat-type">Tipo de cliente</label>
+                    <select id="intl-vat-type" class="glass-select">
+                      <option value="b2c" selected>B2C (consumidor final)</option>
+                      <option value="b2b">B2B (empresa)</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-vat-amount">Valor líquido (base)</label>
+                    <input id="intl-vat-amount" class="glass-field" type="number" step="0.01" min="0" placeholder="1000.00" value="1000" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-vat-currency">Moeda</label>
+                    <input id="intl-vat-currency" class="glass-field" placeholder="EUR" maxlength="3" value="EUR" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-vat-ytd">Vendas B2C à UE no ano (limite OSS €10.000)</label>
+                    <input id="intl-vat-ytd" class="glass-field" type="number" step="0.01" min="0" placeholder="0" value="0" />
+                  </div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--champagne-64)">
+                    <input id="intl-vat-import" type="checkbox" /> Importação de fora da UE (dispara IOSS)
+                  </label>
+                  <button class="glass-button primary" id="intl-vat-button" type="submit">Calcular VAT</button>
+                  <div class="financial-message" id="intl-vat-message">O cálculo é real e não toca em nenhuma autoridade fiscal.</div>
+                </form>
+              </article>
+
+              <aside class="panel">
+                <div class="panel-title"><h2>Resultado do VAT</h2><span id="intl-vat-regime">aguardando</span></div>
+                <div class="tax-kpi-grid" id="intl-vat-result">
+                  <div class="tax-kpi"><span>Base líquida</span><strong id="intl-vat-net">--</strong></div>
+                  <div class="tax-kpi"><span>VAT</span><strong id="intl-vat-tax">--</strong></div>
+                  <div class="tax-kpi"><span>Total com VAT</span><strong id="intl-vat-gross">--</strong></div>
+                  <div class="tax-kpi"><span>Alíquota</span><strong id="intl-vat-rate">--</strong></div>
+                </div>
+                <div class="financial-message" id="intl-vat-rationale" style="margin-top:12px">Preencha e calcule para ver a regra aplicada.</div>
+              </aside>
+            </section>
+          </div>
+
+          <div class="tab-panel" data-tab-group="internacional" data-tab="internacional-1">
+            <section class="work-grid">
+              <article class="panel">
+                <div class="panel-title"><h2>Montar documento fiscal</h2><span>roteador por país</span></div>
+                <form class="stacked-form" id="intl-emit-form">
+                  <div class="field-block">
+                    <label for="intl-emit-seller-name">Vendedor (razão social)</label>
+                    <input id="intl-emit-seller-name" class="glass-field" placeholder="Helvok Comércio Ltda" value="Helvok Comércio Ltda" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-seller-country">País do vendedor</label>
+                    <input id="intl-emit-seller-country" class="glass-field" placeholder="PT" maxlength="2" value="PT" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-buyer-name">Comprador</label>
+                    <input id="intl-emit-buyer-name" class="glass-field" placeholder="Cliente Final" value="Cliente Final" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-buyer-country">País do comprador (destino)</label>
+                    <input id="intl-emit-buyer-country" class="glass-field" placeholder="DE" maxlength="2" value="DE" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-buyer-type">Comprador é</label>
+                    <select id="intl-emit-buyer-type" class="glass-select">
+                      <option value="b2c" selected>Consumidor final (B2C)</option>
+                      <option value="b2b">Empresa (B2B)</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-item-desc">Descrição do item</label>
+                    <input id="intl-emit-item-desc" class="glass-field" placeholder="Camisa de linho" value="Produto" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-item-qty">Quantidade</label>
+                    <input id="intl-emit-item-qty" class="glass-field" type="number" min="1" value="1" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-item-price">Preço unitário líquido</label>
+                    <input id="intl-emit-item-price" class="glass-field" type="number" step="0.01" min="0" value="500" />
+                  </div>
+                  <div class="field-block">
+                    <label for="intl-emit-currency">Moeda</label>
+                    <input id="intl-emit-currency" class="glass-field" placeholder="EUR" maxlength="3" value="EUR" />
+                  </div>
+                  <button class="glass-button primary" id="intl-emit-button" type="submit">Montar documento</button>
+                  <div class="financial-message" id="intl-emit-message">Sem credencial do provedor, o documento é montado mas não transmitido (status honesto).</div>
+                </form>
+              </article>
+
+              <aside class="panel">
+                <div class="panel-title"><h2>Documento</h2><span id="intl-emit-provider">--</span></div>
+                <div class="tax-kpi-grid">
+                  <div class="tax-kpi"><span>Tipo</span><strong id="intl-doc-kind">--</strong></div>
+                  <div class="tax-kpi"><span>Status</span><strong id="intl-doc-status">--</strong></div>
+                  <div class="tax-kpi"><span>Imposto</span><strong id="intl-doc-tax">--</strong></div>
+                  <div class="tax-kpi"><span>Total</span><strong id="intl-doc-total">--</strong></div>
+                </div>
+                <div class="financial-message" id="intl-doc-detail" style="margin-top:12px">Monte o documento para ver o resultado.</div>
+              </aside>
+            </section>
           </div>
         </section>
       </main>
@@ -8496,6 +8627,83 @@ export function renderDashboard(): string {
         }
       }
 
+      function fmtMoneyCents(cents, currency) {
+        var v = Number(cents || 0) / 100;
+        try { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: currency || "EUR" }).format(v); }
+        catch (e) { return (currency || "EUR") + " " + v.toFixed(2); }
+      }
+
+      async function runIntlVat(event) {
+        if (event) { event.preventDefault(); }
+        var btn = qs("#intl-vat-button");
+        if (btn) { btn.disabled = true; btn.textContent = "Calculando..."; }
+        setText("#intl-vat-message", "Calculando VAT de destino...");
+        try {
+          var currency = (qs("#intl-vat-currency").value || "EUR").toUpperCase();
+          var payload = {
+            origin_country: (qs("#intl-vat-origin").value || "").toUpperCase(),
+            destination_country: (qs("#intl-vat-destination").value || "").toUpperCase(),
+            is_b2c: qs("#intl-vat-type").value !== "b2b",
+            net_amount: Number(qs("#intl-vat-amount").value || 0),
+            currency: currency,
+            eu_cross_border_sales_ytd: Number(qs("#intl-vat-ytd").value || 0),
+            is_import_into_eu: qs("#intl-vat-import").checked
+          };
+          var res = await fetch("/v1/intl/vat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+          var body = await res.json();
+          if (!res.ok) { throw new Error(body && body.error ? body.error.message : "Falha no cálculo"); }
+          var d = body.decision || {}, a = body.amounts || {};
+          setText("#intl-vat-regime", d.regime || "-");
+          setText("#intl-vat-net", fmtMoneyCents(a.net_amount_cents, currency));
+          setText("#intl-vat-tax", fmtMoneyCents(a.vat_amount_cents, currency));
+          setText("#intl-vat-gross", fmtMoneyCents(a.gross_amount_cents, currency));
+          setText("#intl-vat-rate", Number(d.rate_percent || 0) + "% (" + (d.applicable_country || "-") + ")");
+          setText("#intl-vat-rationale", d.rationale || "");
+          setText("#intl-vat-message", "Cálculo concluído.");
+          addFeed("intl.vat.calculated", "VAT calculado: " + Number(d.rate_percent || 0) + "% " + (d.applicable_country || ""));
+        } catch (error) {
+          setText("#intl-vat-message", error instanceof Error ? error.message : "Erro no cálculo");
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = "Calcular VAT"; }
+        }
+      }
+
+      async function runIntlEmit(event) {
+        if (event) { event.preventDefault(); }
+        var btn = qs("#intl-emit-button");
+        if (btn) { btn.disabled = true; btn.textContent = "Montando..."; }
+        setText("#intl-emit-message", "Montando o documento...");
+        try {
+          var currency = (qs("#intl-emit-currency").value || "EUR").toUpperCase();
+          var payload = {
+            seller: { legal_name: qs("#intl-emit-seller-name").value, country_code: (qs("#intl-emit-seller-country").value || "").toUpperCase(), is_business: true },
+            buyer: { legal_name: qs("#intl-emit-buyer-name").value, country_code: (qs("#intl-emit-buyer-country").value || "").toUpperCase(), is_business: qs("#intl-emit-buyer-type").value === "b2b" },
+            items: [{ description: qs("#intl-emit-item-desc").value, quantity: Number(qs("#intl-emit-item-qty").value || 1), unit_price: Number(qs("#intl-emit-item-price").value || 0) }],
+            currency: currency
+          };
+          var res = await fetch("/v1/intl/emit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+          var body = await res.json();
+          if (!res.ok) { throw new Error(body && body.error ? body.error.message : "Falha na emissão"); }
+          var doc = body.document || {};
+          setText("#intl-emit-provider", body.provider || "-");
+          setText("#intl-doc-kind", doc.kind || "-");
+          setText("#intl-doc-status", doc.status || "-");
+          if (doc.tax) {
+            setText("#intl-doc-tax", fmtMoneyCents(doc.tax.taxAmountCents, currency) + " (" + Number(doc.tax.ratePercent || 0) + "%)");
+            setText("#intl-doc-total", fmtMoneyCents(doc.tax.grossAmountCents, currency));
+          } else {
+            setText("#intl-doc-tax", "--"); setText("#intl-doc-total", "--");
+          }
+          setText("#intl-doc-detail", doc.message || "");
+          setText("#intl-emit-message", "Documento processado.");
+          addFeed("intl.document.processed", (body.provider || "") + " · " + (doc.status || ""));
+        } catch (error) {
+          setText("#intl-emit-message", error instanceof Error ? error.message : "Erro na emissão");
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = "Montar documento"; }
+        }
+      }
+
       function openCompareModal(comparison) {
         var modal = qs("#compare-modal");
         if (!modal) { return; }
@@ -9098,6 +9306,11 @@ export function renderDashboard(): string {
       });
 
       // Seletor de países: clicar num chip alterna a seleção
+      const intlVatForm = qs("#intl-vat-form");
+      if (intlVatForm) { intlVatForm.noValidate = true; intlVatForm.addEventListener("submit", runIntlVat); }
+      const intlEmitForm = qs("#intl-emit-form");
+      if (intlEmitForm) { intlEmitForm.noValidate = true; intlEmitForm.addEventListener("submit", runIntlEmit); }
+
       const marketChips = qs("#market-chips");
       if (marketChips) {
         marketChips.addEventListener("click", (event) => {

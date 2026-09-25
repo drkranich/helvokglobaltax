@@ -4,6 +4,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { createAdminRouter } from "./admin/routes";
 import type { AppEnv } from "./env";
 import { createFiscalAdapterRouter } from "./fiscal/routes";
+import { createIntlFiscalRouter } from "./fiscal/intl-routes";
 import { createFinancialRouter } from "./financial/routes";
 import { renderDashboard } from "./frontend/dashboard";
 import { htmlResponse, jsonResponse } from "./response";
@@ -98,6 +99,7 @@ export function createApp(): Hono<AppEnv> {
   app.route("/v1", createTaxRouter());
   app.route("/v1", createFinancialRouter());
   app.route("/v1", createFiscalAdapterRouter());
+  app.route("/v1", createIntlFiscalRouter());
 
   app.notFound((c) =>
     jsonResponse(

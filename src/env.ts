@@ -2,6 +2,8 @@ type SecretBindings = {
   HELVOK_ADMIN_TOKEN?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   HELVOK_CERT_ENCRYPTION_KEY?: string;
+  FOCUS_NFE_TOKEN?: string;
+  HELVOK_PEPPOL_AP_KEY?: string;
 };
 
 type PublicBindings = {
