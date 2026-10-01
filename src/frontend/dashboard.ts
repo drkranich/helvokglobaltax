@@ -1,3 +1,4 @@
+import { moduleNavigationStyles, moduleNavigationScript } from "./module-navigation";
 import { mobileStyles, mobileMarkup, mobileScript } from "./mobile";
 
 export function renderDashboard(): string {
@@ -2560,6 +2561,7 @@ export function renderDashboard(): string {
       }
 
       ${mobileStyles}
+      ${moduleNavigationStyles}
     </style>
   </head>
   <body>
@@ -9207,7 +9209,9 @@ export function renderDashboard(): string {
       initViewTabs();
 
       function activateView(viewId, updateHash) {
-        const targetId = viewId || "dashboard";
+        const parts = String(viewId || "dashboard").split("/");
+        const targetId = parts[0];
+        const sectionId = parts[1] || "";
         const target = document.getElementById(targetId) || document.getElementById("dashboard");
         if (!target) {
           return;
@@ -9219,19 +9223,24 @@ export function renderDashboard(): string {
 
         document.querySelectorAll(".nav-button").forEach((link) => {
           const linkTarget = String(link.getAttribute("href") || "").replace("#", "");
-          link.classList.toggle("active", linkTarget === target.id);
+          link.classList.toggle("active", linkTarget.split("/")[0] === target.id);
         });
 
         const label = target.getAttribute("aria-label") || "Dashboard";
         setText("#breadcrumb-organization", label);
         if (updateHash) {
-          window.history.replaceState(null, "", "#" + target.id);
+          window.history.replaceState(null, "", "#" + target.id + (sectionId && document.getElementById(sectionId)?.closest(".app-view") === target ? "/" + sectionId : ""));
         }
         document.querySelectorAll(".mobile-nav a, .mobile-module-links a").forEach(link => {
-          if (link.hash === "#" + target.id) link.setAttribute("aria-current", "page");
+          if (link.hash.split("/")[0] === "#" + target.id) link.setAttribute("aria-current", "page");
           else link.removeAttribute("aria-current");
         });
-        window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        updateModuleNavigation(target, sectionId);
+        const destination = sectionId && document.getElementById(sectionId);
+        if (destination && destination.closest(".app-view") === target) {
+          destination.scrollIntoView({block: "start", behavior: "auto"});
+          destination.setAttribute("tabindex", "-1"); destination.focus({preventScroll: true});
+        } else window.scrollTo({top: 0, behavior: "auto"});
       }
 
       document.querySelectorAll(".nav-button").forEach((link) => {
@@ -9708,6 +9717,8 @@ export function renderDashboard(): string {
         });
       }
 
+      ${moduleNavigationScript}
+      initializeModuleNavigation();
       ${mobileScript}
       initializeMobileExperience();
 

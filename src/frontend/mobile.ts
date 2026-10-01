@@ -80,12 +80,12 @@ export const mobileScript = `
 function initializeMobileExperience() {
   const dialog = document.getElementById("mobile-module-dialog");
   const links = dialog.querySelector(".mobile-module-links");
-  document.querySelectorAll(".side-rail .nav-button").forEach(link => links.append(link.cloneNode(true)));
+  document.querySelectorAll(".side-rail .nav-stack > *").forEach(item => links.append(item.cloneNode(true)));
   document.querySelectorAll("[data-mobile-menu]").forEach(button => button.addEventListener("click", () => dialog.showModal()));
   document.getElementById("mobile-module-close").addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", event => { if (event.target === dialog) { const rect = dialog.getBoundingClientRect(); if (event.clientY < rect.top || event.clientX < rect.left || event.clientX > rect.right) dialog.close(); } });
   document.querySelectorAll(".mobile-nav a, .mobile-module-links a").forEach(link => link.addEventListener("click", event => {
-    event.preventDefault(); activateView(link.hash.slice(1), true); dialog.close();
+    event.preventDefault(); dialog.close(); activateView(link.hash.slice(1), true);
   }));
   const labelComparisons = () => document.querySelectorAll(".comparison-table").forEach(table => {
     const headers = [...table.querySelectorAll(".comparison-row.header > *")].map(cell => cell.textContent.trim());
