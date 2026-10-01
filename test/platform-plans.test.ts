@@ -5,7 +5,7 @@ import { renderDashboard } from '../src/frontend/dashboard';
 
 describe('platform plan catalogue', () => {
   it('serves public prices without claiming billing or quota enforcement', async () => {
-    const response = await createApp().request('/v1/plans');
+    const response = await createApp().request('/v1/plans', {}, { APP_NAME: 'Helvok Tax', APP_ENV: 'test', API_VERSION: 'v1' });
     const body = await response.json<typeof platformPlanCatalog>();
     expect(response.status).toBe(200);
     expect(body.billing_enabled).toBe(false);

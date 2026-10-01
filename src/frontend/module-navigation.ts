@@ -43,6 +43,7 @@ function initializeModuleNavigation() {
     const viewId = link.hash.slice(1), view = document.getElementById(viewId);
     if (!view) return;
     const tree = document.createElement("details"); tree.className = "module-tree"; tree.dataset.module = viewId;
+    if (link.hasAttribute("data-platform-admin")) { tree.setAttribute("data-platform-admin", ""); tree.hidden = true; }
     const summary = document.createElement("summary"); summary.textContent = link.querySelector("span").textContent;
     link.before(tree); tree.append(summary, link);
     link.querySelector("span").textContent = "Visão geral";

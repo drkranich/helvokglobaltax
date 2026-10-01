@@ -1,3 +1,4 @@
+import { billingAdminMarkup, billingAdminScript } from "./billing-admin";
 import { accountMarkup, accountScript } from "./account";
 import { renderPlatformPlans, platformPlanStyles } from "./platform-plans";
 import { moduleNavigationStyles, moduleNavigationScript } from "./module-navigation";
@@ -2570,6 +2571,8 @@ export function renderDashboard(): string {
       .welcome-organization { font-size: 12px; }
       .welcome-block p { margin: 0; font-size: 12px; color: var(--champagne-64); line-height: 1.5; }
       ${platformPlanStyles}
+      [data-platform-admin][hidden] { display:none !important; }
+      .billing-plan-form { padding-block:24px; border-top:1px solid var(--line); }
     </style>
   </head>
   <body>
@@ -2640,6 +2643,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
+          <a class="nav-button" href="#admin-planos" data-platform-admin hidden><span>Admin · Planos e Stripe</span><span class="nav-code">ADM</span></a>
           <a class="nav-button" href="#minha-conta"><span>Minha conta</span><span class="nav-code">EU</span></a>
           <a class="nav-button" href="#planos"><span>Planos da plataforma</span><span class="nav-code">PLN</span></a>
           <a class="nav-button" href="#configuracoes"><span>Configurações</span><span class="nav-code">CFG</span></a>
@@ -4025,6 +4029,7 @@ export function renderDashboard(): string {
         </div>
         </section>
 
+        ${billingAdminMarkup}
         ${accountMarkup}
         ${renderPlatformPlans()}
         <section class="app-view" id="configuracoes" data-view="configuracoes" aria-label="Configurações gerais">
@@ -4452,6 +4457,7 @@ export function renderDashboard(): string {
         authState.session = null;
         authState.access = null;
         renderAccountEmail(null);
+        setBillingAdminVisible(false);
         document.querySelectorAll("#minha-conta input").forEach(input => { input.value = ""; });
         setText("#breadcrumb-tenant", "à Helvok Tax");
         setText("#breadcrumb-organization", "—");
@@ -7661,6 +7667,7 @@ export function renderDashboard(): string {
         setText("#auth-tenant-label", tenantCount > 0 ? "linked" : "invite");
         setText("#access-user-label", email || "perfil sincronizado");
         renderAccountEmail(email);
+        initializeBillingAdmin();
         setText("#access-role-label", roleLabels || "sem membership");
         setText("#access-tenant-label", tenantLabel);
         setText("#access-permission-label", permissions.length + " permissões");
@@ -9310,6 +9317,9 @@ export function renderDashboard(): string {
         button.addEventListener("click", () => setAuthMode(button.getAttribute("data-auth-mode") || "login"));
       });
 
+      ${billingAdminScript}
+      initializeBillingForms();
+      loadPublishedPlans();
       ${accountScript}
       initializeAccount();
 

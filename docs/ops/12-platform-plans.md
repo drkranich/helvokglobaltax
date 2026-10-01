@@ -14,9 +14,9 @@ Todos incluem os módulos disponíveis e o PWA; provedores fiscais, emissões, c
 
 ## Estado da implementação
 
-`src/billing/plans.ts` é a fonte única. `/v1/plans` é um catálogo público sem dados de cliente. A página `#planos` apresenta os planos em desktop/mobile e tem subpáginas próprias.
+`src/billing/plans.ts` define planos e valores iniciais. Após a migração, os valores e Price IDs são persistidos em helvok_platform_plans e editados exclusivamente pelo admin da plataforma. `/v1/plans` é um catálogo público sem dados de cliente. A página `#planos` apresenta os planos em desktop/mobile e tem subpáginas próprias.
 
-Não existe checkout, assinatura persistida, cobrança ou aplicação automática de limites. Os indicadores `billing_enabled` e `limits_enforced` são falsos. Não atribuir plano pago a tenants existentes nem bloquear clientes antes da implantação do faturamento.
+Existe edição persistida do catálogo e validação de Stripe Price IDs. Não existe checkout, assinatura persistida, cobrança ou aplicação automática de limites. Os indicadores `billing_enabled` e `limits_enforced` são falsos. Não atribuir plano pago a tenants existentes nem bloquear clientes antes da implantação do faturamento.
 
 Para ativar assinaturas: escolher e integrar o provedor de cobrança; definir assinatura e titular de faturamento no banco; validar webhooks com idempotência; aplicar limites no servidor nas rotas de escrita; contar memberships ativos distintos (não roles) e organizações; preservar dados em downgrade; permitir cancelamento e exportação. Nunca autorizar plano por localStorage, query string ou seleção no navegador.
 

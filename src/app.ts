@@ -1,4 +1,4 @@
-import { platformPlanCatalog } from "./billing/plans";
+import { createBillingRouter } from "./billing/routes";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
@@ -42,7 +42,7 @@ export function createApp(): Hono<AppEnv> {
     });
   }
 
-  app.get("/v1/plans", (c) => jsonResponse(c, platformPlanCatalog));
+  app.route("/v1", createBillingRouter());
 
   app.get("/health", (c) =>
     jsonResponse(c, {
