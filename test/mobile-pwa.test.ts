@@ -30,6 +30,39 @@ describe("mobile navigation and PWA", () => {
     dom.window.close();
   });
 
+  it("keeps browser installation available and prompts once per event", async () => {
+    const dom = new JSDOM(renderDashboard(), { url: "https://helvok.test/app", runScripts: "outside-only" });
+    const w = dom.window;
+    w.eval(mobileScript + "\ninitializeMobileExperience();");
+    const event = new w.Event("beforeinstallprompt", { cancelable: true });
+    event.prompt = vi.fn().mockResolvedValue({});
+    event.userChoice = Promise.resolve({ outcome: "dismissed" });
+    w.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    const button = w.document.getElementById("mobile-install");
+    expect(button.hidden).toBe(false);
+    button.click();
+    button.click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(event.prompt).toHaveBeenCalledTimes(1);
+    expect(button.hidden).toBe(true);
+    expect(renderDashboard()).toContain('name="mobile-web-app-capable" content="yes"');
+    dom.window.close();
+  });
+
+  it("greets the tenant according to local time", () => {
+    const html = renderDashboard();
+    const start = html.indexOf("      function updateWelcomeGreeting()");
+    const script = html.slice(start, html.indexOf("      updateWelcomeGreeting();", start));
+    for (const [hour, expected] of [[8, "Bom dia"], [14, "Boa tarde"], [21, "Boa noite"]] as const) {
+      const setText = vi.fn();
+      runInNewContext(script + "updateWelcomeGreeting();", { Date: class { getHours() { return hour; } }, setText });
+      expect(setText).toHaveBeenCalledWith("#welcome-greeting", expected);
+    }
+    expect(html).toContain("Clareza para decidir. Confiança para avançar.");
+    expect(html).toContain('setText("#breadcrumb-tenant", primaryTenant ? tenantLabel');
+  });
+
   it("retains accessible zoom and parses the generated browser script", () => {
     const html = renderDashboard();
     expect(html).not.toMatch(/user-scalable=no|maximum-scale=1/);

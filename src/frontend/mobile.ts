@@ -97,9 +97,23 @@ function initializeMobileExperience() {
   document.querySelectorAll(".comparison-table").forEach(table => new MutationObserver(labelComparisons).observe(table, {childList: true, subtree: true}));
   let installPrompt;
   const installButton = document.getElementById("mobile-install");
-  window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); installPrompt = event; installButton.hidden = false; });
-  installButton.addEventListener("click", async () => { if (installPrompt) { await installPrompt.prompt(); installPrompt = null; installButton.hidden = true; } });
-  window.addEventListener("appinstalled", () => { installButton.hidden = true; });
+  window.addEventListener("beforeinstallprompt", event => { installPrompt = event; installButton.hidden = false; });
+  installButton.addEventListener("click", async () => {
+    if (!installPrompt || installButton.disabled) return;
+    const pendingPrompt = installPrompt;
+    installPrompt = null;
+    installButton.disabled = true;
+    try {
+      await pendingPrompt.prompt();
+      await pendingPrompt.userChoice;
+    } catch {
+      // The browser may have consumed this event through its own install UI.
+    } finally {
+      installButton.disabled = false;
+      installButton.hidden = !installPrompt;
+    }
+  });
+  window.addEventListener("appinstalled", () => { installPrompt = null; installButton.hidden = true; });
   window.addEventListener("resize", () => { if (window.innerWidth > 1024 && dialog.open) dialog.close(); });
   if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
 }

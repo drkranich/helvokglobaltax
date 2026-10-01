@@ -11,6 +11,7 @@ export function renderDashboard(): string {
     <link rel="apple-touch-icon" href="/pwa-icon-192.png" />
     <meta name="theme-color" content="#fafafa" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>Helvok Tax - Command Center</title>
     <meta
       name="description"
@@ -2562,6 +2563,10 @@ export function renderDashboard(): string {
 
       ${mobileStyles}
       ${moduleNavigationStyles}
+      .topbar .welcome-block { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+      .welcome-title { font-size: clamp(17px, 1.4vw, 22px); line-height: 1.35; }
+      .welcome-organization { font-size: 12px; }
+      .welcome-block p { margin: 0; font-size: 12px; color: var(--champagne-64); line-height: 1.5; }
     </style>
   </head>
   <body>
@@ -2651,12 +2656,10 @@ export function renderDashboard(): string {
         </section>
 
         <header class="topbar">
-          <div class="breadcrumb">
-            <span>Tenant</span>
-            <strong id="breadcrumb-tenant">helvok-tax-foundation</strong>
-            <span>/</span>
-            <span>Organização</span>
-            <strong id="breadcrumb-organization">Helvok Tax</strong>
+          <div class="breadcrumb welcome-block">
+            <div class="welcome-title"><span id="welcome-greeting">Boas-vindas</span><span>, </span><strong id="breadcrumb-tenant">à Helvok Tax</strong></div>
+            <div class="welcome-organization">Organização · <strong id="breadcrumb-organization">—</strong></div>
+            <p>Clareza para decidir. Confiança para avançar.</p>
           </div>
           <div class="top-actions">
             <span class="session-chip" id="session-chip">sessão anônima</span>
@@ -4441,6 +4444,8 @@ export function renderDashboard(): string {
         window.localStorage.removeItem(authStorage.email);
         authState.session = null;
         authState.access = null;
+        setText("#breadcrumb-tenant", "à Helvok Tax");
+        setText("#breadcrumb-organization", "—");
         setText("#session-chip", "sessão anônima");
         setText("#session-button", "Entrar");
         renderTenantAccess(null);
@@ -7657,7 +7662,7 @@ export function renderDashboard(): string {
             ? "Sessão autorizada por membership ativo. O painel agora enxerga tenants, organizações e permissões via RLS."
             : "Entre com Supabase Auth uma vez; depois a Admin API concede membership no tenant foundation.",
         );
-        setText("#breadcrumb-tenant", primaryTenant && primaryTenant.slug ? primaryTenant.slug : "helvok-tax-foundation");
+        setText("#breadcrumb-tenant", primaryTenant ? tenantLabel : "à Helvok Tax");
         setText("#breadcrumb-organization", organizationLabel);
         showAuthGate(false);
 
@@ -9751,6 +9756,12 @@ export function renderDashboard(): string {
       initializeMobileExperience();
 
       setText("#rail-clock", new Date().toLocaleString("pt-BR"));
+      function updateWelcomeGreeting() {
+        const hour = new Date().getHours();
+        setText("#welcome-greeting", hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite");
+      }
+      updateWelcomeGreeting();
+      window.setInterval(updateWelcomeGreeting, 60000);
       window.setInterval(() => {
         if (document.hidden) return;
         setText("#rail-clock", new Date().toLocaleString("pt-BR"));

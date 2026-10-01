@@ -25,7 +25,7 @@ describe('session recovery and favicon', () => {
     const c = recovery(fetch, refresh);
     await c.load();
     expect(refresh).toHaveBeenCalledTimes(1);
-    expect(fetch.mock.calls[1][1].headers.authorization).toBe('Bearer new-token');
+    expect(fetch.mock.calls[1]![1].headers.authorization).toBe('Bearer new-token');
   });
   it('does not refresh or bypass a permission denial', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'supabase_rpc_error', message: 'permission denied' } }), { status: 403 }));
