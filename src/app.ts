@@ -26,6 +26,7 @@ export function createApp(): Hono<AppEnv> {
   );
 
   app.get("/", (c) => htmlResponse(c, renderDashboard()));
+  app.get("/favicon.ico", () => new Response(Uint8Array.from(atob(pwaIcons["192"]!), character => character.charCodeAt(0)), { headers: { "content-type": "image/png", "cache-control": "public, max-age=86400" } }));
   app.get("/app", (c) => htmlResponse(c, renderDashboard()));
   app.get("/manifest.webmanifest", () => new Response(JSON.stringify(pwaManifest), {
     headers: { "content-type": "application/manifest+json", "cache-control": "public, max-age=3600" },

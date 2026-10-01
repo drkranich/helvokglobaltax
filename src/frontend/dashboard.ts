@@ -2614,7 +2614,7 @@ export function renderDashboard(): string {
               <span>malha fiscal global</span>
             </div>
           </div>
-          <div class="env-pill"><span><i class="pulse-dot"></i>Cloudflare ao vivo</span><span id="rail-clock">--:--</span></div>
+          <div class="env-pill"><span id="rail-clock">--:--</span></div>
         </div>
 
         <nav class="nav-stack">
@@ -4588,8 +4588,30 @@ export function renderDashboard(): string {
         return body.session;
       }
 
-      async function loadSession() {
-        const accessToken = getStoredAccessToken();
+      let sessionRefreshPromise = null;
+      async function refreshStoredSession() {
+        if (sessionRefreshPromise) return sessionRefreshPromise;
+        const refreshToken = window.localStorage.getItem(authStorage.refresh);
+        if (!refreshToken) return false;
+        sessionRefreshPromise = callSupabaseAuth("/auth/v1/token?grant_type=refresh_token", { refresh_token: refreshToken })
+          .then((payload) => { storeAuthSession(payload); return true; })
+          .finally(() => { sessionRefreshPromise = null; });
+        return sessionRefreshPromise;
+      }
+
+      async function loadSession(retried = false) {
+        let accessToken = getStoredAccessToken();
+        if (accessToken && !retried) {
+          try {
+            const encoded = accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+            const claims = JSON.parse(atob(encoded));
+            if (claims.exp && claims.exp * 1000 <= Date.now() + 60000) {
+              if (await refreshStoredSession()) accessToken = getStoredAccessToken();
+            }
+          } catch (error) {
+            // Token validation remains on the server; malformed tokens are never trusted.
+          }
+        }
         if (!accessToken) {
           showAuthGate(true);
           return null;
@@ -4603,7 +4625,11 @@ export function renderDashboard(): string {
         });
         const body = await response.json();
         if (!response.ok) {
-          throw new Error(body && body.error && body.error.message ? body.error.message : "Session unavailable");
+          const code = body && body.error && body.error.code;
+          const expired = response.status === 401 || (response.status === 403 && ["jwt_expired", "bad_jwt"].includes(code));
+          if (expired && !retried && await refreshStoredSession()) return loadSession(true);
+          if (expired) clearAuthSession();
+          throw new Error(body && body.error && body.error.message ? body.error.message : "Sessão indisponível. Entre novamente.");
         }
         authState.session = body.session;
         renderSession(body.session);
@@ -9724,10 +9750,11 @@ export function renderDashboard(): string {
       ${mobileScript}
       initializeMobileExperience();
 
+      setText("#rail-clock", new Date().toLocaleString("pt-BR"));
       window.setInterval(() => {
-        if (document.hidden || window.innerWidth <= 1024) return;
-        setText("#rail-clock", formatTime(new Date()));
-        pulseMetrics();
+        if (document.hidden) return;
+        setText("#rail-clock", new Date().toLocaleString("pt-BR"));
+        if (window.innerWidth > 1024) pulseMetrics();
       }, 1000);
 
       window.setInterval(() => { if (!document.hidden && navigator.onLine) refreshStatus(); }, window.matchMedia("(max-width: 1024px)").matches ? 30000 : 8000);
@@ -9746,7 +9773,7 @@ export function renderDashboard(): string {
             renderInviteAcceptState();
           }
         })
-        .catch(() => showAuthGate(true));
+        .catch((error) => { showAuthGate(true); setAuthMessage(error.message, "warn"); });
       refreshStatus();
     </script>
   </body>
