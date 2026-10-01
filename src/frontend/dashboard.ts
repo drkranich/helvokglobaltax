@@ -6463,7 +6463,7 @@ export function renderDashboard(): string {
           await queueSimulationExport();
           await createFiscalDocumentDraft();
           addFeed("tax.simulation.materialized", "Simulação virou provisão, lançamento, preço, exportação e draft");
-          activateView("financeiro", true);
+          activateView("financeiro/financial-records-list", true);
         } catch (error) {
           setFinancialMessage(error instanceof Error ? error.message : "Não foi possível materializar a simulação.", "warn");
           addFeed("tax.simulation.materialize.error", "Falha ao criar pacote fiscal-financeiro");
@@ -6832,7 +6832,7 @@ export function renderDashboard(): string {
         if (createButton) {
           createButton.textContent = "Atualizar draft fiscal";
         }
-        activateView("motor", true);
+        activateView("motor/tax-simulator-form", true);
         runTaxSimulation();
       }
 
@@ -7290,7 +7290,7 @@ export function renderDashboard(): string {
         setText("#motor-view-status", "catálogo aplicado");
         setCatalogMessage("Produto aplicado ao simulador fiscal.", "good");
         addFeed("catalog.to_simulator", (item.sku || "SKU") + " aplicado ao motor tributário");
-        activateView("motor", true);
+        activateView("motor/tax-simulator-form", true);
         runTaxSimulation();
       }
 
@@ -8449,7 +8449,7 @@ export function renderDashboard(): string {
           }
           renderFinancialPlan(body.plan);
           addFeed(body.event_type || "financial.plan.calculated", "Plano financeiro recalculado");
-          scrollResultIntoViewIfStacked(button);
+          openModuleTarget(button && button.id === "financial-plan-button" ? "financial-warnings" : "tax-warnings");
         } catch (error) {
           setText("#financial-result-status", "erro");
           const warnings = qs("#financial-warnings");
@@ -8457,6 +8457,7 @@ export function renderDashboard(): string {
             warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha no planejamento</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
           }
           addFeed("financial.plan.error", "Falha ao calcular planejamento");
+          openModuleTarget("financial-warnings");
         } finally {
           if (button) {
             button.disabled = false;
@@ -8563,7 +8564,7 @@ export function renderDashboard(): string {
           runTaxComparison(false);
           setText("#tax-result-status", "calculado " + formatCurrency(body.simulation.totals.customer_total || 0, body.simulation.input_snapshot && body.simulation.input_snapshot.currency ? body.simulation.input_snapshot.currency : taxState.currency));
           addFeed(body.event_type || "tax.simulation.completed", "Custo total e impostos recalculados");
-          scrollResultIntoViewIfStacked(button);
+          openModuleTarget(button && button.id === "financial-plan-button" ? "financial-warnings" : "tax-warnings");
           return body.simulation;
         } catch (error) {
           setText("#tax-result-status", "erro");
@@ -8572,6 +8573,7 @@ export function renderDashboard(): string {
             warnings.innerHTML = '<div class="tax-warning-card"><strong>Falha na simulação</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Erro desconhecido") + '</span></div>';
           }
           addFeed("tax.simulation.error", "Falha ao calcular impostos");
+          openModuleTarget("tax-warnings");
         } finally {
           if (button) {
             button.disabled = false;
@@ -9236,11 +9238,11 @@ export function renderDashboard(): string {
           else link.removeAttribute("aria-current");
         });
         updateModuleNavigation(target, sectionId);
+        window.scrollTo({top: 0, behavior: "auto"});
         const destination = sectionId && document.getElementById(sectionId);
         if (destination && destination.closest(".app-view") === target) {
-          destination.scrollIntoView({block: "start", behavior: "auto"});
           destination.setAttribute("tabindex", "-1"); destination.focus({preventScroll: true});
-        } else window.scrollTo({top: 0, behavior: "auto"});
+        }
       }
 
       document.querySelectorAll(".nav-button").forEach((link) => {

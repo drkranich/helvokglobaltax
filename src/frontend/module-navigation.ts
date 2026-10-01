@@ -11,11 +11,22 @@ export const moduleNavigationStyles = `
 .module-breadcrumb a { padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; }
 .module-breadcrumb [aria-current] { color: #0a0a0a; font-weight: 500; }
 .module-section-index { display: flex; flex-wrap: wrap; gap: 8px; }
+[data-page-hidden="true"] { display: none !important; }
+.tab-panel.page-active-branch { display: block !important; }
+.page-active-branch.work-grid, .page-active-branch.hero-grid, .page-active-branch.access-grid, .page-active-branch.members-workbench, .page-active-branch.catalog-workbench, .page-active-branch.tax-workbench { grid-template-columns: minmax(0, 1fr); }
+.module-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.module-overview a { display: grid; align-content: start; gap: 10px; padding: 24px; background: white; border: 1px solid var(--line); border-radius: 16px; text-decoration: none; }
+.module-overview strong { font-size: 18px; }
+.module-overview span { color: var(--champagne-64); font-size: 14px; }
+.module-page-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.module-page-links a { padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.module-page-links [aria-current] { background: #f4f4f5; color: #0a0a0a; }
+
 .module-section-index a { padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; text-decoration: none; }
 [data-module-section] { scroll-margin-top: 24px; }
 @media (max-width: 1024px) {
   .module-tree > summary, .submodule-tree > summary, .hierarchy-link, .module-section-index a { min-height: 44px; }
-  .module-section-index { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .module-section-index, .module-overview { display: grid; grid-template-columns: minmax(0, 1fr); }
   .module-breadcrumb { font-size: 13px; }
 }
 `;
@@ -36,7 +47,7 @@ function initializeModuleNavigation() {
     link.before(tree); tree.append(summary, link);
     link.querySelector("span").textContent = "Visão geral";
     const index = document.createElement("nav"); index.className = "module-section-index"; index.setAttribute("aria-label", "Seções de " + summary.textContent);
-    const headings = [...view.querySelectorAll("h2")];
+    const headings = [...view.querySelectorAll("h2"), ...view.querySelectorAll(".feed h3")];
     headings.forEach((heading, position) => {
       const sectionId = viewId + "-section-" + (position + 1);
       heading.id = heading.id || sectionId; heading.setAttribute("data-module-section", "");
@@ -50,7 +61,7 @@ function initializeModuleNavigation() {
         destinations.push({ id: target.id, label }); target.setAttribute("data-module-section", "");
       });
       destinations.forEach(destination => {
-        moduleSections.set(viewId + "/" + destination.id, { module: summary.textContent, section: title.textContent, label: destination.label, headingId: heading.id });
+        moduleSections.set(viewId + "/" + destination.id, { module: summary.textContent, section: title.textContent, label: destination.label, headingId: heading.id, panel, targetId: destination.id });
         const item = document.createElement("a"); item.className = "hierarchy-link"; item.href = "#" + viewId + "/" + destination.id; item.textContent = destination.label; item.dataset.moduleTarget = ""; sub.append(item);
       });
       tree.append(sub);
@@ -64,9 +75,61 @@ function initializeModuleNavigation() {
     event.preventDefault(); activateView(link.hash.slice(1), true);
   });
 }
+function openModuleTarget(targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const view = target.closest(".app-view");
+  const direct = moduleSections.get(view.id + "/" + targetId);
+  const selected = direct || [...moduleSections.values()].find(value => value.panel.contains(target));
+  if (selected) activateView(view.id + "/" + (direct ? targetId : selected.headingId), true);
+}
+function renderModulePage(view, selected) {
+  view.querySelectorAll("[data-page-hidden]").forEach(node => { node.removeAttribute("data-page-hidden"); node.inert = false; });
+  view.querySelectorAll(".page-active-branch").forEach(node => node.classList.remove("page-active-branch"));
+  let overview = view.querySelector(":scope > .module-overview");
+  if (!overview) { overview = document.createElement("nav"); overview.className = "module-overview"; overview.setAttribute("aria-label", "Subpáginas do módulo"); view.append(overview); }
+  let pageLinks = view.querySelector(":scope > .module-page-links");
+  if (!pageLinks) { pageLinks = document.createElement("nav"); pageLinks.className = "module-page-links"; pageLinks.setAttribute("aria-label", "Páginas desta seção"); view.append(pageLinks); }
+  const hide = node => { node.setAttribute("data-page-hidden", "true"); node.inert = true; };
+  const sections = [...moduleSections.entries()].filter(([key, value]) => key.startsWith(view.id + "/") && key.endsWith("/" + value.headingId));
+  if (!selected) {
+    [...view.children].forEach(node => { if (!node.classList.contains("view-head") && node !== overview) hide(node); });
+    overview.replaceChildren();
+    sections.forEach(([key, value]) => {
+      const card = document.createElement("a"); card.href = "#" + key; card.dataset.moduleTarget = "";
+      const title = document.createElement("strong"); title.textContent = value.section;
+      const label = document.createElement("span"); label.textContent = "Abrir página →"; card.append(title, label); overview.append(card);
+    });
+    return;
+  }
+  hide(overview);
+  const panel = selected.panel;
+  let branch = panel;
+  while (branch && branch !== view) {
+    branch.classList.add("page-active-branch");
+    const parent = branch.parentElement;
+    [...parent.children].forEach(sibling => {
+      if (sibling !== branch && !(parent === view && (sibling.classList.contains("view-head") || sibling === pageLinks))) hide(sibling);
+    });
+    branch = parent;
+  }
+  const destination = document.getElementById(selected.targetId);
+  if (selected.targetId !== selected.headingId && destination && panel.contains(destination)) {
+    panel.querySelectorAll("form[id], [id$='-list'], [id$='-table'], [id$='-result']").forEach(sibling => {
+      if (sibling !== destination && !sibling.contains(destination) && !destination.contains(sibling)) hide(sibling);
+    });
+  }
+  pageLinks.replaceChildren();
+  const back = document.createElement("a"); back.href = "#" + view.id; back.textContent = "← " + (view.getAttribute("aria-label") || "Módulo"); back.dataset.moduleTarget = ""; pageLinks.append(back);
+  [...moduleSections.entries()].filter(([key, value]) => key.startsWith(view.id + "/") && value.headingId === selected.headingId).forEach(([key, value]) => {
+    const link = document.createElement("a"); link.href = "#" + key; link.textContent = value.label; link.dataset.moduleTarget = "";
+    if (value.targetId === selected.targetId) link.setAttribute("aria-current", "page"); pageLinks.append(link);
+  });
+}
 function updateModuleNavigation(view, sectionId) {
   const key = view.id + (sectionId ? "/" + sectionId : "");
   const selected = moduleSections.get(key);
+  renderModulePage(view, selected);
   document.querySelectorAll(".module-tree").forEach(tree => { if (tree.dataset.module === view.id) tree.open = true; });
   document.querySelectorAll(".hierarchy-link").forEach(link => {
     if (link.hash === "#" + key) { link.setAttribute("aria-current", "location"); link.closest(".submodule-tree").open = true; }
