@@ -1,3 +1,4 @@
+import { platformPlanCatalog } from "./billing/plans";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
@@ -40,6 +41,8 @@ export function createApp(): Hono<AppEnv> {
       return new Response(bytes, { headers: { "content-type": "image/png", "cache-control": "public, max-age=86400" } });
     });
   }
+
+  app.get("/v1/plans", (c) => jsonResponse(c, platformPlanCatalog));
 
   app.get("/health", (c) =>
     jsonResponse(c, {

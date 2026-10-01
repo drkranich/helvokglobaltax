@@ -1,3 +1,4 @@
+import { renderPlatformPlans, platformPlanStyles } from "./platform-plans";
 import { moduleNavigationStyles, moduleNavigationScript } from "./module-navigation";
 import { mobileStyles, mobileMarkup, mobileScript } from "./mobile";
 
@@ -2567,6 +2568,7 @@ export function renderDashboard(): string {
       .welcome-title { font-size: clamp(17px, 1.4vw, 22px); line-height: 1.35; }
       .welcome-organization { font-size: 12px; }
       .welcome-block p { margin: 0; font-size: 12px; color: var(--champagne-64); line-height: 1.5; }
+      ${platformPlanStyles}
     </style>
   </head>
   <body>
@@ -2637,6 +2639,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
+          <a class="nav-button" href="#planos"><span>Planos da plataforma</span><span class="nav-code">PLN</span></a>
           <a class="nav-button" href="#configuracoes"><span>Configurações</span><span class="nav-code">CFG</span></a>
         </nav>
 
@@ -4020,6 +4023,7 @@ export function renderDashboard(): string {
         </div>
         </section>
 
+        ${renderPlatformPlans()}
         <section class="app-view" id="configuracoes" data-view="configuracoes" aria-label="Configurações gerais">
           <div class="view-head">
             <div>
