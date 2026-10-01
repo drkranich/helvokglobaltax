@@ -1,3 +1,4 @@
+import { accountMarkup, accountScript } from "./account";
 import { renderPlatformPlans, platformPlanStyles } from "./platform-plans";
 import { moduleNavigationStyles, moduleNavigationScript } from "./module-navigation";
 import { mobileStyles, mobileMarkup, mobileScript } from "./mobile";
@@ -2639,6 +2640,7 @@ export function renderDashboard(): string {
           <a class="nav-button" href="#documentos"><span>Documentos</span><span class="nav-code">DOC</span></a>
           <a class="nav-button" href="#auditoria"><span>Auditoria</span><span class="nav-code">LOG</span></a>
           <a class="nav-button" href="#integracoes"><span>Integrações</span><span class="nav-code">SDK</span></a>
+          <a class="nav-button" href="#minha-conta"><span>Minha conta</span><span class="nav-code">EU</span></a>
           <a class="nav-button" href="#planos"><span>Planos da plataforma</span><span class="nav-code">PLN</span></a>
           <a class="nav-button" href="#configuracoes"><span>Configurações</span><span class="nav-code">CFG</span></a>
         </nav>
@@ -4023,6 +4025,7 @@ export function renderDashboard(): string {
         </div>
         </section>
 
+        ${accountMarkup}
         ${renderPlatformPlans()}
         <section class="app-view" id="configuracoes" data-view="configuracoes" aria-label="Configurações gerais">
           <div class="view-head">
@@ -4448,6 +4451,8 @@ export function renderDashboard(): string {
         window.localStorage.removeItem(authStorage.email);
         authState.session = null;
         authState.access = null;
+        renderAccountEmail(null);
+        document.querySelectorAll("#minha-conta input").forEach(input => { input.value = ""; });
         setText("#breadcrumb-tenant", "à Helvok Tax");
         setText("#breadcrumb-organization", "—");
         setText("#session-chip", "sessão anônima");
@@ -7655,6 +7660,7 @@ export function renderDashboard(): string {
         setText("#auth-core-label", user ? "pronto" : "created");
         setText("#auth-tenant-label", tenantCount > 0 ? "linked" : "invite");
         setText("#access-user-label", email || "perfil sincronizado");
+        renderAccountEmail(email);
         setText("#access-role-label", roleLabels || "sem membership");
         setText("#access-tenant-label", tenantLabel);
         setText("#access-permission-label", permissions.length + " permissões");
@@ -9264,7 +9270,7 @@ export function renderDashboard(): string {
         });
 
         const label = target.getAttribute("aria-label") || "Dashboard";
-        setText("#breadcrumb-organization", label);
+
         if (updateHash) {
           window.history.replaceState(null, "", "#" + target.id + (sectionId && document.getElementById(sectionId)?.closest(".app-view") === target ? "/" + sectionId : ""));
         }
@@ -9303,6 +9309,9 @@ export function renderDashboard(): string {
       document.querySelectorAll("[data-auth-mode]").forEach((button) => {
         button.addEventListener("click", () => setAuthMode(button.getAttribute("data-auth-mode") || "login"));
       });
+
+      ${accountScript}
+      initializeAccount();
 
       const authForm = qs("#auth-form");
       if (authForm) {
@@ -9776,13 +9785,15 @@ export function renderDashboard(): string {
       bootstrapFeed();
       setAuthMode("login");
       detectRecoveryReturn();
+      const emailChangeReturn = detectEmailChangeReturn();
       activateView(String(window.location.hash || "#dashboard").replace("#", ""), false);
       renderInviteAcceptState();
       getAuthConfig().catch(() => setText("#auth-health-label", "offline"));
       loadTaxMarkets();
       loadFiscalAdapterCoverage();
-      loadSession()
+      (emailChangeReturn ? syncSession() : loadSession())
         .then(() => {
+          if (emailChangeReturn) setText("#account-email-message", "Confirmação recebida. Confira seu e-mail de acesso acima.");
           if (authState.pendingInviteToken) {
             showAuthGate(true);
             renderInviteAcceptState();

@@ -22,4 +22,4 @@ Para ativar assinaturas: escolher e integrar o provedor de cobrança; definir as
 
 ## Conta e credenciais atuais
 
-Existe recuperação de senha por e-mail na tela de login, seguida de definição da nova senha via Supabase Auth. Não há área autenticada para trocar senha ou e-mail. O contato de suporte do tenant não altera a identidade de login. Uma futura página Minha conta deve atualizar exclusivamente o usuário autenticado e respeitar confirmação/reautenticação do Supabase; sem usar chaves administrativas no navegador.
+Existe recuperação de senha por e-mail na tela de login, seguida de definição da nova senha via Supabase Auth. A área autenticada Minha conta permite trocar senha e solicitar troca de e-mail, mediante confirmação da senha atual e da mesma identidade. O contato de suporte do tenant não altera a identidade de login. Minha conta atualiza exclusivamente o usuário autenticado via Supabase Auth, respeita confirmação de e-mail e nunca usa chaves administrativas no navegador.

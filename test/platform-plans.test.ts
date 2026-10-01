@@ -6,7 +6,7 @@ import { renderDashboard } from '../src/frontend/dashboard';
 describe('platform plan catalogue', () => {
   it('serves public prices without claiming billing or quota enforcement', async () => {
     const response = await createApp().request('/v1/plans');
-    const body = await response.json();
+    const body = await response.json<typeof platformPlanCatalog>();
     expect(response.status).toBe(200);
     expect(body.billing_enabled).toBe(false);
     expect(body.limits_enforced).toBe(false);
