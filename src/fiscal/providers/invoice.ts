@@ -66,8 +66,8 @@ function buildInvoice(request: FiscalDocumentRequest, sequence: number): Commerc
       originCountry: request.seller.countryCode,
       destinationCountry: request.buyer.countryCode,
       isB2C: !request.buyer.isBusiness,
-      euCrossBorderSalesYtdCents: request.euCrossBorderSalesYtdCents,
-      isImportIntoEu: request.isImportIntoEu,
+      ...(request.euCrossBorderSalesYtdCents !== undefined ? { euCrossBorderSalesYtdCents: request.euCrossBorderSalesYtdCents } : {}),
+      ...(request.isImportIntoEu !== undefined ? { isImportIntoEu: request.isImportIntoEu } : {}),
     };
     const vat = applyVat(netTotalCents, ctx);
     taxTotalCents = vat.vatAmountCents;
@@ -81,12 +81,12 @@ function buildInvoice(request: FiscalDocumentRequest, sequence: number): Commerc
     seller: {
       legalName: request.seller.legalName,
       countryCode: request.seller.countryCode.toUpperCase(),
-      taxId: request.seller.taxId,
+      ...(request.seller.taxId !== undefined ? { taxId: request.seller.taxId } : {}),
     },
     buyer: {
       legalName: request.buyer.legalName,
       countryCode: request.buyer.countryCode.toUpperCase(),
-      taxId: request.buyer.taxId,
+      ...(request.buyer.taxId !== undefined ? { taxId: request.buyer.taxId } : {}),
     },
     lines,
     netTotalCents,
@@ -153,3 +153,4 @@ export function createInvoiceProvider(config: InvoiceProviderConfig): FiscalProv
     },
   };
 }
+

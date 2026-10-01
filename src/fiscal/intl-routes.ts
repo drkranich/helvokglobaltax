@@ -39,11 +39,11 @@ function toCents(value: unknown): number {
 
 function buildRouterConfig(env: AppEnv["Bindings"]): FiscalRouterConfig {
   // Cada provedor lê sua credencial do ambiente; sem ela, opera em modo "não configurado".
-  const focusToken = (env as Record<string, string | undefined>).FOCUS_NFE_TOKEN;
-  const peppolKey = (env as Record<string, string | undefined>).HELVOK_PEPPOL_AP_KEY;
+  const focusToken = env.FOCUS_NFE_TOKEN;
+  const peppolKey = env.HELVOK_PEPPOL_AP_KEY;
   return {
-    focusNfe: () => createFocusNfeProvider({ token: focusToken }),
-    helvokPeppol: () => createHelvokPeppolProvider({ accessPointKey: peppolKey }),
+    focusNfe: () => createFocusNfeProvider(focusToken ? { token: focusToken } : {}),
+    helvokPeppol: () => createHelvokPeppolProvider(peppolKey ? { accessPointKey: peppolKey } : {}),
     // numeração sequencial simples (em produção, persistir o contador por tenant)
     invoiceFallback: () => createInvoiceProvider({ nextSequence: () => Date.now() % 1_000_000 }),
   };
@@ -86,8 +86,7 @@ export function createIntlFiscalRouter(): Hono<AppEnv> {
       isB2C: body.is_b2c !== false, // default B2C
       euCrossBorderSalesYtdCents: toCents(body.eu_cross_border_sales_ytd),
       isImportIntoEu: body.is_import_into_eu === true,
-      overrideRatePercent:
-        typeof body.override_rate_percent === "number" ? body.override_rate_percent : undefined,
+      ...(typeof body.override_rate_percent === "number" ? { overrideRatePercent: body.override_rate_percent } : {}),
     };
 
     const decision = decideVat(context);
@@ -140,26 +139,26 @@ export function createIntlFiscalRouter(): Hono<AppEnv> {
       seller: {
         legalName: typeof seller.legal_name === "string" ? seller.legal_name : "Vendedor",
         countryCode: sellerCountry,
-        taxId: typeof seller.tax_id === "string" ? seller.tax_id : undefined,
+        ...(typeof seller.tax_id === "string" ? { taxId: seller.tax_id } : {}),
         isBusiness: seller.is_business !== false,
       },
       buyer: {
         legalName: typeof buyer.legal_name === "string" ? buyer.legal_name : "Comprador",
         countryCode: buyerCountry,
-        taxId: typeof buyer.tax_id === "string" ? buyer.tax_id : undefined,
+        ...(typeof buyer.tax_id === "string" ? { taxId: buyer.tax_id } : {}),
         isBusiness: buyer.is_business === true, // default consumidor (B2C)
       },
       items: rawItems.map((it) => ({
         description: typeof it.description === "string" ? it.description : "Item",
         quantity: Math.max(1, toNumber(it.quantity, 1)),
         unitPriceCents: toCents(it.unit_price),
-        taxCode: typeof it.tax_code === "string" ? it.tax_code : undefined,
-        vatRatePercent: typeof it.vat_rate_percent === "number" ? it.vat_rate_percent : undefined,
+        ...(typeof it.tax_code === "string" ? { taxCode: it.tax_code } : {}),
+        ...(typeof it.vat_rate_percent === "number" ? { vatRatePercent: it.vat_rate_percent } : {}),
       })),
       currency: typeof body.currency === "string" ? body.currency : "EUR",
       euCrossBorderSalesYtdCents: toCents(body.eu_cross_border_sales_ytd),
       isImportIntoEu: body.is_import_into_eu === true,
-      reference: typeof body.reference === "string" ? body.reference : undefined,
+      ...(typeof body.reference === "string" ? { reference: body.reference } : {}),
     };
 
     const config = buildRouterConfig(c.env);
@@ -190,3 +189,4 @@ export function createIntlFiscalRouter(): Hono<AppEnv> {
 
   return router;
 }
+

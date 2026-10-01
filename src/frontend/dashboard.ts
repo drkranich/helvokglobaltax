@@ -1,9 +1,15 @@
+import { mobileStyles, mobileMarkup, mobileScript } from "./mobile";
+
 export function renderDashboard(): string {
   return `<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/pwa-icon-192.png" />
+    <meta name="theme-color" content="#fafafa" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Helvok Tax - Command Center</title>
     <meta
       name="description"
@@ -2553,6 +2559,7 @@ export function renderDashboard(): string {
         .compare-modal-card { padding: 16px; }
       }
 
+      ${mobileStyles}
     </style>
   </head>
   <body>
@@ -2637,7 +2644,8 @@ export function renderDashboard(): string {
       <main class="content" id="app-content">
         <section class="mobile-brand" aria-label="Marca">
           <strong>Helvok Tax</strong>
-          <span><i class="pulse-dot"></i>painel operacional na Cloudflare</span>
+          <div class="mobile-tools"><button type="button" id="mobile-install" hidden>Instalar</button><button type="button" data-mobile-menu aria-haspopup="dialog" aria-controls="mobile-module-dialog">Módulos</button></div>
+          <span><i class="pulse-dot"></i>painel operacional</span>
         </section>
 
         <header class="topbar">
@@ -4224,6 +4232,7 @@ export function renderDashboard(): string {
       </div>
     </div>
 
+    ${mobileMarkup}
     <script>
       const feedSeeds = [
         ["tenant.created", "Tenant foundation confirmado"],
@@ -9218,7 +9227,11 @@ export function renderDashboard(): string {
         if (updateHash) {
           window.history.replaceState(null, "", "#" + target.id);
         }
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.querySelectorAll(".mobile-nav a, .mobile-module-links a").forEach(link => {
+          if (link.hash === "#" + target.id) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+        window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       }
 
       document.querySelectorAll(".nav-button").forEach((link) => {
@@ -9695,12 +9708,16 @@ export function renderDashboard(): string {
         });
       }
 
+      ${mobileScript}
+      initializeMobileExperience();
+
       window.setInterval(() => {
+        if (document.hidden || window.innerWidth <= 1024) return;
         setText("#rail-clock", formatTime(new Date()));
         pulseMetrics();
       }, 1000);
 
-      window.setInterval(refreshStatus, 8000);
+      window.setInterval(() => { if (!document.hidden && navigator.onLine) refreshStatus(); }, window.matchMedia("(max-width: 1024px)").matches ? 30000 : 8000);
       bootstrapFeed();
       setAuthMode("login");
       detectRecoveryReturn();
@@ -9722,3 +9739,4 @@ export function renderDashboard(): string {
   </body>
 </html>`;
 }
+

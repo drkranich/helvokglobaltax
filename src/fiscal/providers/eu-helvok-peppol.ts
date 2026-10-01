@@ -35,8 +35,8 @@ function toVatContext(request: FiscalDocumentRequest): VatContext {
     originCountry: request.seller.countryCode,
     destinationCountry: request.buyer.countryCode,
     isB2C: !request.buyer.isBusiness,
-    euCrossBorderSalesYtdCents: request.euCrossBorderSalesYtdCents,
-    isImportIntoEu: request.isImportIntoEu,
+    ...(request.euCrossBorderSalesYtdCents !== undefined ? { euCrossBorderSalesYtdCents: request.euCrossBorderSalesYtdCents } : {}),
+    ...(request.isImportIntoEu !== undefined ? { isImportIntoEu: request.isImportIntoEu } : {}),
   };
 }
 
@@ -119,3 +119,4 @@ export function createHelvokPeppolProvider(config: HelvokPeppolConfig): FiscalPr
     },
   };
 }
+

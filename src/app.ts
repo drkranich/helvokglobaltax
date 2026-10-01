@@ -7,6 +7,8 @@ import { createFiscalAdapterRouter } from "./fiscal/routes";
 import { createIntlFiscalRouter } from "./fiscal/intl-routes";
 import { createFinancialRouter } from "./financial/routes";
 import { renderDashboard } from "./frontend/dashboard";
+import { pwaManifest, serviceWorker } from "./frontend/pwa";
+import { pwaIcons } from "./frontend/pwa-icons";
 import { htmlResponse, jsonResponse } from "./response";
 import { createSessionRouter } from "./session/routes";
 import { createTaxRouter } from "./tax/routes";
@@ -25,6 +27,18 @@ export function createApp(): Hono<AppEnv> {
 
   app.get("/", (c) => htmlResponse(c, renderDashboard()));
   app.get("/app", (c) => htmlResponse(c, renderDashboard()));
+  app.get("/manifest.webmanifest", () => new Response(JSON.stringify(pwaManifest), {
+    headers: { "content-type": "application/manifest+json", "cache-control": "public, max-age=3600" },
+  }));
+  app.get("/sw.js", () => new Response(serviceWorker, {
+    headers: { "content-type": "application/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" },
+  }));
+  for (const size of ["192", "512"]) {
+    app.get(`/pwa-icon-${size}.png`, () => {
+      const bytes = Uint8Array.from(atob(pwaIcons[size]!), character => character.charCodeAt(0));
+      return new Response(bytes, { headers: { "content-type": "image/png", "cache-control": "public, max-age=86400" } });
+    });
+  }
 
   app.get("/health", (c) =>
     jsonResponse(c, {
